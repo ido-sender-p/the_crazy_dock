@@ -1,0 +1,29 @@
+{
+  "name": "wildock",
+  "version": "0.1.0",
+  "description": "Programmatic SEO site cataloguing docks, piers and marinas worldwide",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:create": "wrangler d1 create wildock-db",
+    "db:migrate:local": "wrangler d1 execute wildock-db --local --file=./src/db/schema.sql",
+    "db:migrate:remote": "wrangler d1 execute wildock-db --remote --file=./src/db/schema.sql",
+    "fetch:overpass": "node scripts/fetch-overpass.mjs",
+    "load:local": "node scripts/load-docks.mjs --local",
+    "load:remote": "node scripts/load-docks.mjs --remote",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "hono": "^4.13.5"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260826.1",
+    "typescript": "^7.0.2",
+    "wrangler": "^4.126.0"
+  }
+}

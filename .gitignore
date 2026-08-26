@@ -1,0 +1,6 @@
+node_modules/
+.env
+.wrangler/
+wrangler-dev.log
+.claude/settings.local.json
+scripts/data/

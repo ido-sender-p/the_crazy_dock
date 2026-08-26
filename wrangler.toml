@@ -1,0 +1,16 @@
+name = "wildock"
+main = "src/index.tsx"
+compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+
+# D1 not wired up yet — demo page runs with hardcoded data first.
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "wildock-db"
+# database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+[vars]
+SITE_URL = "https://wildock.com"
