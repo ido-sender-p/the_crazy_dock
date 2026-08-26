@@ -82,7 +82,7 @@ export const Layout: FC<
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
       <link
-        href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600&family=Pirata+One&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600&family=Cinzel:wght@600;700&family=GFS+Didot&display=swap"
         rel="stylesheet"
       />
       {jsonLd && <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>}
