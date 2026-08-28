@@ -5,36 +5,28 @@ import { raw } from "hono/html";
 
 const PAGE_CSS = `
   .hero {
-    background: radial-gradient(120% 160% at 15% 0%, #123a63 0%, #0b2545 55%, #082038 100%);
-    color: #fff;
-    padding: 88px 0 96px;
     position: relative;
-    overflow: hidden;
-  }
-  .hero .wrap { position: relative; z-index: 1; max-width: 680px; }
-  .hero .shore { position: absolute; right: 0; bottom: -1px; width: 46%; max-width: 560px; height: auto; z-index: 0; pointer-events: none; }
-  @media (max-width: 860px) { .hero .shore { display: none; } }
-  .hero .sun { position: absolute; left: 4%; top: 8%; width: 150px; height: 150px; z-index: 0; pointer-events: none; }
-  @media (max-width: 860px) { .hero .sun { width: 100px; height: 100px; } }
-  .hero h1 {
-    font-family: 'Cinzel', 'Fraunces', Georgia, serif;
-    font-weight: 600;
-    font-size: clamp(2.1rem, 4.6vw, 3rem);
-    letter-spacing: 0.05em;
-    margin: 12px 0 16px;
+    min-height: 560px;
+    display: flex;
+    align-items: center;
     color: #fff;
-    text-shadow: 0 2px 14px rgba(0,0,0,0.35);
+    overflow: hidden;
+    background-image: linear-gradient(100deg, rgba(4,14,26,0.78) 0%, rgba(4,14,26,0.55) 32%, rgba(4,14,26,0.15) 58%, rgba(4,14,26,0.25) 100%), linear-gradient(180deg, rgba(6,20,36,0.15) 0%, rgba(6,20,36,0.3) 60%, rgba(6,20,36,0.75) 100%), url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Lighthouse_in_Chania._Crete%2C_Greece.jpg/1280px-Lighthouse_in_Chania._Crete%2C_Greece.jpg');
+    background-size: cover;
+    background-position: center 65%;
   }
-  .hero p.lede {
-    font-family: 'Inter', system-ui, sans-serif;
-    font-size: 1.05rem;
-    line-height: 1.55;
-    color: #cfe0ee;
-    max-width: 540px;
+  .hero .wrap { position: relative; z-index: 1; max-width: 1080px; padding-top: 60px; padding-bottom: 60px; text-align: left; }
+  .hero h1 {
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+    font-weight: 800;
+    font-size: clamp(2.2rem, 5.2vw, 3.9rem);
+    letter-spacing: -0.02em;
+    line-height: 1.15;
     margin: 0;
+    max-width: none;
+    color: #fff;
+    text-shadow: 0 2px 24px rgba(0,0,0,0.45);
   }
-  .hero .wave { position: absolute; left: 0; right: 0; bottom: -1px; line-height: 0; }
-
 
   section.block { padding: 64px 0; }
   section.block .kicker { color: var(--accent-dark); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -113,7 +105,7 @@ const PAGE_CSS = `
   }
   .how-note {
     margin-top: 22px; font-family: 'Fraunces', serif; font-style: italic;
-    font-size: 1.05rem; color: var(--ink); max-width: 68ch; line-height: 1.5;
+    font-size: 0.9rem; color: var(--ink); max-width: 68ch; line-height: 1.5;
   }
 
   .trail { position: relative; margin-top: 32px; max-width: 620px; padding-left: 46px; }
@@ -148,9 +140,9 @@ const PAGE_CSS = `
   .submit-cta h2 { color: #fff; font-size: 1.7rem; }
   .submit-cta p { color: #cfe0ee; max-width: 480px; margin: 8px auto 24px; }
 
-  /* center all text on this page */
-  .hero .wrap, section.block, .map-teaser-copy, .featured-card .copy { text-align: center; }
-  section.block p.intro, .lede, .how-note, .log-entry p, .trail-stop p { margin-left: auto; margin-right: auto; }
+  /* center all text on this page (hero stays left-aligned over the photo) */
+  section.block, .map-teaser-copy, .featured-card .copy { text-align: center; }
+  section.block p.intro, .how-note, .log-entry p, .trail-stop p { margin-left: auto; margin-right: auto; }
   .log-entry, .trail-stop { justify-items: center; }
   .log-entry { grid-template-columns: 1fr; }
   .trail { padding-left: 0; max-width: 480px; margin-left: auto; margin-right: auto; }
@@ -243,121 +235,16 @@ export function HomePage() {
 
       <section class="hero">
         <div class="wrap">
-          <h1>From the thunder of the tide to the ancient lake legends</h1>
-          <p class="lede">Weathered walls, working boats, and the people who breathe life into the docks. A port is built on their stories. Here, we share them.</p>
+          <h1>From the whispering seas to the legends of the lakes</h1>
         </div>
-
-        <svg class="sun" viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#f4fbfa" stop-opacity="0.8" />
-              <stop offset="45%" stop-color="#eaf6f3" stop-opacity="0.3" />
-              <stop offset="100%" stop-color="#eaf6f3" stop-opacity="0" />
-            </radialGradient>
-          </defs>
-          <circle cx="75" cy="75" r="75" fill="url(#sunGlow)" />
-          <circle cx="75" cy="75" r="26" fill="none" stroke="#f4fbfa" stroke-width="0.5" opacity="0.8" />
-        </svg>
-
-        <svg class="shore" viewBox="0 0 700 420" preserveAspectRatio="xMaxYMax meet" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <radialGradient id="lampGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stop-color="#f4fbfa" stop-opacity="0.18" />
-              <stop offset="100%" stop-color="#f4fbfa" stop-opacity="0" />
-            </radialGradient>
-          </defs>
-          <g transform="translate(0,-40)">
-          <g fill="#04121f" opacity="0.9">
-            <ellipse cx="470" cy="392" rx="46" ry="34" />
-            <ellipse cx="555" cy="400" rx="34" ry="26" />
-            <ellipse cx="600" cy="378" rx="26" ry="20" />
-          </g>
-          <g fill="#0a2440" opacity="0.75">
-            <ellipse cx="345" cy="404" rx="32" ry="22" />
-            <ellipse cx="400" cy="410" rx="24" ry="16" />
-            <ellipse cx="640" cy="400" rx="30" ry="20" />
-          </g>
-          <g fill="none" stroke="#eaf6f3" stroke-linecap="round">
-            <path opacity="0.55" stroke-width="3" d="M230,340 C300,318 350,352 420,332 C490,312 540,344 610,326 C635,318 655,322 680,314" />
-            <path opacity="0.4" stroke-width="3" d="M200,368 C280,348 330,378 410,360 C480,342 540,370 620,352 C645,346 660,350 685,344" />
-            <path opacity="0.3" stroke-width="2.5" d="M180,396 C250,380 320,402 400,386 C470,370 540,398 630,382 C650,378 665,382 685,376" />
-          </g>
-          <g fill="#f4fbfa">
-            <circle opacity="0.5" cx="440" cy="368" r="2.5" />
-            <circle opacity="0.4" cx="500" cy="358" r="2" />
-            <circle opacity="0.45" cx="560" cy="370" r="2.5" />
-            <circle opacity="0.35" cx="480" cy="392" r="2" />
-            <circle opacity="0.4" cx="610" cy="360" r="2" />
-          </g>
-          <g fill="none" stroke="#eaf6f3" stroke-linecap="round">
-            <path opacity="0.6" stroke-width="3" d="M700,255 C620,248 520,258 430,268" />
-            <path opacity="0.6" stroke-width="3" d="M700,270 C620,264 520,274 430,284" />
-            <path opacity="0.55" stroke-width="2.5" d="M430,268 L430,284" />
-            <path opacity="0.45" stroke-width="2" d="M480,262 L480,300" />
-            <path opacity="0.4" stroke-width="2" d="M545,259 L545,312" />
-            <path opacity="0.35" stroke-width="2" d="M615,256 L615,322" />
-            <path opacity="0.3" stroke-width="2" d="M675,253 L675,332" />
-          </g>
-          <circle cx="500" cy="216" r="30" fill="url(#lampGlow)" />
-          <g fill="none" stroke="#eaf6f3" stroke-linecap="round" stroke-linejoin="round">
-            <path opacity="0.55" stroke-width="2.4" d="M500,261 L500,224" />
-            <path opacity="0.6" stroke-width="1.6" d="M488,224 Q500,215 512,224" />
-            <path opacity="0.6" stroke-width="1.4" d="M488,224 L512,224" />
-            <path opacity="0.6" stroke-width="1.6" d="M491,218 Q500,215 509,218" />
-            <path opacity="0.6" stroke-width="1.4" d="M491,218 L509,218" />
-            <circle opacity="0.5" stroke-width="1.2" cx="500" cy="213" r="1.6" fill="#f4fbfa" />
-          </g>
-          <circle opacity="0.4" cx="500" cy="224" r="2" fill="#f4fbfa" />
-          </g>
-        </svg>
-
-        <svg class="wave" viewBox="0 0 1440 60" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-          <path fill="#fbf9f4" d="M0,32L80,29C160,26,320,20,480,22C640,24,800,34,960,36C1120,38,1280,32,1360,29L1440,26L1440,60L0,60Z" />
-        </svg>
       </section>
 
-      <section class="block wrap">
-        <div class="kicker">How it works</div>
+      <section class="block wrap" style="padding-bottom: 0;">
+        <p class="intro" style="font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;">Great walls, working boats, and the people who bring them to life. A port tells many stories. Here, we share them.</p>
         <h2>Photos uploaded by the people who were there</h2>
-        <div class="log">
-          <div class="log-entry">
-            <svg class="log-num" viewBox="-6 -6 52 52" fill="none" stroke="currentColor" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="20" cy="20" r="24" stroke-width="1" opacity="0.6" />
-              <circle cx="20" cy="20" r="18" stroke-width="1.2" />
-              <text x="20" y="-1" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Β</text>
-              <text x="41" y="20" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Α</text>
-              <text x="20" y="41" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Ν</text>
-              <text x="-1" y="20" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Δ</text>
-              {Array.from({ length: 28 }).map((_, i) => {
-                const angle = (i / 28) * Math.PI * 2;
-                return (
-                  <circle
-                    cx={20 + 19.2 * Math.cos(angle)}
-                    cy={20 + 19.2 * Math.sin(angle)}
-                    r="0.7"
-                    fill="currentColor"
-                    stroke="none"
-                    opacity="0.6"
-                  />
-                );
-              })}
-              <polygon points="20,6 24,20 16,20" fill="currentColor" stroke="none" />
-              <polygon points="20,34 24,20 16,20" fill="none" stroke-width="1.1" />
-              <circle cx="20" cy="20" r="1.6" fill="currentColor" stroke="none" />
-            </svg>
-            <div>
-              <h3>The best shot wins the page</h3>
-              <p>For each marina or port, the photo with the most votes from the community becomes the one everyone sees first, together with the memory, the moment, and the story behind it.</p>
-            </div>
-          </div>
-        </div>
-        <p class="how-note">
-          We encourage high-quality photos, but older photos with a meaningful or touching story are more
-          than welcome too. Sometimes the story matters as much as the image.
-        </p>
       </section>
 
-      <section class="block wrap">
+      <section class="block wrap" style="padding-top: 32px;">
         <div class="kicker">Get started</div>
         <h2>Your voyage, from dock to dock</h2>
         <div class="trail">
@@ -429,6 +316,45 @@ export function HomePage() {
             </p>
           </div>
         </div>
+      </section>
+
+      <section class="block wrap">
+        <div class="log">
+          <div class="log-entry">
+            <svg class="log-num" viewBox="-6 -6 52 52" fill="none" stroke="currentColor" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="20" r="24" stroke-width="1" opacity="0.6" />
+              <circle cx="20" cy="20" r="18" stroke-width="1.2" />
+              <text x="20" y="-1" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Β</text>
+              <text x="41" y="20" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Α</text>
+              <text x="20" y="41" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Ν</text>
+              <text x="-1" y="20" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Δ</text>
+              {Array.from({ length: 28 }).map((_, i) => {
+                const angle = (i / 28) * Math.PI * 2;
+                return (
+                  <circle
+                    cx={20 + 19.2 * Math.cos(angle)}
+                    cy={20 + 19.2 * Math.sin(angle)}
+                    r="0.7"
+                    fill="currentColor"
+                    stroke="none"
+                    opacity="0.6"
+                  />
+                );
+              })}
+              <polygon points="20,6 24,20 16,20" fill="currentColor" stroke="none" />
+              <polygon points="20,34 24,20 16,20" fill="none" stroke-width="1.1" />
+              <circle cx="20" cy="20" r="1.6" fill="currentColor" stroke="none" />
+            </svg>
+            <div>
+              <h3>The best shot wins the page</h3>
+              <p>For each marina or port, the photo with the most votes from the community becomes the one everyone sees first, together with the memory, the moment, and the story behind it.</p>
+            </div>
+          </div>
+        </div>
+        <p class="how-note">
+          We encourage high-quality photos, but older photos with a meaningful or touching story are more
+          than welcome too. Sometimes the story matters as much as the image.
+        </p>
       </section>
 
       <section class="block wrap" id="continents">

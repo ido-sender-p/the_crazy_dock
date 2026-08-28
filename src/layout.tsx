@@ -28,9 +28,17 @@ const GLOBAL_CSS = `
     border-bottom: 1px solid var(--border);
     background: var(--surface);
   }
+  header.site:has(~ .hero) {
+    position: absolute;
+    top: 0; left: 0; right: 0; z-index: 5;
+    background: transparent;
+    border-bottom: none;
+  }
   header.site .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 20px; }
   .logo { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.3rem; text-decoration: none; color: var(--ink); white-space: nowrap; }
   .logo span { color: var(--accent-dark); }
+  header.site:has(~ .hero) .logo { color: #fff; }
+  header.site:has(~ .hero) .logo span { color: var(--accent); }
   .header-actions { display: flex; align-items: center; gap: 10px; }
   .icon-btn {
     display: inline-flex; align-items: center; justify-content: center;
@@ -40,6 +48,10 @@ const GLOBAL_CSS = `
   }
   .icon-btn:hover { border-color: var(--accent); color: var(--accent-dark); }
   .icon-btn svg { width: 18px; height: 18px; }
+  header.site:has(~ .hero) .icon-btn {
+    background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.4); color: #fff;
+  }
+  header.site:has(~ .hero) .icon-btn:hover { border-color: #fff; color: #fff; }
   .btn-login {
     display: inline-flex; align-items: center; text-decoration: none;
     border: 1px solid var(--border); border-radius: 999px;
@@ -47,6 +59,8 @@ const GLOBAL_CSS = `
     white-space: nowrap; transition: border-color 0.15s ease, color 0.15s ease;
   }
   .btn-login:hover { border-color: var(--accent); color: var(--accent-dark); }
+  header.site:has(~ .hero) .btn-login { border-color: rgba(255,255,255,0.7); color: #fff; }
+  header.site:has(~ .hero) .btn-login:hover { border-color: #fff; }
 
   footer.site { border-top: 1px solid var(--border); margin-top: 80px; padding: 32px 0; color: var(--ink-soft); font-size: 0.85rem; }
   footer.site .wrap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
@@ -82,7 +96,7 @@ export const Layout: FC<
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
       <link
-        href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600&family=Cinzel:wght@600;700&family=GFS+Didot&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600&family=Cinzel:wght@600;700&family=GFS+Didot&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap"
         rel="stylesheet"
       />
       {jsonLd && <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>}
