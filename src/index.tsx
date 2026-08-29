@@ -1,9 +1,12 @@
 import { Hono } from "hono";
-import { docks, dockTypes, countries, continents, type Dock } from "./data";
+import { docks, dockTypes, countries, continents, slugify, type Dock } from "./data";
 import { HomePage } from "./pages/home";
 import { DockPage } from "./pages/dock";
 import { CategoryPage } from "./pages/category";
+import { ContinentPage } from "./pages/continent";
+import { CountryPage } from "./pages/country";
 import { MapPage } from "./pages/map";
+import { countriesByContinent, citiesByCountry, usStates, usStateSea } from "./continents";
 
 const app = new Hono();
 
@@ -34,24 +37,50 @@ app.get("/type/:slug", (c) => {
 app.get("/countries/:code", (c) => {
   const code = c.req.param("code") as (typeof countries)[number]["code"];
   const country = countries.find((cn) => cn.code === code);
-  if (!country) return c.notFound();
-  return c.html(
-    <CategoryPage
-      title={country.name}
-      intro={`Docks, piers and marinas documented in ${country.name}.`}
-      path={`/countries/${code}`}
-      matches={docks.filter((d) => d.countryCode === code)}
-    />,
-  );
+  if (country) {
+    return c.html(
+      <CategoryPage
+        title={country.name}
+        intro={`Docks, piers and marinas documented in ${country.name}.`}
+        path={`/countries/${code}`}
+        matches={docks.filter((d) => d.countryCode === code)}
+      />,
+    );
+  }
+
+  // Country cards on any continent page link here by slugified name.
+  for (const [continentSlug, names] of Object.entries(countriesByContinent)) {
+    const found = names.find((name) => slugify(name) === code);
+    if (!found) continue;
+    const continent = continents.find((ct) => ct.slug === continentSlug);
+    return c.html(
+      <CountryPage
+        name={found}
+        continentName={continent?.name ?? continentSlug}
+        continentSlug={continentSlug}
+        cities={citiesByCountry[found] ?? []}
+        states={
+          found === "United States"
+            ? usStates.flatMap((s) => (usStateSea[s] ?? []).map((e) => ({ name: s, sea: e.sea, family: e.family })))
+            : undefined
+        }
+        path={`/countries/${code}`}
+      />,
+    );
+  }
+
+  return c.notFound();
 });
 
 app.get("/continents/:slug", (c) => {
   const slug = c.req.param("slug");
   const continent = continents.find((ct) => ct.slug === slug);
   if (!continent) return c.notFound();
+
   return c.html(
-    <CategoryPage
-      title={continent.name}
+    <ContinentPage
+      name={continent.name}
+      slug={continent.slug}
       intro={`Docks, piers and marinas documented across ${continent.name}.`}
       path={`/continents/${slug}`}
       matches={docks.filter((d) => d.continentSlug === slug)}

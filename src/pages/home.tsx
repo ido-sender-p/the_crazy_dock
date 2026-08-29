@@ -2,6 +2,7 @@ import { Layout } from "../layout";
 import { docks, dockTypes, continents, dockCountForType } from "../data";
 import { buildMailto } from "../lib/contact";
 import { raw } from "hono/html";
+import { WORLD_MAP_VIEWBOX, CONTINENT_SHAPES } from "../continents";
 
 const PAGE_CSS = `
   .hero {
@@ -114,7 +115,7 @@ const PAGE_CSS = `
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='40' viewBox='0 0 20 40'%3E%3Cpath d='M10,0 C18,10 2,10 10,20 C18,30 2,30 10,40' fill='none' stroke='%23c9c2b0' stroke-width='2' stroke-dasharray='4 4' stroke-linecap='round'/%3E%3C/svg%3E");
     background-repeat: repeat-y; background-size: 20px 40px;
   }
-  .sailboat { position: relative; z-index: 2; width: 60px; margin: 0 auto; color: var(--accent-dark); background: var(--bg); }
+  .sailboat { position: relative; z-index: 2; width: 60px; margin: 0 auto; color: var(--accent-dark); background: #ffffff; }
   .sailboat svg { width: 100%; height: auto; display: block; }
   .trail-stop { position: relative; padding-bottom: 48px; }
   .trail-stop:last-child { padding-bottom: 0; }
@@ -122,11 +123,11 @@ const PAGE_CSS = `
     position: absolute; left: -46px; top: -4px; z-index: 1;
     width: 34px; height: 34px;
     display: flex; align-items: center; justify-content: center;
-    color: var(--accent-dark); background: var(--bg);
+    color: var(--accent-dark); background: #ffffff;
   }
   .dock-marker svg { width: 100%; height: 100%; }
-  .trail-stop h3 { position: relative; z-index: 2; font-family: 'Fraunces', serif; font-size: 1.1rem; margin: 0 0 6px; background: var(--bg); padding: 0 10px; display: inline-block; }
-  .trail-stop p { position: relative; z-index: 2; color: var(--ink-soft); font-size: 0.95rem; max-width: 56ch; margin: 0; background: var(--bg); padding: 2px 10px; }
+  .trail-stop h3 { position: relative; z-index: 2; font-family: 'Fraunces', serif; font-size: 1.1rem; margin: 0 0 6px; background: #ffffff; padding: 0 10px; display: inline-block; }
+  .trail-stop p { position: relative; z-index: 2; color: var(--ink-soft); font-size: 0.95rem; max-width: 56ch; margin: 0; background: #ffffff; padding: 2px 10px; }
   .footprints { position: absolute; left: -34px; bottom: 10px; width: 26px; height: 26px; opacity: 0.4; }
   .footprints ellipse { fill: var(--accent-dark); }
 
@@ -172,43 +173,6 @@ const HOME_MAP_JS = `
   }
 `;
 
-// Real coastline data (Natural Earth continents), simplified and projected onto one
-// shared 1000x460 canvas so every shape sits at its true relative position/size — this
-// renders as a loose world map rather than a grid of icons.
-const WORLD_MAP_VIEWBOX = "0 0 1000 460";
-const CONTINENT_SHAPES: Record<string, { d: string; cx: number; cy: number }> = {
-  europe: {
-    d: "M530.5,151.7 L507.8,140.4 L457,156.1 L506.4,106.2 L567.7,97.3 L543.2,95.4 L546.6,80.6 L523,109.9 L498.8,100.8 L534.3,70.6 L597.7,75.6 L572.2,77.1 L587.6,86.5 L667.9,75.5 L642.9,105.8 L654.6,122.7 L614.2,125.3 L617,149.4 L571.9,132.6 L546.1,162.8 L517.7,137.5 L530.5,151.7 Z",
-    cx: 562.5,
-    cy: 116.7,
-  },
-  asia: {
-    d: "M642.8,191.8 L617.1,180.6 L650.2,202.1 L604.6,228.9 L584.3,161.7 L556.3,152.9 L654.6,122.7 L676.6,61 L684.1,79.7 L773.4,47.6 L985,72 L920,122.5 L945,90.2 L860.2,111.2 L877.5,119.6 L843.6,166.2 L811.7,155.1 L816.8,193.6 L780.6,205.7 L776.4,240.2 L762,227.2 L773.8,260.5 L736.2,198.6 L699.5,241.7 L686.6,202.2 L642.8,191.8 Z",
-    cx: 770.7,
-    cy: 154.1,
-  },
-  africa: {
-    d: "M485.4,248.1 L460.5,251.5 L434.6,223.1 L439.1,198 L468.3,164.2 L510.9,160.2 L512.1,170.2 L536.3,179.9 L544,172.4 L578.8,177 L578.9,187 L573.6,181.8 L602,232.2 L626.3,231.3 L617.2,251.6 L592.7,277.2 L597.3,305.3 L579.9,318.9 L582.3,331.6 L561.2,356.3 L539.2,361.3 L516.3,314.4 L522.1,294.8 L520.2,280.5 L507.7,266 L510.6,253.5 L494.1,245.8 L485.4,248.1 Z",
-    cx: 530.5,
-    cy: 260.8,
-  },
-  "north-america": {
-    d: "M311.6,106.7 L328.3,119.1 L285.5,129.3 L313.6,138.1 L268.7,155.8 L259.5,194.1 L243.1,179.3 L211.1,187.7 L216.5,212 L241.5,204.5 L258.2,244.1 L191,210.4 L163,175.2 L171.2,195.3 L110.7,101.2 L66.5,92.9 L28.3,111.5 L46.6,99.4 L15,81.3 L47.1,65.4 L216.7,78.6 L220.1,63.6 L256.8,71.5 L219.3,98.1 L257.8,122 L267.5,89.9 L311.6,106.7 Z",
-    cx: 171.7,
-    cy: 153.9,
-  },
-  "south-america": {
-    d: "M372.9,315.3 L366.3,328.1 L347.7,335.1 L332.6,360.8 L321.3,354.6 L325.5,367.1 L302,378 L306.3,383 L295.2,392.4 L300.2,397.9 L292.9,410 L279.2,412.4 L272.5,394.4 L281.1,388.1 L288.1,319.9 L257.3,281.2 L267.9,240.1 L283.8,229.5 L283.9,239 L288.4,230.2 L311.1,234.3 L324,248.9 L340.6,252.7 L344.4,261 L336.6,268.7 L351.7,265.9 L384.6,278.6 L372.9,315.3 Z",
-    cx: 321,
-    cy: 321,
-  },
-  oceania: {
-    d: "M905.7,331.2 L910.3,336.5 L909.6,351.6 L901.3,368.8 L891.4,373.3 L887.3,369.7 L883.4,372.5 L875,370.1 L868.2,359.3 L864.8,362.6 L867.3,354.9 L862.3,361.8 L857.3,354.7 L848.9,351.9 L806.6,361.2 L798.9,337.3 L801.7,337.5 L801.2,325.1 L820.7,318.8 L834.6,303 L844.9,306.5 L847.3,298.8 L853.3,298 L851.2,295.2 L864,297.5 L860.9,305.8 L873.9,313.6 L880.8,294.2 L891,316.9 L905.7,331.2 Z",
-    cx: 854.6,
-    cy: 333.8,
-  },
-};
-
 export function HomePage() {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -239,12 +203,14 @@ export function HomePage() {
         </div>
       </section>
 
+      <div style="background: #ffffff;">
       <section class="block wrap" style="padding-bottom: 0;">
-        <p class="intro" style="font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;">Great walls, working boats, and the people who bring them to life. A port tells many stories. Here, we share them.</p>
-        <h2>Photos uploaded by the people who were there</h2>
+        <p class="intro" style="font-family: 'Fraunces', Georgia, serif; font-style: italic; font-size: 1.8rem; color: var(--ink); line-height: 1.3;">"Great walls, working boats, market stalls, and the people who bring them to life.<br />Docks tells many stories."</p>
+        <hr style="border: none; border-top: 1px solid var(--border); max-width: 620px; margin: 40px auto;" />
+        <h2>The Photos uploaded by the people who were there</h2>
       </section>
 
-      <section class="block wrap" style="padding-top: 32px;">
+      <section class="block wrap" style="padding-top: 10px;">
         <div class="kicker">Get started</div>
         <h2>Your voyage, from dock to dock</h2>
         <div class="trail">
@@ -317,6 +283,7 @@ export function HomePage() {
           </div>
         </div>
       </section>
+      </div>
 
       <section class="block wrap">
         <div class="log">

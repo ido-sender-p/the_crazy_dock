@@ -5,7 +5,7 @@ const GLOBAL_CSS = `
   :root {
     --ink: #0b2545;
     --ink-soft: #45607a;
-    --bg: #fbf9f4;
+    --bg: #ffffff;
     --surface: #ffffff;
     --accent: #2ec4b6;
     --accent-dark: #17a094;
