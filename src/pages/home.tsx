@@ -18,15 +18,25 @@ const PAGE_CSS = `
   }
   .hero .wrap { position: relative; z-index: 1; max-width: 1080px; padding-top: 60px; padding-bottom: 60px; text-align: left; }
   .hero h1 {
-    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
-    font-weight: 800;
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
     font-size: clamp(2.2rem, 5.2vw, 3.9rem);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
     line-height: 1.15;
     margin: 0;
     max-width: none;
     color: #fff;
     text-shadow: 0 2px 24px rgba(0,0,0,0.45);
+  }
+  .hero p.tagline {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 400;
+    font-size: clamp(1rem, 1.6vw, 1.2rem);
+    line-height: 1.5;
+    margin: 18px 0 0;
+    max-width: 620px;
+    color: #eef4f8;
+    text-shadow: 0 1px 12px rgba(0,0,0,0.35);
   }
 
   section.block { padding: 64px 0; }
@@ -200,6 +210,7 @@ export function HomePage() {
       <section class="hero">
         <div class="wrap">
           <h1>From the whispering seas to the legends of the lakes</h1>
+          <p class="tagline">Wildock is on a mission to map every dock in the world — and give people a place to share their stories about them.</p>
         </div>
       </section>
 
