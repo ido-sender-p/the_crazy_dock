@@ -2,7 +2,7 @@ import { docks, type Dock } from "../data";
 
 // Published (review_status = 'published') user submissions, read live from D1
 // and merged into the same listing pages that render the static `docks`
-// array — so approving a submission makes it appear immediately, no deploy.
+// array, so approving a submission makes it appear immediately, no deploy.
 
 type DockRow = {
   slug: string;
@@ -22,6 +22,7 @@ type DockRow = {
   description: string | null;
   image_url: string | null;
   image_attribution: string | null;
+  image_orientation: string | null;
   length_m: number | null;
   year_built: number | null;
 };
@@ -45,6 +46,7 @@ function toDock(r: DockRow): Dock {
     description: r.description ?? "",
     imageUrl: r.image_url ?? "",
     imageAttribution: r.image_attribution ?? "",
+    imageOrientation: r.image_orientation === "portrait" ? "portrait" : "landscape",
     lengthM: r.length_m ?? 0,
     yearBuilt: r.year_built,
   };
@@ -52,7 +54,7 @@ function toDock(r: DockRow): Dock {
 
 const SELECT = `SELECT slug, name, dock_type, continent, continent_slug, country, country_code,
   state_province, state_province_slug, settlement, settlement_type, settlement_slug,
-  lat, lon, description, image_url, image_attribution, length_m, year_built
+  lat, lon, description, image_url, image_attribution, image_orientation, length_m, year_built
   FROM docks WHERE source = 'user_submission' AND review_status = 'published'`;
 
 export async function findPublishedDockBySlug(db: D1Database, slug: string): Promise<Dock | null> {
@@ -60,7 +62,7 @@ export async function findPublishedDockBySlug(db: D1Database, slug: string): Pro
   return row ? toDock(row) : null;
 }
 
-// Checks the static catalogue first, then falls back to D1 — the same
+// Checks the static catalogue first, then falls back to D1, the same
 // two-source lookup every dock-detail route already does, pulled out so
 // features that just need "the dock for this slug" (favorites, etc.) don't
 // each reimplement it.

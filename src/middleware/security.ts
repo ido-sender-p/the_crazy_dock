@@ -8,7 +8,7 @@ import { secureHeaders } from "hono/secure-headers";
 // style-src/script-src still need 'unsafe-inline': the whole site is built
 // on inline <style>/<script> tags per page (no per-request nonce plumbing
 // exists), so this CSP's job is narrowing *which hosts* can load, not
-// eliminating inline code — that would need a larger templating change.
+// eliminating inline code, which would need a larger templating change.
 export const securityHeaders = secureHeaders({
   contentSecurityPolicy: {
     defaultSrc: ["'self'"],

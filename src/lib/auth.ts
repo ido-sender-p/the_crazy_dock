@@ -46,7 +46,7 @@ export function newSessionToken(): string {
 
 // A syntactically valid but unreachable hash, same iteration count as a
 // real one. Verifying against this when an email doesn't exist keeps login
-// response time the same either way — otherwise "wrong password" (runs a
+// response time the same either way. Otherwise "wrong password" (runs a
 // full PBKDF2 derivation) is measurably slower than "no such account"
 // (returns immediately), letting an attacker enumerate registered emails.
 export const DUMMY_PASSWORD_HASH = `pbkdf2$${PBKDF2_ITERATIONS}$${"00".repeat(16)}$${"00".repeat(32)}`;

@@ -13,7 +13,7 @@ export function slugify(s: string) {
 
 // Listing pages merge the hardcoded `docks` array with live D1 rows, and a
 // dock can legitimately exist in both (e.g. seeded into D1 so it shows on a
-// user's own profile, while also living in the static catalogue) — dedupe
+// user's own profile, while also living in the static catalogue), so dedupe
 // by slug so it never renders twice on the same page. First occurrence wins.
 export function dedupeDocksBySlug<T extends { slug: string }>(items: T[]): T[] {
   const seen = new Set<string>();
@@ -47,6 +47,11 @@ export type Dock = {
   description: string;
   imageUrl: string;
   imageAttribution: string;
+  // Drives which dock-page layout renders: a phone-shot portrait photo gets
+  // the side-by-side "featured card" treatment (photo next to the story),
+  // a landscape one gets the photo-above-text layout. Unknown/undetected
+  // falls back to landscape.
+  imageOrientation: "portrait" | "landscape";
   lengthM: number;
   yearBuilt: number | null;
 };
@@ -68,9 +73,10 @@ export const docks: Dock[] = [
     lat: 40.5457,
     lon: 14.2264,
     description:
-      "Marina Piccola is the small bay on Capri's southern shore, tucked beneath the cliffs with the Faraglioni sea stacks rising just offshore. On November 4, 2025, the harbour was crowded with people, but I was walking it alone. My partner was in another country at the time. Unable to find a quiet corner to talk, I found this spot and had a long conversation with her from here.",
+      "Marina Piccola is the small bay on Capri's southern shore, tucked beneath the cliffs where the Faraglioni sea stacks rise straight out of the water just offshore. I walked it alone on November 4, 2025, the harbour packed with tourists chasing the same view. My partner was a country away that day, so I kept weaving through the crowd until I found one quiet corner between the boats, sat down, and called her. We talked for a long time, her voice carrying across the distance while the sea stacks just sat there, unbothered, like they'd seen this before.",
     imageUrl: "/uploads/marina-piccola-capri-cover",
     imageAttribution: "Photo by Ido Sender",
+    imageOrientation: "portrait",
     lengthM: 80,
     yearBuilt: null,
   },

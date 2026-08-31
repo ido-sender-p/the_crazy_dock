@@ -20,7 +20,7 @@ type DockRow = {
 };
 
 // Searches both sources of truth for docks: the hardcoded data.ts entries
-// and published user submissions in D1 — the same split every other
+// and published user submissions in D1, the same split every other
 // dock-listing feature (favorites, liveDocks) already has to handle.
 export async function searchDocks(db: D1Database | undefined, query: string): Promise<DockRow[]> {
   const needle = query.trim().toLowerCase();
@@ -54,7 +54,7 @@ export async function searchDocks(db: D1Database | undefined, query: string): Pr
 export type LocationSearchResult = { kind: "continent" | "country" | "city"; label: string; sublabel: string; href: string };
 
 // Pure in-memory search over the illustrative browse hierarchy (continents,
-// countries, cities) — no DB round trip needed, unlike users/docks. These
+// countries, cities), no DB round trip needed, unlike users/docks. These
 // pages are deliberately left out of sitemap.xml (thin/no real dock content
 // yet), but they're still real, navigable pages worth surfacing in search.
 export function searchLocations(query: string): LocationSearchResult[] {

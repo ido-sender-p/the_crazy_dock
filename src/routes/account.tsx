@@ -18,7 +18,7 @@ account.get("/profile/edit", async (c) => {
   return c.html(<EditProfilePage user={user} hasPassword={hasPassword(user)} path="/profile/edit" />);
 });
 
-// Old standalone change-password page — folded into /profile/edit.
+// Old standalone change-password page, folded into /profile/edit.
 account.get("/profile/password", (c) => c.redirect("/profile/edit"));
 
 account.post("/profile/edit", async (c) => {
@@ -58,7 +58,7 @@ account.post("/profile/edit", async (c) => {
     avatarUrl = `/uploads/${key}`;
   }
 
-  // Password change is optional — only touched when a new password was typed.
+  // Password change is optional, only touched when a new password was typed.
   const newPassword = String(form.get("newPassword") ?? "");
   const confirmPassword = String(form.get("confirmPassword") ?? "");
   if (newPassword || confirmPassword) {

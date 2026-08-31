@@ -5,7 +5,7 @@ import { findUserBySession } from "./db";
 
 export const SESSION_COOKIE = "session";
 
-// Mirrors SESSION_COOKIE's presence but isn't httpOnly — it carries no
+// Mirrors SESSION_COOKIE's presence but isn't httpOnly. It carries no
 // authority of its own (just "1" or absent), so the header's inline script
 // can read it client-side to swap "Log in" for "Profile" without needing
 // every page route to fetch currentUser() and thread it through Layout.

@@ -8,11 +8,52 @@ const GALLERY_PREVIEW_LIMIT = 6;
 
 const PAGE_CSS = `
   .dock-page { padding: 40px 0 80px; }
-  .dock-page img.hero-img {
-    width: 100%; max-height: 620px; object-fit: contain; border-radius: 14px;
-    background: var(--surface); border: 1px solid var(--border);
+  .dock-page figure { margin: 0; text-align: center; }
+  .dock-page .hero-frame {
+    display: inline-flex; max-width: 100%; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+    padding: 0; cursor: pointer; transition: opacity 0.15s ease;
   }
+  .dock-page .hero-frame:hover { opacity: 0.9; }
+  .dock-page img.hero-img {
+    display: block; width: auto; height: auto; max-width: 100%; max-height: 620px;
+  }
+
+  .hero-lightbox {
+    position: fixed; inset: 0; z-index: 50; background: rgba(6,14,26,0.92);
+    display: none; align-items: center; justify-content: center; padding: 40px 20px; cursor: zoom-out;
+  }
+  .hero-lightbox.open { display: flex; }
+  .hero-lightbox img { max-width: 100%; max-height: 90vh; border-radius: 10px; display: block; }
+  .hero-lightbox .lb-close {
+    position: fixed; top: 20px; right: 20px; border: none; background: rgba(255,255,255,0.12); color: #fff;
+    border-radius: 50%; width: 44px; height: 44px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; transition: background 0.15s ease;
+  }
+  .hero-lightbox .lb-close:hover { background: rgba(255,255,255,0.24); }
+  .hero-lightbox .lb-close svg { width: 20px; height: 20px; }
   .dock-page figcaption { font-size: 0.75rem; color: var(--ink-soft); margin-top: 6px; }
+
+  .no-photo-yet {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+    border: 1.5px dashed var(--border); border-radius: 14px; padding: 48px 16px;
+    text-align: center; color: var(--ink-soft); margin: 24px 0 32px;
+  }
+
+  .hero-split {
+    display: grid; grid-template-columns: 1fr 1fr; align-items: stretch;
+    border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin: 24px 0 32px;
+  }
+  .hero-frame-split { border: none; padding: 0; margin: 0; cursor: pointer; display: block; background: none; }
+  .hero-img-split { width: 100%; height: 100%; min-height: 320px; object-fit: cover; display: block; transition: opacity 0.15s ease; }
+  .hero-frame-split:hover .hero-img-split { opacity: 0.9; }
+  .hero-split-text { padding: 32px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
+  .hero-split-text .desc { margin: 0; }
+  .hero-split-text .hero-credit { font-size: 0.75rem; color: var(--ink-soft); }
+  @media (max-width: 700px) {
+    .hero-split { grid-template-columns: 1fr; }
+    .hero-img-split { min-height: 240px; }
+  }
   .dock-page h1 { font-size: 2.1rem; margin-top: 4px; }
   .dock-page .meta { color: var(--ink-soft); margin-bottom: 24px; }
   .dock-page .title-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
@@ -32,7 +73,11 @@ const PAGE_CSS = `
   }
   .facts dt { font-weight: 600; color: var(--ink-soft); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
   .facts dd { margin: 4px 0 0; font-size: 1.05rem; }
-  .dock-page p.desc { font-size: 1.05rem; max-width: 68ch; }
+  .dock-page p.desc {
+    font-family: 'Fraunces', Georgia, serif; font-size: 1.15rem; line-height: 1.7;
+    max-width: 66ch; color: var(--ink); border-left: 3px solid var(--accent);
+    padding: 4px 0 4px 22px; margin: 32px 0;
+  }
 
   .gallery-section { margin: 36px 0; }
   .gallery-section h2 { font-size: 1.2rem; margin: 0 0 16px; }
@@ -68,7 +113,8 @@ const PAGE_CSS = `
   .gallery-lightbox.open { display: flex; }
   .gallery-lightbox figure { margin: 0; max-width: 900px; width: 100%; text-align: center; }
   .gallery-lightbox img { max-width: 100%; max-height: 72vh; border-radius: 10px; display: block; margin: 0 auto; }
-  .gallery-lightbox figcaption { color: #eef4f8; margin-top: 14px; font-size: 0.95rem; }
+  .gallery-lightbox h3#lb-title { color: #fff; font-family: 'Fraunces', serif; font-size: 1.15rem; margin: 16px 0 0; }
+  .gallery-lightbox figcaption { color: #cddbe7; margin-top: 6px; font-size: 0.92rem; line-height: 1.5; }
   .gallery-lightbox .lb-close, .gallery-lightbox .lb-prev, .gallery-lightbox .lb-next {
     position: fixed; border: none; background: rgba(255,255,255,0.12); color: #fff;
     border-radius: 50%; width: 44px; height: 44px; cursor: pointer; display: flex;
@@ -137,6 +183,7 @@ function galleryScript(photos: (DockPhoto & { yourRating: number | null; isTop: 
       var box = document.getElementById('gallery-lightbox');
       var img = document.getElementById('lb-img');
       var caption = document.getElementById('lb-caption');
+      var titleEl = document.getElementById('lb-title');
       var leaderTag = document.getElementById('lb-leader');
       var feedback = document.getElementById('lb-feedback');
       var ratingButtons = document.querySelectorAll('.rating-row button');
@@ -208,6 +255,8 @@ function galleryScript(photos: (DockPhoto & { yourRating: number | null; isTop: 
       function show(i) {
         index = (i + photos.length) % photos.length;
         img.src = photos[index].image_url;
+        img.alt = photos[index].title;
+        if (titleEl) titleEl.textContent = photos[index].title;
         caption.textContent = photos[index].caption;
         updateRatingUI();
         loadComments();
@@ -311,11 +360,32 @@ export function DockPage(
           </form>
         </div>
         <p class="meta">{d.settlement}, {d.stateProvince}, {d.country} · {d.dockType.replace("_", " ")}</p>
-        <figure>
-          <img class="hero-img" src={d.imageUrl} alt={d.name} />
-          <figcaption>{d.imageAttribution}</figcaption>
-        </figure>
-        <p class="desc">{d.description}</p>
+        {!d.imageUrl ? (
+          <div class="no-photo-yet">
+            <p>No photo yet. Be the first to add one.</p>
+            <a class="btn-cta" href={`/docks/${d.slug}/add-photo`}>Submit a photo</a>
+          </div>
+        ) : d.imageOrientation === "portrait" ? (
+          <div class="hero-split">
+            <button class="hero-frame-split" type="button" id="hero-open" aria-label={`View larger photo of ${d.name}`}>
+              <img class="hero-img-split" src={d.imageUrl} alt={d.name} />
+            </button>
+            <div class="hero-split-text">
+              {d.description && <p class="desc">{d.description}</p>}
+              <span class="hero-credit">{d.imageAttribution}</span>
+            </div>
+          </div>
+        ) : (
+          <>
+            <figure>
+              <button class="hero-frame" type="button" id="hero-open" aria-label={`View larger photo of ${d.name}`}>
+                <img class="hero-img" src={d.imageUrl} alt={d.name} />
+              </button>
+              <figcaption>{d.imageAttribution}</figcaption>
+            </figure>
+            {d.description && <p class="desc">{d.description}</p>}
+          </>
+        )}
         <dl class="facts">
           <div><dt>Type</dt><dd>{d.dockType.replace("_", " ")}</dd></div>
           <div><dt>Length</dt><dd>{d.lengthM} m</dd></div>
@@ -331,7 +401,7 @@ export function DockPage(
                 const remaining = photos.length - GALLERY_PREVIEW_LIMIT;
                 return (
                   <button class="gallery-tile" data-index={i} type="button">
-                    <img src={p.image_url} alt={p.caption} loading="lazy" />
+                    <img src={p.image_url} alt={p.title} loading="lazy" />
                     {isLastTile && remaining > 0 ? (
                       <span class="more-overlay">+{remaining} more</span>
                     ) : (
@@ -342,7 +412,7 @@ export function DockPage(
                             #1
                           </span>
                         )}
-                        <span class="caption">{p.caption}</span>
+                        <span class="caption">{p.title}</span>
                       </>
                     )}
                   </button>
@@ -361,6 +431,29 @@ export function DockPage(
         </div>
       </div>
 
+      <div class="hero-lightbox" id="hero-lightbox">
+        <button class="lb-close" id="hero-close" type="button" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+        <img src={d.imageUrl} alt={d.name} />
+      </div>
+      <script>{raw(`
+        (function () {
+          var openBtn = document.getElementById('hero-open');
+          var box = document.getElementById('hero-lightbox');
+          var closeBtn = document.getElementById('hero-close');
+          if (!openBtn || !box || !closeBtn) return;
+          function open() { box.classList.add('open'); }
+          function close() { box.classList.remove('open'); }
+          openBtn.addEventListener('click', open);
+          closeBtn.addEventListener('click', close);
+          box.addEventListener('click', function (e) { if (e.target === box) close(); });
+          document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && box.classList.contains('open')) close();
+          });
+        })();
+      `)}</script>
+
       {photos.length > 0 && (
         <div class="gallery-lightbox" id="gallery-lightbox">
           <button class="lb-close" id="lb-close" type="button" aria-label="Close">
@@ -374,6 +467,7 @@ export function DockPage(
           </button>
           <figure>
             <img id="lb-img" src="" alt="" />
+            <h3 id="lb-title"></h3>
             <figcaption id="lb-caption"></figcaption>
             <div class="lb-vote">
               <span class="leader-tag" id="lb-leader">

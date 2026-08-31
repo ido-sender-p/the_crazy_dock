@@ -372,10 +372,6 @@ export function HomePage() {
       <section class="block wrap">
         <div class="submit-cta">
           <h2>Know a dock, pier or marina we're missing?</h2>
-          <p>
-            Built for photographers and sailors. Send us a photo of the place and we'll add it to
-            the catalogue. Credit guaranteed 📸
-          </p>
           <a class="btn-cta" href="/submit">Submit a dock</a>
         </div>
       </section>

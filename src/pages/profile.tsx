@@ -158,8 +158,8 @@ export function ProfilePage(opts: {
             <div class="rating-history-list">
               {opts.ratingHistory.map((r) => (
                 <a class="rating-history-row" href={`/docks/${r.dock_slug}`}>
-                  <img src={r.image_url} alt={r.caption} />
-                  <div class="caption">{r.caption || r.dock_slug}</div>
+                  <img src={r.image_url} alt={r.title} />
+                  <div class="caption">{r.title || r.dock_slug}</div>
                   <span class="your-rating">Your rating: {r.rating}/10</span>
                 </a>
               ))}

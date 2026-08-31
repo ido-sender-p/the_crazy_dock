@@ -53,13 +53,18 @@ export function AddPhotoPage(opts: {
       <style>{raw(PAGE_CSS)}</style>
       <div class="wrap add-photo-page">
         <h1>Add a photo of {opts.dockName}</h1>
-        <p class="intro">Send a photo and a short line about it. We'll review it before it joins the gallery.</p>
+        <p class="intro">Name your photo, upload it, and tell its story. We'll review it before it joins the gallery.</p>
 
         {opts.success ? (
           <div class="success">Thanks! Your photo is in for review.</div>
         ) : (
           <form method="post" action={`/docks/${opts.dockSlug}/add-photo`} enctype="multipart/form-data">
             {opts.error && <div class="error">{opts.error}</div>}
+            <div>
+              <label for="title">Picture name</label>
+              <input id="title" name="title" type="text" maxlength={60} required />
+              <p class="hint">A short name. This is what shows under the photo in the gallery.</p>
+            </div>
             <div>
               <label for="photo">Photo</label>
               <input class="photo-input" id="photo" name="photo" type="file" accept="image/*" required />
@@ -73,9 +78,9 @@ export function AddPhotoPage(opts: {
               </label>
             </div>
             <div>
-              <label for="caption">Caption</label>
-              <textarea id="caption" name="caption" maxlength={140} required />
-              <p class="hint">One short line — this is what shows under the photo in the gallery.</p>
+              <label for="caption">Story</label>
+              <textarea id="caption" name="caption" maxlength={1000} required />
+              <p class="hint">What's the story behind this shot? This shows when someone opens the photo.</p>
             </div>
             <button class="btn-cta" type="submit">
               Submit for review

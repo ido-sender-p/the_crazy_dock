@@ -5,7 +5,8 @@
 export type DockPhoto = {
   id: number;
   image_url: string;
-  caption: string;
+  title: string; // short name, shown on the gallery tile
+  caption: string; // the longer story, shown in the lightbox
   votes: number; // number of people who've rated it
   avg_rating: number; // 0 when unrated, otherwise the 1-10 average
 };
@@ -17,14 +18,14 @@ export type PendingDockPhoto = DockPhoto & {
   created_at: string;
 };
 
-// Randomized on every call — freshly shuffled each time the gallery is
+// Randomized on every call, freshly shuffled each time the gallery is
 // opened, so exposure doesn't favor whichever photo happened to be
 // uploaded first. Ranking still exists (avg_rating), it's just not used to
 // order the display; the page marks only the current #1, nothing else.
 export async function findPublishedPhotosForDock(db: D1Database, dockSlug: string): Promise<DockPhoto[]> {
   const result = await db
     .prepare(
-      `SELECT id, image_url, caption, votes, avg_rating FROM dock_photos
+      `SELECT id, image_url, title, caption, votes, avg_rating FROM dock_photos
        WHERE dock_slug = ? AND review_status = 'published'
        ORDER BY RANDOM()`,
     )
@@ -50,19 +51,20 @@ export type RatingHistoryEntry = {
   photo_id: number;
   dock_slug: string;
   image_url: string;
+  title: string;
   caption: string;
   rating: number;
   rated_at: string;
 };
 
-// This is the user's own private history of what they rated — showing it
+// This is the user's own private history of what they rated. Showing it
 // back to them isn't the same as exposing scores publicly (see the gallery,
 // where votes/averages stay hidden from everyone).
 export async function findRatingHistoryForUser(db: D1Database, userId: number): Promise<RatingHistoryEntry[]> {
   const result = await db
     .prepare(
       `SELECT photo_votes.photo_id, photo_votes.rating, photo_votes.created_at AS rated_at,
-              dock_photos.dock_slug, dock_photos.image_url, dock_photos.caption
+              dock_photos.dock_slug, dock_photos.image_url, dock_photos.title, dock_photos.caption
        FROM photo_votes JOIN dock_photos ON dock_photos.id = photo_votes.photo_id
        WHERE photo_votes.user_id = ?
        ORDER BY photo_votes.created_at DESC`,
@@ -76,7 +78,7 @@ export type RateResult = { ok: true; votes: number; avgRating: number } | { ok: 
 
 // Re-rating is allowed and just replaces the user's previous score for this
 // photo (upsert), then the denormalized count/average are recomputed from
-// photo_votes — the single source of truth — rather than incrementally
+// photo_votes, the single source of truth, rather than incrementally
 // adjusted, so they can never drift out of sync.
 export async function ratePhoto(db: D1Database, photoId: number, userId: number, rating: number): Promise<RateResult> {
   if (!Number.isInteger(rating) || rating < 1 || rating > 10) return { ok: false, reason: "invalid_rating" };
@@ -108,7 +110,7 @@ export async function ratePhoto(db: D1Database, photoId: number, userId: number,
 export async function findPendingPhotos(db: D1Database): Promise<PendingDockPhoto[]> {
   const result = await db
     .prepare(
-      `SELECT dock_photos.id, dock_photos.dock_slug, dock_photos.image_url, dock_photos.caption,
+      `SELECT dock_photos.id, dock_photos.dock_slug, dock_photos.image_url, dock_photos.title, dock_photos.caption,
               dock_photos.votes, dock_photos.avg_rating,
               dock_photos.submitted_by, dock_photos.created_at, users.username AS submitted_by_username
        FROM dock_photos JOIN users ON users.id = dock_photos.submitted_by
@@ -123,21 +125,49 @@ export type NewDockPhoto = {
   dockSlug: string;
   submittedBy: number;
   imageUrl: string;
+  title: string;
   caption: string;
+  imageOrientation: "portrait" | "landscape";
 };
 
 export function insertDockPhoto(db: D1Database, photo: NewDockPhoto) {
   return db
     .prepare(
-      `INSERT INTO dock_photos (dock_slug, submitted_by, image_url, caption, review_status)
-       VALUES (?, ?, ?, ?, 'pending')`,
+      `INSERT INTO dock_photos (dock_slug, submitted_by, image_url, title, caption, image_orientation, review_status)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending')`,
     )
-    .bind(photo.dockSlug, photo.submittedBy, photo.imageUrl, photo.caption)
+    .bind(photo.dockSlug, photo.submittedBy, photo.imageUrl, photo.title, photo.caption, photo.imageOrientation)
     .run();
 }
 
-export function approveDockPhoto(db: D1Database, id: number) {
-  return db.prepare(`UPDATE dock_photos SET review_status = 'published' WHERE id = ?`).bind(id).run();
+// A dock submitted through /submit has no photo or story of its own (that
+// form only collects the location). The first gallery photo approved for
+// it becomes its cover, so the dock's own page isn't stuck blank forever.
+// Only promotes a D1 user_submission row with no cover yet; never touches
+// an already-set cover or the static data.ts entries.
+export async function approveDockPhoto(db: D1Database, id: number) {
+  const photo = await db
+    .prepare(
+      `SELECT dock_photos.dock_slug, dock_photos.image_url, dock_photos.caption, dock_photos.image_orientation,
+              users.username AS submitted_by_username
+       FROM dock_photos JOIN users ON users.id = dock_photos.submitted_by
+       WHERE dock_photos.id = ?`,
+    )
+    .bind(id)
+    .first<{ dock_slug: string; image_url: string; caption: string; image_orientation: string; submitted_by_username: string }>();
+
+  const updated = await db.prepare(`UPDATE dock_photos SET review_status = 'published' WHERE id = ?`).bind(id).run();
+  if (!photo) return updated;
+
+  await db
+    .prepare(
+      `UPDATE docks SET image_url = ?, image_attribution = ?, description = ?, image_orientation = ?
+       WHERE source = 'user_submission' AND slug = ? AND (image_url IS NULL OR image_url = '')`,
+    )
+    .bind(photo.image_url, `Photo by ${photo.submitted_by_username}`, photo.caption, photo.image_orientation, photo.dock_slug)
+    .run();
+
+  return updated;
 }
 
 export function rejectDockPhoto(db: D1Database, id: number) {

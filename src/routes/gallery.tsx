@@ -4,7 +4,7 @@ import { docks } from "../data";
 import { AddPhotoPage } from "../pages/addPhoto";
 import { currentUser, safeNextPath } from "../lib/session";
 import { insertDockPhoto, ratePhoto, findCommentsForPhoto, addComment } from "../lib/gallery";
-import { detectImageType, MAX_PHOTO_BYTES } from "../lib/imageValidation";
+import { detectImageType, detectImageOrientation, MAX_PHOTO_BYTES } from "../lib/imageValidation";
 import { findPublishedDockBySlug } from "../lib/liveDocks";
 
 export const gallery = new Hono<Env>();
@@ -50,8 +50,11 @@ gallery.post("/docks/:slug/add-photo", async (c) => {
   const detectedType = detectImageType(photoBytes);
   if (!detectedType) return rejectWith("That file doesn't look like a supported image (JPEG, PNG, GIF or WEBP).");
 
-  const caption = String(form.get("caption") ?? "").trim().slice(0, 140);
-  if (!caption) return rejectWith("Please add a short caption.");
+  const title = String(form.get("title") ?? "").trim().slice(0, 60);
+  if (!title) return rejectWith("Please name the photo.");
+
+  const caption = String(form.get("caption") ?? "").trim().slice(0, 1000);
+  if (!caption) return rejectWith("Please tell us the story behind it.");
 
   const photoKey = crypto.randomUUID();
   await c.env.PHOTOS.put(photoKey, photoBytes, { httpMetadata: { contentType: detectedType } });
@@ -60,7 +63,9 @@ gallery.post("/docks/:slug/add-photo", async (c) => {
     dockSlug: slug,
     submittedBy: user.id,
     imageUrl: `/uploads/${photoKey}`,
+    title,
     caption,
+    imageOrientation: detectImageOrientation(photoBytes, detectedType) ?? "landscape",
   });
 
   return c.html(<AddPhotoPage user={user} dockName={dockName} dockSlug={slug} path={`/docks/${slug}/add-photo`} success />);

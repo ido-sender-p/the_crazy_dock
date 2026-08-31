@@ -31,7 +31,7 @@ export function linkGoogleId(db: D1Database, userId: number, googleId: string) {
   return db.prepare("UPDATE users SET google_id = ? WHERE id = ?").bind(googleId, userId).run();
 }
 
-// No password of their own — 'oauth:google' can never match verifyPassword's
+// No password of their own. 'oauth:google' can never match verifyPassword's
 // "pbkdf2$..." format, so this account is only ever reachable via Google.
 export function createGoogleUser(db: D1Database, email: string, username: string, googleId: string) {
   return db
@@ -92,16 +92,16 @@ export type NewSubmission = {
   country: string;
   stateProvince: string;
   settlement: string;
-  description: string;
-  imageUrl: string;
-  imageAttribution: string;
 };
 
+// Photo and story are added later, via the "Submit a photo" flow on the
+// dock's own page once it's published, not required to submit the location
+// itself. description/image_url/image_attribution stay empty until then.
 export function insertSubmission(db: D1Database, submission: NewSubmission) {
   return db
     .prepare(
-      `INSERT INTO docks (source, submitted_by, name, dock_type, country, state_province, settlement, description, image_url, image_attribution, published)
-       VALUES ('user_submission', ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+      `INSERT INTO docks (source, submitted_by, name, dock_type, country, state_province, settlement, published)
+       VALUES ('user_submission', ?, ?, ?, ?, ?, ?, 0)`,
     )
     .bind(
       submission.submittedBy,
@@ -110,9 +110,6 @@ export function insertSubmission(db: D1Database, submission: NewSubmission) {
       submission.country,
       submission.stateProvince,
       submission.settlement,
-      submission.description,
-      submission.imageUrl,
-      submission.imageAttribution,
     )
     .run();
 }
@@ -143,7 +140,7 @@ export async function findSubmissionsByUser(db: D1Database, userId: number) {
 
 export type PublicSubmission = { slug: string; name: string; country: string; settlement: string; image_url: string | null };
 
-// Public view of what a user has added — published only, since a stranger
+// Public view of what a user has added: published only, since a stranger
 // shouldn't see someone else's pending/rejected submissions.
 export async function findPublishedSubmissionsByUser(db: D1Database, userId: number) {
   const result = await db

@@ -1,4 +1,4 @@
-// Private user-to-user messages — modeled as email (subject/body/read
+// Private user-to-user messages, modeled as email (subject/body/read
 // marker, inbox vs sent), not a live chat: no presence, no typing state,
 // no realtime delivery.
 
@@ -61,7 +61,7 @@ export async function countUnread(db: D1Database, userId: number): Promise<numbe
   return row?.n ?? 0;
 }
 
-// Only the sender or recipient may ever see a message — this is checked by
+// Only the sender or recipient may ever see a message. This is checked by
 // the caller (route) against currentUser before rendering the result.
 export function findMessageById(db: D1Database, id: number) {
   return db

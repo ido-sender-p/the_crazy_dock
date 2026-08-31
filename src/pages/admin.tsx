@@ -21,9 +21,14 @@ const PAGE_CSS = `
     margin-bottom: 14px;
   }
   .review-card img { width: 140px; height: 100px; object-fit: cover; border-radius: 10px; display: block; }
+  .review-card .no-photo {
+    width: 140px; height: 100px; border-radius: 10px; background: var(--bg);
+    border: 1px dashed var(--border); display: flex; align-items: center; justify-content: center;
+    color: var(--ink-soft); font-size: 0.78rem; text-align: center; padding: 8px;
+  }
   @media (max-width: 480px) {
     .review-card { grid-template-columns: 1fr; }
-    .review-card img { width: 100%; height: 180px; }
+    .review-card img, .review-card .no-photo { width: 100%; height: 180px; }
   }
   .review-card .name { font-weight: 600; font-size: 1.05rem; margin: 0 0 2px; }
   .review-card .place { color: var(--ink-soft); font-size: 0.85rem; margin: 0 0 8px; }
@@ -47,11 +52,13 @@ const PAGE_CSS = `
 function ReviewCard({ s, blocked }: { s: ReviewSubmission; blocked?: boolean }) {
   return (
     <div class="review-card">
-      <img src={s.image_url} alt={s.name} />
+      {s.image_url ? <img src={s.image_url} alt={s.name} /> : <div class="no-photo">No photo yet</div>}
       <div>
         <p class="name">{s.name}</p>
         <p class="place">{s.settlement}, {s.country} · {s.dock_type}</p>
-        <p class="desc">{s.description.slice(0, 160)}{s.description.length > 160 ? "…" : ""}</p>
+        <p class="desc">
+          {s.description ? `${s.description.slice(0, 160)}${s.description.length > 160 ? "…" : ""}` : "No description yet."}
+        </p>
         <p class="meta">Submitted by {s.submitted_by_username}</p>
         {blocked && s.block_reason && <p class="block-reason">Waiting for path creation: {s.block_reason}</p>}
         <div class="actions">
@@ -70,9 +77,10 @@ function ReviewCard({ s, blocked }: { s: ReviewSubmission; blocked?: boolean }) 
 function PhotoReviewCard({ p }: { p: PendingDockPhoto }) {
   return (
     <div class="review-card">
-      <img src={p.image_url} alt={p.caption} />
+      <img src={p.image_url} alt={p.title} />
       <div>
-        <p class="name">{p.caption}</p>
+        <p class="name">{p.title}</p>
+        <p class="place">{p.caption}</p>
         <p class="place">For dock: {p.dock_slug}</p>
         <p class="meta">Submitted by {p.submitted_by_username}</p>
         <div class="actions">
@@ -109,7 +117,7 @@ export function AdminPage(opts: {
           opts.pending.map((s) => <ReviewCard s={s} />)
         )}
 
-        <div class="kicker">Blocked — waiting for path creation</div>
+        <div class="kicker">Blocked, waiting for path creation</div>
         <h2>{opts.blocked.length} blocked</h2>
         {opts.blocked.length === 0 ? (
           <div class="empty">Nothing blocked.</div>

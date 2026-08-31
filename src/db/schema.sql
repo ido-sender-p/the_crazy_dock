@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS docks (
   description TEXT,                    -- unique per-page copy, required for publish
   image_url TEXT,
   image_attribution TEXT,
+  image_orientation TEXT NOT NULL DEFAULT 'landscape', -- portrait | landscape, detected from the uploaded photo
   length_m REAL,
   year_built INTEGER,
   source_tags TEXT,                    -- raw OSM tags as JSON, kept for re-enrichment
@@ -44,7 +45,7 @@ CREATE INDEX IF NOT EXISTS idx_docks_type ON docks (dock_type);
 CREATE INDEX IF NOT EXISTS idx_docks_published ON docks (published);
 
 -- Auth: gates the "submit a new marina" form behind a real account.
--- Google-only accounts get password_hash = 'oauth:google' — verifyPassword
+-- Google-only accounts get password_hash = 'oauth:google'. verifyPassword
 -- already rejects anything that doesn't parse as "pbkdf2$...", so that
 -- placeholder can never itself be used to log in via the password form.
 CREATE TABLE IF NOT EXISTS users (
@@ -83,7 +84,7 @@ CREATE INDEX IF NOT EXISTS idx_login_failures_email ON login_failures (email, at
 
 -- Extra community photos for a dock that already exists (the "Got a better
 -- photo?" box on the dock page), separate from the initial dock submission.
--- dock_slug is a plain string, not a foreign key — the dock it points at
+-- dock_slug is a plain string, not a foreign key. The dock it points at
 -- may be one of the hardcoded data.ts entries or a published D1 row, and
 -- those two don't share a table.
 CREATE TABLE IF NOT EXISTS dock_photos (
@@ -91,7 +92,9 @@ CREATE TABLE IF NOT EXISTS dock_photos (
   dock_slug TEXT NOT NULL,
   submitted_by INTEGER NOT NULL REFERENCES users (id),
   image_url TEXT NOT NULL,
-  caption TEXT NOT NULL,
+  title TEXT NOT NULL DEFAULT '',          -- short name, shown on the gallery tile
+  caption TEXT NOT NULL,                   -- the longer story, shown in the lightbox
+  image_orientation TEXT NOT NULL DEFAULT 'landscape', -- portrait | landscape, same detection as docks.image_orientation
   votes INTEGER NOT NULL DEFAULT 0,        -- denormalized count of ratings, kept in sync with photo_votes
   avg_rating REAL NOT NULL DEFAULT 0,      -- denormalized AVG(rating), same source of truth
   review_status TEXT NOT NULL DEFAULT 'pending', -- pending | published | rejected
@@ -112,7 +115,7 @@ CREATE TABLE IF NOT EXISTS photo_votes (
 );
 
 -- Saved/favorited docks. dock_slug is a plain string for the same reason as
--- dock_photos.dock_slug — it may point at a hardcoded data.ts entry or a
+-- dock_photos.dock_slug, it may point at a hardcoded data.ts entry or a
 -- published D1 row, and those two don't share a table.
 CREATE TABLE IF NOT EXISTS favorites (
   user_id INTEGER NOT NULL REFERENCES users (id),
@@ -136,7 +139,7 @@ CREATE TABLE IF NOT EXISTS messages (
 CREATE INDEX IF NOT EXISTS idx_messages_recipient ON messages (recipient_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages (sender_id, created_at);
 
--- Comments on a dock photo. Separate from photo_votes (the 1-10 rating) —
+-- Comments on a dock photo. Separate from photo_votes (the 1-10 rating);
 -- comments are plain discussion text and, unlike ratings, are shown openly.
 CREATE TABLE IF NOT EXISTS photo_comments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
