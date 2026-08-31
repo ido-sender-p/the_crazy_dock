@@ -8,7 +8,10 @@ const GALLERY_PREVIEW_LIMIT = 6;
 
 const PAGE_CSS = `
   .dock-page { padding: 40px 0 80px; }
-  .dock-page img.hero-img { width: 100%; max-height: 420px; object-fit: cover; border-radius: 14px; }
+  .dock-page img.hero-img {
+    width: 100%; max-height: 620px; object-fit: contain; border-radius: 14px;
+    background: var(--surface); border: 1px solid var(--border);
+  }
   .dock-page figcaption { font-size: 0.75rem; color: var(--ink-soft); margin-top: 6px; }
   .dock-page h1 { font-size: 2.1rem; margin-top: 4px; }
   .dock-page .meta { color: var(--ink-soft); margin-bottom: 24px; }
