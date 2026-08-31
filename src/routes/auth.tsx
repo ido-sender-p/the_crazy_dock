@@ -1,14 +1,15 @@
 import { Hono, type Context } from "hono";
 import { setCookie, deleteCookie, getCookie } from "hono/cookie";
 import type { Env } from "../env";
-import { LoginPage, ForgotPasswordPage } from "../pages/login";
+import { LoginPage, SignupPage, ForgotPasswordPage } from "../pages/login";
 import { ProfilePage } from "../pages/profile";
-import { verifyPassword, newSessionToken, DUMMY_PASSWORD_HASH } from "../lib/auth";
+import { verifyPassword, hashPassword, newSessionToken, DUMMY_PASSWORD_HASH } from "../lib/auth";
 import {
   findUserByEmail,
   findUserByGoogleId,
   linkGoogleId,
   createGoogleUser,
+  createUser,
   createSession,
   deleteSession,
   findSubmissionsByUser,
@@ -61,6 +62,39 @@ auth.post("/login", async (c) => {
     return c.html(<LoginPage next={next} path="/login" error={genericError} />, 401);
   }
   await clearLoginFailures(c.env.DB, email);
+  await startSession(c, user.id);
+  return c.redirect(next);
+});
+
+auth.get("/signup", async (c) => {
+  const next = safeNextPath(c.req.query("next"), "/profile");
+  if (await currentUser(c)) return c.redirect(next);
+  return c.html(<SignupPage next={next} path="/signup" />);
+});
+
+auth.post("/signup", async (c) => {
+  const form = await c.req.formData();
+  const next = safeNextPath(String(form.get("next") ?? ""), "/profile");
+  const rejectWith = (error: string) => c.html(<SignupPage next={next} path="/signup" error={error} />, 400);
+
+  const username = String(form.get("username") ?? "").trim().slice(0, 60);
+  if (!username) return rejectWith("Please enter a display name.");
+
+  const email = String(form.get("email") ?? "").trim().toLowerCase().slice(0, 255);
+  if (!email || !email.includes("@")) return rejectWith("Please enter a valid email address.");
+
+  const password = String(form.get("password") ?? "");
+  const confirmPassword = String(form.get("confirmPassword") ?? "");
+  if (password.length < 8) return rejectWith("Password must be at least 8 characters.");
+  if (password !== confirmPassword) return rejectWith("Passwords don't match.");
+
+  const existing = await findUserByEmail(c.env.DB, email);
+  if (existing) return rejectWith("That email is already registered. Try logging in instead.");
+
+  await createUser(c.env.DB, email, username, await hashPassword(password));
+  const user = await findUserByEmail(c.env.DB, email);
+  if (!user) return rejectWith("Could not create your account. Please try again.");
+
   await startSession(c, user.id);
   return c.redirect(next);
 });

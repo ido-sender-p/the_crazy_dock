@@ -53,14 +53,6 @@ export async function findSent(db: D1Database, userId: number): Promise<MessageL
   return result.results;
 }
 
-export async function countUnread(db: D1Database, userId: number): Promise<number> {
-  const row = await db
-    .prepare("SELECT COUNT(*) AS n FROM messages WHERE recipient_id = ? AND read_at IS NULL")
-    .bind(userId)
-    .first<{ n: number }>();
-  return row?.n ?? 0;
-}
-
 // Only the sender or recipient may ever see a message. This is checked by
 // the caller (route) against currentUser before rendering the result.
 export function findMessageById(db: D1Database, id: number) {

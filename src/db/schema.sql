@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS docks (
   source_tags TEXT,                    -- raw OSM tags as JSON, kept for re-enrichment
   published INTEGER NOT NULL DEFAULT 0, -- 0 until description/image pass thin-content check
   review_status TEXT NOT NULL DEFAULT 'pending', -- pending | blocked | published | rejected (user_submission rows)
-  block_reason TEXT,                   -- set when review_status = 'blocked' (route doesn't exist yet)
+  block_reason TEXT,                   -- set when review_status = 'blocked'
   source_updated_at TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now')),

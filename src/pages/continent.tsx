@@ -50,7 +50,6 @@ const PAGE_CSS = `
   .list .copy { padding: 14px; }
   .list h3 { font-size: 1rem; margin: 0 0 4px; }
   .list p { margin: 0; font-size: 0.85rem; color: var(--ink-soft); }
-  .empty { margin-top: 28px; padding: 28px; border: 1px dashed var(--border); border-radius: 12px; color: var(--ink-soft); }
 `;
 
 function LakeIcon() {

@@ -87,8 +87,3 @@ export async function findPublishedDocksBySettlementSlug(db: D1Database, slug: s
   const result = await db.prepare(`${SELECT} AND settlement_slug = ?`).bind(slug).all<DockRow>();
   return result.results.map(toDock);
 }
-
-export async function findPublishedDocksByType(db: D1Database, dockType: string): Promise<Dock[]> {
-  const result = await db.prepare(`${SELECT} AND dock_type = ?`).bind(dockType).all<DockRow>();
-  return result.results.map(toDock);
-}

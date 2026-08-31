@@ -15,10 +15,6 @@ export function findUserByEmail(db: D1Database, email: string) {
   return db.prepare("SELECT * FROM users WHERE email = ?").bind(email.toLowerCase()).first<User>();
 }
 
-export function findUserById(db: D1Database, id: number) {
-  return db.prepare("SELECT * FROM users WHERE id = ?").bind(id).first<User>();
-}
-
 export function findUserByUsername(db: D1Database, username: string) {
   return db.prepare("SELECT * FROM users WHERE username = ? COLLATE NOCASE").bind(username).first<User>();
 }
@@ -37,6 +33,13 @@ export function createGoogleUser(db: D1Database, email: string, username: string
   return db
     .prepare(`INSERT INTO users (email, username, password_hash, google_id) VALUES (?, ?, 'oauth:google', ?)`)
     .bind(email.toLowerCase(), username, googleId)
+    .run();
+}
+
+export function createUser(db: D1Database, email: string, username: string, passwordHash: string) {
+  return db
+    .prepare(`INSERT INTO users (email, username, password_hash) VALUES (?, ?, ?)`)
+    .bind(email.toLowerCase(), username, passwordHash)
     .run();
 }
 

@@ -56,6 +56,11 @@ const PAGE_CSS = `
     color: var(--ink-soft); text-decoration: none;
   }
   .auth-card .forgot:hover { color: var(--accent-dark); }
+  .auth-card .switch {
+    text-align: center; margin-top: 14px; font-size: 0.85rem; color: var(--ink-soft);
+  }
+  .auth-card .switch a { color: var(--accent-dark); font-weight: 600; text-decoration: none; }
+  .auth-card .switch a:hover { text-decoration: underline; }
   .auth-card p.body { color: var(--ink-soft); text-align: center; font-size: 0.92rem; line-height: 1.55; margin: 0 0 22px; }
 
   .btn-google {
@@ -120,6 +125,58 @@ export function LoginPage(opts: { next: string; error?: string; path: string }) 
             </button>
           </form>
           <a class="forgot" href="/forgot-password">Forgot your password?</a>
+          <p class="switch">
+            New here? <a href={`/signup?next=${encodeURIComponent(opts.next)}`}>Create an account</a>
+          </p>
+        </div>
+      </section>
+    </Layout>
+  );
+}
+
+export function SignupPage(opts: { next: string; error?: string; path: string }) {
+  return (
+    <Layout title="Create an account | Wildock" description="Create a Wildock account to submit docks, piers and marinas." path={opts.path}>
+      <style>{raw(PAGE_CSS)}</style>
+      <section class="hero auth-hero">
+        <div class="auth-card">
+          <div class="auth-icon">
+            <svg viewBox="0 0 24 34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12,4 C16,4 17,10 15,15 C14,19 13,23 12,29 C11,23 10,19 9,15 C7,10 8,4 12,4 Z" />
+              <path d="M8.5,12.5 L15.5,12.5" />
+              <path d="M8,18.5 L16,18.5" />
+              <circle cx="12" cy="2.5" r="1.3" fill="currentColor" stroke="none" />
+              <path d="M4,31 Q8,28.5 12,31 Q16,33.5 20,31" stroke-width="1.2" opacity="0.6" />
+            </svg>
+          </div>
+          <h1>Create your account</h1>
+          <p class="intro">Sign up to submit a new dock, pier or marina to the catalogue.</p>
+          {opts.error && <div class="error">{opts.error}</div>}
+          <form method="post" action="/signup">
+            <input type="hidden" name="next" value={opts.next} />
+            <div>
+              <label for="username">Display name</label>
+              <input id="username" name="username" type="text" required autocomplete="nickname" maxlength={60} />
+            </div>
+            <div>
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" required autocomplete="email" />
+            </div>
+            <div>
+              <label for="password">Password</label>
+              <input id="password" name="password" type="password" required autocomplete="new-password" minlength={8} />
+            </div>
+            <div>
+              <label for="confirmPassword">Confirm password</label>
+              <input id="confirmPassword" name="confirmPassword" type="password" required autocomplete="new-password" minlength={8} />
+            </div>
+            <button class="btn-cta" type="submit">
+              Create account
+            </button>
+          </form>
+          <p class="switch">
+            Already have an account? <a href={`/login?next=${encodeURIComponent(opts.next)}`}>Log in</a>
+          </p>
         </div>
       </section>
     </Layout>

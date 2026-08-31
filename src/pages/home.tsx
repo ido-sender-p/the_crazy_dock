@@ -54,10 +54,11 @@ const PAGE_CSS = `
     background: var(--surface);
   }
   #home-map { height: 320px; width: 100%; background: #0b2545; }
-  .map-teaser-copy { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 18px 24px; }
-  .map-teaser-copy strong { font-family: 'Fraunces', serif; font-size: 1.1rem; }
-  .map-teaser-copy span:last-child { color: var(--ink-soft); font-size: 0.85rem; }
-  .map-teaser-copy .btn-cta { padding: 8px 16px; font-size: 0.8rem; }
+  .map-teaser-copy { display: flex; align-items: center; justify-content: center; padding: 26px 24px; }
+  .map-teaser-copy .btn-cta {
+    display: inline-flex; align-items: center; gap: 9px; padding: 10px 20px; font-size: 0.85rem;
+  }
+  .map-teaser-copy .btn-cta svg { width: 16px; height: 16px; }
 
   .featured-card {
     display: grid;
@@ -80,7 +81,7 @@ const PAGE_CSS = `
   .log { margin-top: 28px; border-top: 1px solid var(--border); }
   .log-entry {
     display: grid; grid-template-columns: 56px 1fr; gap: 20px;
-    padding: 26px 0; border-bottom: 1px solid var(--border);
+    padding: 26px 0;
   }
   @media (max-width: 560px) { .log-entry { grid-template-columns: 36px 1fr; gap: 14px; } }
   .log-num { color: var(--accent-dark); width: 60px; height: 60px; }
@@ -89,11 +90,6 @@ const PAGE_CSS = `
     color: var(--ink); font-family: 'GFS Didot', 'Fraunces', serif;
     font-size: 1.15rem; line-height: 1.5; max-width: 60ch; margin: 0;
   }
-  .how-note {
-    margin-top: 22px; font-family: 'Fraunces', serif; font-style: italic;
-    font-size: 0.9rem; color: var(--ink); max-width: 68ch; line-height: 1.5;
-  }
-
   .trail { position: relative; margin-top: 32px; max-width: 620px; padding-left: 46px; }
   .trail::before {
     content: ''; position: absolute; left: 5px; top: 4px; bottom: 4px; width: 20px;
@@ -117,18 +113,23 @@ const PAGE_CSS = `
   .footprints ellipse { fill: var(--accent-dark); }
 
   .submit-cta {
-    background: linear-gradient(135deg, #0b2545, #123a63);
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, #0b2545 0%, #0b2545 60%, #123a63 100%);
     color: #fff;
     border-radius: 20px;
     padding: 48px;
     text-align: center;
   }
+  .submit-cta .dock-scene { position: absolute; right: 10px; bottom: 0; width: 260px; height: auto; opacity: 0.9; }
+  .submit-cta .cast-line { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.9; pointer-events: none; }
+  .submit-cta .birds { position: absolute; left: 24px; top: 18px; width: 120px; height: 50px; opacity: 0.85; pointer-events: none; }
   .submit-cta h2 { color: #fff; font-size: 1.7rem; }
   .submit-cta p { color: #cfe0ee; max-width: 480px; margin: 8px auto 24px; }
 
   /* center all text on this page (hero stays left-aligned over the photo) */
   section.block, .map-teaser-copy, .featured-card .copy { text-align: center; }
-  section.block p.intro, .how-note, .log-entry p, .trail-stop p { margin-left: auto; margin-right: auto; }
+  section.block p.intro, .log-entry p, .trail-stop p { margin-left: auto; margin-right: auto; }
   .log-entry, .trail-stop { justify-items: center; }
   .log-entry { grid-template-columns: 1fr; }
   .trail { padding-left: 0; max-width: 480px; margin-left: auto; margin-right: auto; }
@@ -194,12 +195,48 @@ export function HomePage() {
         </div>
       </section>
 
-      <div style="background: #ffffff;">
-      <section class="block wrap" style="padding-bottom: 0;">
-        <hr style="border: none; border-top: 1px solid var(--border); max-width: 620px; margin: 40px auto;" />
+      <section class="block wrap">
+        <div class="log">
+          <div class="log-entry">
+            <svg class="log-num" viewBox="-6 -6 52 52" fill="none" stroke="currentColor" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="20" cy="20" r="24" stroke-width="1" opacity="0.6" />
+              <circle cx="20" cy="20" r="18" stroke-width="1.2" />
+              <text x="20" y="-1" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Β</text>
+              <text x="41" y="20" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Α</text>
+              <text x="20" y="41" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Ν</text>
+              <text x="-1" y="20" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Δ</text>
+              {Array.from({ length: 28 }).map((_, i) => {
+                const angle = (i / 28) * Math.PI * 2;
+                return (
+                  <circle
+                    cx={20 + 19.2 * Math.cos(angle)}
+                    cy={20 + 19.2 * Math.sin(angle)}
+                    r="0.7"
+                    fill="currentColor"
+                    stroke="none"
+                    opacity="0.6"
+                  />
+                );
+              })}
+              <polygon points="20,6 24,20 16,20" fill="currentColor" stroke="none" />
+              <polygon points="20,34 24,20 16,20" fill="none" stroke-width="1.1" />
+              <circle cx="20" cy="20" r="1.6" fill="currentColor" stroke="none" />
+            </svg>
+            <div>
+              <h3>The best shot wins the page</h3>
+              <p>For each marina or port, the photo with the most votes from the community becomes the one everyone sees first, together with the memory, the moment, and the story behind it.</p>
+              <p>To keep exposure fair, the gallery shows photos in a fresh random order every time you open it, regardless of when each one was uploaded.</p>
+            </div>
+          </div>
+        </div>
       </section>
 
-      <section class="block wrap" style="padding-top: 10px;">
+      <div class="wrap">
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 0 auto 48px; max-width: 620px;" />
+      </div>
+
+      <div style="background: #ffffff;">
+      <section class="block wrap" style="padding-top: 0;">
         <div class="kicker">Get started</div>
         <h2>Your voyage, from dock to dock</h2>
         <div class="trail">
@@ -274,6 +311,10 @@ export function HomePage() {
       </section>
       </div>
 
+      <div class="wrap">
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 0 auto 48px; max-width: 620px;" />
+      </div>
+
       <section class="block wrap">
         <div class="kicker">Featured</div>
         <h2>Pick of the week</h2>
@@ -285,42 +326,6 @@ export function HomePage() {
             <p>{docks[0].description.slice(0, 160)}…</p>
           </div>
         </a>
-      </section>
-
-      <section class="block wrap">
-        <div class="log">
-          <div class="log-entry">
-            <svg class="log-num" viewBox="-6 -6 52 52" fill="none" stroke="currentColor" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="20" cy="20" r="24" stroke-width="1" opacity="0.6" />
-              <circle cx="20" cy="20" r="18" stroke-width="1.2" />
-              <text x="20" y="-1" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Β</text>
-              <text x="41" y="20" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Α</text>
-              <text x="20" y="41" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Ν</text>
-              <text x="-1" y="20" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Δ</text>
-              {Array.from({ length: 28 }).map((_, i) => {
-                const angle = (i / 28) * Math.PI * 2;
-                return (
-                  <circle
-                    cx={20 + 19.2 * Math.cos(angle)}
-                    cy={20 + 19.2 * Math.sin(angle)}
-                    r="0.7"
-                    fill="currentColor"
-                    stroke="none"
-                    opacity="0.6"
-                  />
-                );
-              })}
-              <polygon points="20,6 24,20 16,20" fill="currentColor" stroke="none" />
-              <polygon points="20,34 24,20 16,20" fill="none" stroke-width="1.1" />
-              <circle cx="20" cy="20" r="1.6" fill="currentColor" stroke="none" />
-            </svg>
-            <div>
-              <h3>The best shot wins the page</h3>
-              <p>For each marina or port, the photo with the most votes from the community becomes the one everyone sees first, together with the memory, the moment, and the story behind it.</p>
-              <p>To keep exposure fair, the gallery shows photos in a fresh random order every time you open it, regardless of when each one was uploaded.</p>
-            </div>
-          </div>
-        </div>
       </section>
 
       <section class="block wrap" id="continents">
@@ -347,12 +352,14 @@ export function HomePage() {
         <div class="map-teaser">
           <div id="home-map" />
           <span class="map-teaser-copy">
-            <span>
-              <strong>Explore the map</strong>
-              <br />
-              <span>{docks.length} location{docks.length === 1 ? "" : "s"} pinned so far</span>
-            </span>
-            <a class="btn-cta" href="/map">Open full map</a>
+            <a class="btn-cta" href="/map">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+                <line x1="8" y1="2" x2="8" y2="18" />
+                <line x1="16" y1="6" x2="16" y2="22" />
+              </svg>
+              Open map
+            </a>
           </span>
         </div>
         <link
@@ -371,6 +378,45 @@ export function HomePage() {
 
       <section class="block wrap">
         <div class="submit-cta">
+          <svg class="birds" viewBox="0 0 120 50" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path d="M6 14 Q10.5 7 15 14 Q19.5 7 24 14" stroke="#cfe0ee" stroke-width="1.3" stroke-linecap="round" />
+            <path d="M48.7 6 Q51.85 1.1 55 6 Q58.15 1.1 61.3 6" stroke="#cfe0ee" stroke-width="1.1" stroke-linecap="round" />
+            <path d="M75.35 22 Q79.18 15.98 83 22 Q86.83 15.98 90.65 22" stroke="#cfe0ee" stroke-width="1.2" stroke-linecap="round" />
+          </svg>
+          <svg class="dock-scene" viewBox="0 0 220 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect x="0" y="82" width="220" height="18" fill="#0d3059" />
+            <path d="M0 82 Q 30 77 60 82 T 120 82 T 180 82 T 220 82 V 100 H 0 Z" fill="#123a63" />
+            <line x1="8" y1="52" x2="212" y2="52" stroke="#cfe0ee" stroke-width="3" stroke-linecap="round" />
+            <line x1="18" y1="52" x2="18" y2="86" stroke="#cfe0ee" stroke-width="3" stroke-linecap="round" />
+            <line x1="68" y1="52" x2="68" y2="86" stroke="#cfe0ee" stroke-width="3" stroke-linecap="round" />
+            <line x1="118" y1="52" x2="118" y2="86" stroke="#cfe0ee" stroke-width="3" stroke-linecap="round" />
+            <line x1="168" y1="52" x2="168" y2="86" stroke="#cfe0ee" stroke-width="3" stroke-linecap="round" />
+            <line x1="204" y1="52" x2="204" y2="86" stroke="#cfe0ee" stroke-width="3" stroke-linecap="round" />
+            <line x1="8" y1="41" x2="212" y2="41" stroke="#cfe0ee" stroke-width="1.5" stroke-linecap="round" />
+            <line x1="8" y1="41" x2="8" y2="52" stroke="#cfe0ee" stroke-width="1.5" />
+            <line x1="33" y1="41" x2="33" y2="52" stroke="#cfe0ee" stroke-width="1.5" />
+            <line x1="58" y1="41" x2="58" y2="52" stroke="#cfe0ee" stroke-width="1.5" />
+            <line x1="83" y1="41" x2="83" y2="52" stroke="#cfe0ee" stroke-width="1.5" />
+            <line x1="108" y1="41" x2="108" y2="52" stroke="#cfe0ee" stroke-width="1.5" />
+            <line x1="133" y1="41" x2="133" y2="52" stroke="#cfe0ee" stroke-width="1.5" />
+            <line x1="158" y1="41" x2="158" y2="52" stroke="#cfe0ee" stroke-width="1.5" />
+            <line x1="183" y1="41" x2="183" y2="52" stroke="#cfe0ee" stroke-width="1.5" />
+            <line x1="212" y1="41" x2="212" y2="52" stroke="#cfe0ee" stroke-width="1.5" />
+            <circle cx="150" cy="27" r="6" fill="#cfe0ee" />
+            <line x1="150" y1="33" x2="150" y2="52" stroke="#cfe0ee" stroke-width="3" stroke-linecap="round" />
+            <line x1="150" y1="39" x2="136" y2="32" stroke="#cfe0ee" stroke-width="2.5" stroke-linecap="round" />
+            <line x1="136" y1="32" x2="62" y2="13" stroke="#cfe0ee" stroke-width="1.2" stroke-linecap="round" />
+          </svg>
+          <svg class="cast-line" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <path
+              d="M 85 47 C 78 35, 73 16, 71 14 C 68 22, 65 32, 65 42 L 65 99"
+              stroke="#cfe0ee"
+              stroke-width="1"
+              stroke-linecap="round"
+              fill="none"
+              vector-effect="non-scaling-stroke"
+            />
+          </svg>
           <h2>Know a dock, pier or marina we're missing?</h2>
           <a class="btn-cta" href="/submit">Submit a dock</a>
         </div>
