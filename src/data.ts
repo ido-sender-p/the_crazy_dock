@@ -69,7 +69,7 @@ export const docks: Dock[] = [
     lon: 14.2264,
     description:
       "Marina Piccola is the small bay on Capri's southern shore, tucked beneath the cliffs with the Faraglioni sea stacks rising just offshore. On November 4, 2025, the harbour was crowded with people, but I was walking it alone. My partner was in another country at the time. Unable to find a quiet corner to talk, I found this spot and had a long conversation with her from here.",
-    imageUrl: "/images/marina-piccola-capri.jpg",
+    imageUrl: "/uploads/marina-piccola-capri-cover",
     imageAttribution: "Photo by Ido Sender",
     lengthM: 80,
     yearBuilt: null,

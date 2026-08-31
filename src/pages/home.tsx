@@ -1,5 +1,5 @@
 import { Layout } from "../layout";
-import { docks, dockTypes, continents, dockCountForType } from "../data";
+import { docks, continents } from "../data";
 import { raw } from "hono/html";
 import { WORLD_MAP_VIEWBOX, CONTINENT_SHAPES } from "../continents";
 import { safeJsonForScript } from "../lib/html";
@@ -29,31 +29,13 @@ const PAGE_CSS = `
     text-shadow: 0 1px 12px rgba(0,0,0,0.35);
   }
   .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 44px; }
-  .hero .btn-cta {
-    margin-top: 0; padding: 12px 24px; font-size: 0.95rem;
-    background: transparent; border: 1.5px solid #fff; box-shadow: none;
-  }
-  .hero .btn-cta:hover { background: rgba(255,255,255,0.12); box-shadow: none; }
+  .hero .btn-cta { margin-top: 0; padding: 12px 24px; font-size: 0.95rem; }
 
   section.block { padding: 64px 0; }
   section.block .kicker { color: var(--accent-dark); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
   section.block h2 { font-size: 1.8rem; margin-top: 6px; }
   section.block p.intro { color: var(--ink-soft); max-width: 620px; margin-bottom: 32px; }
 
-  .grid { display: grid; gap: 20px; }
-  .grid.types { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
-
-  .card-link {
-    display: block;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 22px;
-    text-decoration: none;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-  }
-  .card-link:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(11,37,69,0.08); border-color: var(--accent); }
-  .card-link .emoji { font-size: 1.8rem; }
   .world-map { width: 100%; margin-top: 8px; }
   .world-map svg { width: 100%; height: auto; display: block; }
   .world-map a { text-decoration: none; }
@@ -63,9 +45,6 @@ const PAGE_CSS = `
     font-family: 'Fraunces', serif; font-weight: 600; fill: var(--ink);
     text-anchor: middle; pointer-events: none;
   }
-  .card-link h3 { font-size: 1.05rem; margin: 10px 0 4px; }
-  .card-link p { margin: 0; font-size: 0.85rem; color: var(--ink-soft); }
-  .card-link .count { display: inline-block; margin-top: 10px; font-size: 0.75rem; font-weight: 600; color: var(--accent-dark); }
 
   .map-teaser {
     display: block;
@@ -207,7 +186,7 @@ export function HomePage() {
 
       <section class="hero">
         <div class="wrap">
-          <h1>From the whispering seas to the legends of the lakes</h1>
+          <h1>From the whisper of seas<br />To the legends of the lakes</h1>
           <p class="tagline">Wildock is on a mission to map every dock in the world and give people a place to share their stories about them.</p>
           <div class="hero-actions">
             <a class="btn-cta" href="#continents">Explore docks around the world</a>
@@ -246,7 +225,7 @@ export function HomePage() {
             <h3>Explore &amp; rate</h3>
             <p>
               Wander the site and take in the photos people have shared. Found one you love?
-              Rate it, and rate photos as you go, in general.
+              Rate it, and keep exploring from there.
             </p>
             <svg class="footprints" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
               <ellipse cx="12" cy="10" rx="4" ry="6" transform="rotate(-18 12 10)" />
@@ -266,8 +245,8 @@ export function HomePage() {
             </div>
             <h3>Save your favorites</h3>
             <p>
-              Found a spot you want to remember and come back to? Mark it as a favorite. Maybe it turns
-              into a great trip. Maybe you can even reach out to whoever took the photo.
+              Found a spot you want to remember? Mark it as a favorite.<br />
+              Maybe it turns into a trip, or a note to the photographer.
             </p>
             <svg class="footprints" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
               <ellipse cx="12" cy="10" rx="4" ry="6" transform="rotate(-18 12 10)" />
@@ -388,21 +367,6 @@ export function HomePage() {
           crossorigin=""
         ></script>
         <script>{raw(HOME_MAP_JS)}</script>
-      </section>
-
-      <section class="block wrap" id="types">
-        <div class="kicker">Browse</div>
-        <h2>By type of structure</h2>
-        <div class="grid types">
-          {dockTypes.map((t) => (
-            <a class="card-link" href={`/type/${t.slug}`}>
-              <div class="emoji">{t.emoji}</div>
-              <h3>{t.label}</h3>
-              <p>{t.blurb}</p>
-              <span class="count">{dockCountForType(t.slug)} documented</span>
-            </a>
-          ))}
-        </div>
       </section>
 
       <section class="block wrap">

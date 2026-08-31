@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Env } from "../env";
-import { docks, dockTypes, countries, continents, dedupeDocksBySlug, type Dock } from "../data";
+import { docks, countries, continents, dedupeDocksBySlug, type Dock } from "../data";
 import { HomePage } from "../pages/home";
 import { DockPage } from "../pages/dock";
 import { CategoryPage } from "../pages/category";
@@ -13,7 +13,6 @@ import {
   findPublishedDocksByContinent,
   findPublishedDocksByCountryName,
   findPublishedDocksBySettlementSlug,
-  findPublishedDocksByType,
 } from "../lib/liveDocks";
 import { findPublishedPhotosForDock, findUserRatingsForDock } from "../lib/gallery";
 import { currentUser } from "../lib/session";
@@ -37,21 +36,6 @@ catalog.get("/docks/:slug", async (c) => {
 
   return c.html(
     <DockPage {...dock} photos={photos} isLoggedIn={!!user} yourRatings={yourRatings} isFavorited={favorited} />,
-  );
-});
-
-catalog.get("/type/:slug", async (c) => {
-  const slug = c.req.param("slug") as (typeof dockTypes)[number]["slug"];
-  const type = dockTypes.find((t) => t.slug === slug);
-  if (!type) return c.notFound();
-  const live = c.env.DB ? await findPublishedDocksByType(c.env.DB, slug) : [];
-  return c.html(
-    <CategoryPage
-      title={type.label}
-      intro={`${type.blurb}. Documented worldwide, starting in the Mediterranean.`}
-      path={`/type/${slug}`}
-      matches={dedupeDocksBySlug([...docks.filter((d) => d.dockType === slug), ...live])}
-    />,
   );
 });
 

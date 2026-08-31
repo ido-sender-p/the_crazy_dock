@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Env } from "../env";
-import { docks, dockTypes, countries, continents, type Dock } from "../data";
+import { docks, countries, continents, type Dock } from "../data";
 import { SETTLEMENT_ROUTE_PATHS } from "./catalog";
 import { AccessibilityPage } from "../pages/accessibility";
 
@@ -21,7 +21,6 @@ meta.get("/sitemap.xml", (c) => {
     "/",
     "/map",
     ...docks.map((d) => `/docks/${d.slug}`),
-    ...dockTypes.map((t) => `/type/${t.slug}`),
     ...countries.map((cn) => `/countries/${cn.code}`),
     ...continents
       .filter((ct) => docks.some((d) => d.continentSlug === ct.slug))

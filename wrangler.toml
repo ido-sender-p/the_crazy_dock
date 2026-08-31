@@ -13,17 +13,20 @@ enabled = true
 # binding = "ASSETS"
 
 # Local-only SQLite for now (login + submissions + everything built on top
-# of it: search, messages, favorites, comments, profile). The
-# CLOUDFLARE_WORKERS_ID token still can't create/reach a real D1 database
-# (auth error), and Cloudflare now rejects a deploy outright if this binding
-# points at an invalid database_id — so it's commented out for production
-# rather than left broken. Every route touching c.env.DB already no-ops or
-# 404s gracefully without it (see currentUser() in lib/session.ts). Restore
-# this with a real database_id once D1 is provisioned.
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "wildock-db"
-# database_id = "local-dev-placeholder"
+# of it: search, messages, favorites, comments, profile). Keep this block
+# UNCOMMENTED for local dev — `wrangler dev` doesn't validate database_id,
+# it just uses the local sqlite file regardless. The CLOUDFLARE_WORKERS_ID
+# token still can't create/reach a real D1 database (auth error), and
+# Cloudflare rejects a *deploy* outright if this binding points at an
+# invalid database_id — so comment this block back out ONLY right before
+# running `wrangler deploy`, then restore it immediately after for local
+# dev to keep working. Every route touching c.env.DB already no-ops or
+# 404s gracefully without it (see currentUser() in lib/session.ts).
+# Replace database_id with a real one once D1 is actually provisioned.
+[[d1_databases]]
+binding = "DB"
+database_name = "wildock-db"
+database_id = "local-dev-placeholder"
 
 # Real bucket, auto-provisioned on the 2026-08-30 deploy.
 [[r2_buckets]]
