@@ -1,4 +1,4 @@
-// Shared "wave button" motif — a card with a small colored wave resting
+// Shared "wave button" motif , a card with a small colored wave resting
 // under it. Every real sea/ocean/region name gets its own distinct color
 // (SEA_COLOR); "family" is only used to decide section order and to detect
 // landlocked places (family === "lake").

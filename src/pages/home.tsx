@@ -1,22 +1,12 @@
 import { Layout } from "../layout";
 import { docks, dockTypes, continents, dockCountForType } from "../data";
-import { buildMailto } from "../lib/contact";
 import { raw } from "hono/html";
 import { WORLD_MAP_VIEWBOX, CONTINENT_SHAPES } from "../continents";
+import { safeJsonForScript } from "../lib/html";
 
 const PAGE_CSS = `
-  .hero {
-    position: relative;
-    min-height: 560px;
-    display: flex;
-    align-items: center;
-    color: #fff;
-    overflow: hidden;
-    background-image: linear-gradient(100deg, rgba(4,14,26,0.78) 0%, rgba(4,14,26,0.55) 32%, rgba(4,14,26,0.15) 58%, rgba(4,14,26,0.25) 100%), linear-gradient(180deg, rgba(6,20,36,0.15) 0%, rgba(6,20,36,0.3) 60%, rgba(6,20,36,0.75) 100%), url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Lighthouse_in_Chania._Crete%2C_Greece.jpg/1280px-Lighthouse_in_Chania._Crete%2C_Greece.jpg');
-    background-size: cover;
-    background-position: center 65%;
-  }
-  .hero .wrap { position: relative; z-index: 1; max-width: 1080px; padding-top: 60px; padding-bottom: 60px; text-align: left; }
+  .hero { min-height: 560px; }
+  .hero .wrap { max-width: 1320px; padding-top: 60px; padding-bottom: 60px; text-align: left; }
   .hero h1 {
     font-family: 'Fraunces', Georgia, serif;
     font-weight: 600;
@@ -38,6 +28,12 @@ const PAGE_CSS = `
     color: #eef4f8;
     text-shadow: 0 1px 12px rgba(0,0,0,0.35);
   }
+  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 44px; }
+  .hero .btn-cta {
+    margin-top: 0; padding: 12px 24px; font-size: 0.95rem;
+    background: transparent; border: 1.5px solid #fff; box-shadow: none;
+  }
+  .hero .btn-cta:hover { background: rgba(255,255,255,0.12); box-shadow: none; }
 
   section.block { padding: 64px 0; }
   section.block .kicker { color: var(--accent-dark); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -79,7 +75,7 @@ const PAGE_CSS = `
     background: var(--surface);
   }
   #home-map { height: 320px; width: 100%; background: #0b2545; }
-  .map-teaser-copy { display: flex; align-items: center; justify-content: space-between; padding: 18px 24px; }
+  .map-teaser-copy { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 18px 24px; }
   .map-teaser-copy strong { font-family: 'Fraunces', serif; font-size: 1.1rem; }
   .map-teaser-copy span:last-child { color: var(--ink-soft); font-size: 0.85rem; }
   .map-teaser-copy .btn-cta { padding: 8px 16px; font-size: 0.8rem; }
@@ -166,16 +162,23 @@ const PAGE_CSS = `
 const HOME_MAP_MARKERS = docks.map((d) => ({ name: d.name, slug: d.slug, lat: d.lat, lon: d.lon }));
 
 const HOME_MAP_JS = `
-  var docks = ${JSON.stringify(HOME_MAP_MARKERS)};
+  var docks = ${safeJsonForScript(HOME_MAP_MARKERS)};
+  var escapeHtml = function (s) {
+    return String(s).replace(/[&<>"']/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+    });
+  };
   var map = L.map('home-map', { scrollWheelZoom: false, zoomControl: false }).setView([20, 10], 2);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19
   }).addTo(map);
   docks.forEach(function (d) {
+    // Dock names can come from user submissions once approved, so this must
+    // stay HTML-escaped — bindPopup renders its argument as raw HTML.
     L.circleMarker([d.lat, d.lon], { radius: 6, color: '#0b2545', weight: 1.5, fillColor: '#2ec4b6', fillOpacity: 0.9 })
       .addTo(map)
-      .bindPopup('<strong>' + d.name + '</strong><br><a href="/docks/' + d.slug + '">View dock</a>');
+      .bindPopup('<strong>' + escapeHtml(d.name) + '</strong><br><a href="/docks/' + encodeURIComponent(d.slug) + '">View dock</a>');
   });
   if (docks.length) {
     var bounds = L.latLngBounds(docks.map(function (d) { return [d.lat, d.lon]; }));
@@ -190,17 +193,12 @@ export function HomePage() {
     name: "Wildock",
     url: "https://wildock.com",
     description:
-      "A growing global catalogue of docks, piers, marinas and floating structures — searchable by continent and type.",
+      "A growing global catalogue of docks, piers, marinas and floating structures, searchable by continent and type.",
   };
-
-  const submitMailto = buildMailto(
-    "New dock/pier submission — Wildock",
-    "Hi Wildock team,\n\nI'd like to submit a dock, pier or marina for the catalogue:\n\nName:\nLocation (city/region/country):\nType (pier/marina/floating dock/industrial):\n\nPlease attach a photo to this email before sending.\n\nAnything else worth knowing about it?\n",
-  );
 
   return (
     <Layout
-      title="Wildock — A Global Catalogue of Docks, Piers & Marinas"
+      title="Wildock: A Global Catalogue of Docks, Piers & Marinas"
       description="Explore thousands of docks, piers, marinas and floating structures from around the world, each documented with photos, history and precise location."
       jsonLd={jsonLd}
       path="/"
@@ -210,15 +208,16 @@ export function HomePage() {
       <section class="hero">
         <div class="wrap">
           <h1>From the whispering seas to the legends of the lakes</h1>
-          <p class="tagline">Wildock is on a mission to map every dock in the world — and give people a place to share their stories about them.</p>
+          <p class="tagline">Wildock is on a mission to map every dock in the world and give people a place to share their stories about them.</p>
+          <div class="hero-actions">
+            <a class="btn-cta" href="#continents">Explore docks around the world</a>
+          </div>
         </div>
       </section>
 
       <div style="background: #ffffff;">
       <section class="block wrap" style="padding-bottom: 0;">
-        <p class="intro" style="font-family: 'Fraunces', Georgia, serif; font-style: italic; font-size: 1.8rem; color: var(--ink); line-height: 1.3;">"Great walls, working boats, market stalls, and the people who bring them to life.<br />Docks tells many stories."</p>
         <hr style="border: none; border-top: 1px solid var(--border); max-width: 620px; margin: 40px auto;" />
-        <h2>The Photos uploaded by the people who were there</h2>
       </section>
 
       <section class="block wrap" style="padding-top: 10px;">
@@ -297,6 +296,19 @@ export function HomePage() {
       </div>
 
       <section class="block wrap">
+        <div class="kicker">Featured</div>
+        <h2>Pick of the week</h2>
+        <a class="featured-card" href={`/docks/${docks[0].slug}`}>
+          <img src={docks[0].imageUrl} alt={docks[0].name} />
+          <div class="copy">
+            <span class="tag">{docks[0].settlement}, {docks[0].country}</span>
+            <h3>{docks[0].name}</h3>
+            <p>{docks[0].description.slice(0, 160)}…</p>
+          </div>
+        </a>
+      </section>
+
+      <section class="block wrap">
         <div class="log">
           <div class="log-entry">
             <svg class="log-num" viewBox="-6 -6 52 52" fill="none" stroke="currentColor" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg">
@@ -326,13 +338,10 @@ export function HomePage() {
             <div>
               <h3>The best shot wins the page</h3>
               <p>For each marina or port, the photo with the most votes from the community becomes the one everyone sees first, together with the memory, the moment, and the story behind it.</p>
+              <p>To keep exposure fair, the gallery shows photos in a fresh random order every time you open it, regardless of when each one was uploaded.</p>
             </div>
           </div>
         </div>
-        <p class="how-note">
-          We encourage high-quality photos, but older photos with a meaningful or touching story are more
-          than welcome too. Sometimes the story matters as much as the image.
-        </p>
       </section>
 
       <section class="block wrap" id="continents">
@@ -367,8 +376,17 @@ export function HomePage() {
             <a class="btn-cta" href="/map">Open full map</a>
           </span>
         </div>
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <link
+          rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""
+        />
+        <script
+          src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin=""
+        ></script>
         <script>{raw(HOME_MAP_JS)}</script>
       </section>
 
@@ -388,26 +406,13 @@ export function HomePage() {
       </section>
 
       <section class="block wrap">
-        <div class="kicker">Featured</div>
-        <h2>Pick of the week</h2>
-        <a class="featured-card" href={`/docks/${docks[0].slug}`}>
-          <img src={docks[0].imageUrl} alt={docks[0].name} />
-          <div class="copy">
-            <span class="tag">{docks[0].settlement}, {docks[0].country}</span>
-            <h3>{docks[0].name}</h3>
-            <p>{docks[0].description.slice(0, 160)}…</p>
-          </div>
-        </a>
-      </section>
-
-      <section class="block wrap">
         <div class="submit-cta">
           <h2>Know a dock, pier or marina we're missing?</h2>
           <p>
             Built for photographers and sailors. Send us a photo of the place and we'll add it to
             the catalogue. Credit guaranteed 📸
           </p>
-          <a class="btn-cta" href={submitMailto}>Submit a dock</a>
+          <a class="btn-cta" href="/submit">Submit a dock</a>
         </div>
       </section>
     </Layout>

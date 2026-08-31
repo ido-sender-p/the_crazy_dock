@@ -46,7 +46,7 @@ export function CategoryPage(opts: {
             ))}
           </div>
         ) : (
-          <div class="empty">No docks documented here yet — the catalogue is growing daily.</div>
+          <div class="empty">No docks documented here yet. The catalogue is growing daily.</div>
         )}
       </div>
     </Layout>

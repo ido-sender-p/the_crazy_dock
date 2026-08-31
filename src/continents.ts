@@ -1,6 +1,6 @@
 import type { Water } from "./waveCard";
 
-// Shared continent map data — the same loose, illustrative shapes power both
+// Shared continent map data , the same loose, illustrative shapes power both
 // the homepage "By continent" world map and each continent's own zoomed page.
 // Coordinates live on one shared 1000x460 canvas (see WORLD_MAP_VIEWBOX) so a
 // continent page can crop to just that continent's bounding box and reuse the
@@ -54,7 +54,7 @@ export const CONTINENT_SHAPES: Record<string, ContinentShape> = {
   },
 };
 
-// Not geographically precise — a systematic, illustrative country list per
+// Not geographically precise , a systematic, illustrative country list per
 // continent so every continent page can show names without needing exact
 // per-country coordinates.
 export const countriesByContinent: Record<string, string[]> = {
@@ -110,11 +110,11 @@ export const countriesByContinent: Record<string, string[]> = {
 };
 
 // Each country carries the real, proper name(s) of the sea(s)/ocean(s) it
-// actually touches — most touch one, some genuinely touch two or three (e.g.
+// actually touches , most touch one, some genuinely touch two or three (e.g.
 // Germany: North Sea + Baltic Sea; Mexico: Pacific Ocean + Gulf of Mexico +
 // Caribbean Sea). "family" just drives the color/grouping, the "sea" string
 // is what's shown. Oceania uses sub-regions instead (nothing there is a
-// meaningfully different sea — everything is the Pacific).
+// meaningfully different sea , everything is the Pacific).
 export type SeaEntry = { sea: string; family: Water };
 export const oceanByCountry: Record<string, SeaEntry[]> = {
   // North America
@@ -422,7 +422,7 @@ export const oceanByCountry: Record<string, SeaEntry[]> = {
   ],
   "Vatican City": [{ sea: "Landlocked", family: "lake" }],
 
-  // Oceania — sub-region instead of sea (everything here is Pacific)
+  // Oceania , sub-region instead of sea (everything here is Pacific)
   Australia: [{ sea: "Australasia", family: "australasia" }],
   Fiji: [{ sea: "Melanesia", family: "melanesia" }],
   Kiribati: [{ sea: "Micronesia", family: "micronesia" }],
@@ -442,7 +442,7 @@ export const oceanByCountry: Record<string, SeaEntry[]> = {
 export type CityEntry = { name: string; sea: string; family: Water };
 
 // A handful of well-known cities per country, each classified by the real
-// sea it actually sits on (or "Landlocked" for inland/interior cities) —
+// sea it actually sits on (or "Landlocked" for inland/interior cities) ,
 // not tied to real dock data yet, just enough to make the country pages
 // browsable. Only North America is filled in for now.
 export const citiesByCountry: Record<string, CityEntry[]> = {
@@ -899,6 +899,7 @@ export const citiesByCountry: Record<string, CityEntry[]> = {
   Italy: [
     { name: "Naples", sea: "Mediterranean Sea", family: "mediterranean" },
     { name: "Venice", sea: "Mediterranean Sea", family: "mediterranean" },
+    { name: "Capri", sea: "Mediterranean Sea", family: "mediterranean" },
     { name: "Rome", sea: "Landlocked", family: "lake" },
   ],
   Kosovo: [{ name: "Pristina", sea: "Landlocked", family: "lake" }],
@@ -958,7 +959,7 @@ export const citiesByCountry: Record<string, CityEntry[]> = {
   ],
   "Vatican City": [{ name: "Vatican City", sea: "Landlocked", family: "lake" }],
 
-  // Oceania — cities carry the same sub-region as their country
+  // Oceania , cities carry the same sub-region as their country
   Australia: [
     { name: "Sydney", sea: "Australasia", family: "australasia" },
     { name: "Melbourne", sea: "Australasia", family: "australasia" },
@@ -982,6 +983,36 @@ export const citiesByCountry: Record<string, CityEntry[]> = {
   Vanuatu: [{ name: "Port Vila", sea: "Melanesia", family: "melanesia" }],
 };
 
+// Reverse lookup so a city card can always resolve to a real page, even
+// before any dock has been documented there yet, since a city browsed here
+// via continent -> country -> city must stay clickable regardless.
+function slugifyLocal(s: string) {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+}
+const CITY_SLUG_TO_NAME: Record<string, string> = {};
+for (const cities of Object.values(citiesByCountry)) {
+  for (const city of cities) {
+    CITY_SLUG_TO_NAME[slugifyLocal(city.name)] = city.name;
+  }
+}
+export function cityNameForSlug(slug: string): string | undefined {
+  return CITY_SLUG_TO_NAME[slug];
+}
+
+// Same idea one level up: a country card links here by slugified name, so
+// resolve straight to {name, continentSlug} instead of re-scanning every
+// continent's country list (and re-slugifying every name) on each request.
+export type CountryInfo = { name: string; continentSlug: string };
+const COUNTRY_SLUG_TO_INFO: Record<string, CountryInfo> = {};
+for (const [continentSlug, names] of Object.entries(countriesByContinent)) {
+  for (const name of names) {
+    COUNTRY_SLUG_TO_INFO[slugifyLocal(name)] = { name, continentSlug };
+  }
+}
+export function countryInfoForSlug(slug: string): CountryInfo | undefined {
+  return COUNTRY_SLUG_TO_INFO[slug];
+}
+
 // The United States is the one North America country we break down further,
 // by state.
 export const usStates: string[] = [
@@ -996,7 +1027,7 @@ export const usStates: string[] = [
   "Washington", "West Virginia", "Wisconsin", "Wyoming",
 ];
 
-// Which real sea(s) each state actually touches — states with no coastline
+// Which real sea(s) each state actually touches , states with no coastline
 // get grouped into "Landlocked" instead. Florida and a few others touch two.
 export const usStateSea: Record<string, SeaEntry[]> = {
   Alaska: [{ sea: "Pacific Ocean", family: "pacific" }],

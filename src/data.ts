@@ -1,4 +1,4 @@
-// Hardcoded pilot data — stands in for D1 until the Overpass pipeline is wired up.
+// Hardcoded pilot data , stands in for D1 until the Overpass pipeline is wired up.
 //
 // Geographic breakdown (matches how the pSEO URL/category structure is organized):
 //   Continent -> Country -> State/Province -> Settlement (City | Town | Village) -> Dock
@@ -11,6 +11,19 @@ export function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
+// Listing pages merge the hardcoded `docks` array with live D1 rows, and a
+// dock can legitimately exist in both (e.g. seeded into D1 so it shows on a
+// user's own profile, while also living in the static catalogue) — dedupe
+// by slug so it never renders twice on the same page. First occurrence wins.
+export function dedupeDocksBySlug<T extends { slug: string }>(items: T[]): T[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.slug)) return false;
+    seen.add(item.slug);
+    return true;
+  });
+}
+
 export type Dock = {
   slug: string;
   name: string;
@@ -20,12 +33,12 @@ export type Dock = {
   continentSlug: string;
 
   country: string;
-  countryCode: "gr" | "hr" | "it";
+  countryCode: string; // "gr" | "hr" | "it" for the legacy demo entries; "" for D1-backed submissions, which route by country-name slug instead
 
-  stateProvince: string; // state/province/autonomous region — the tier below country
+  stateProvince: string; // state/province/autonomous region , the tier below country
   stateProvinceSlug: string;
 
-  settlement: string; // city, town or village — the tier below state/province
+  settlement: string; // city, town or village , the tier below state/province
   settlementType: SettlementType;
   settlementSlug: string;
 
@@ -40,27 +53,26 @@ export type Dock = {
 
 export const docks: Dock[] = [
   {
-    slug: "old-venetian-harbour-pier-chania",
-    name: "Old Venetian Harbour Pier",
-    dockType: "pier",
+    slug: "marina-piccola-capri",
+    name: "Marina Piccola",
+    dockType: "marina",
     continent: "Europe",
     continentSlug: "europe",
-    country: "Greece",
-    countryCode: "gr",
-    stateProvince: "Crete",
-    stateProvinceSlug: "crete",
-    settlement: "Chania",
-    settlementType: "city",
-    settlementSlug: "chania",
-    lat: 35.5169,
-    lon: 24.0186,
+    country: "Italy",
+    countryCode: "it",
+    stateProvince: "Campania",
+    stateProvinceSlug: "campania",
+    settlement: "Capri",
+    settlementType: "town",
+    settlementSlug: "capri",
+    lat: 40.5457,
+    lon: 14.2264,
     description:
-      "A stone pier guarding the entrance to Chania's Venetian harbour, built in the 14th century as part of the old fortifications. Today it's a popular sunset walk lined with the old lighthouse at its tip, with the harbour's cafes and boats visible along the curve of the quay.",
-    imageUrl:
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0e/Chania_old_harbour.jpg/800px-Chania_old_harbour.jpg",
-    imageAttribution: "Wikimedia Commons (demo placeholder)",
-    lengthM: 550,
-    yearBuilt: 1320,
+      "Marina Piccola is the small bay on Capri's southern shore, tucked beneath the cliffs with the Faraglioni sea stacks rising just offshore. On November 4, 2025, the harbour was crowded with people, but I was walking it alone. My partner was in another country at the time. Unable to find a quiet corner to talk, I found this spot and had a long conversation with her from here.",
+    imageUrl: "/images/marina-piccola-capri.jpg",
+    imageAttribution: "Photo by Ido Sender",
+    lengthM: 80,
+    yearBuilt: null,
   },
 ];
 
@@ -88,16 +100,4 @@ export const continents: { slug: string; name: string }[] = [
 
 export function dockCountForType(type: Dock["dockType"]) {
   return docks.filter((d) => d.dockType === type).length;
-}
-
-export function dockCountForCountry(code: Dock["countryCode"]) {
-  return docks.filter((d) => d.countryCode === code).length;
-}
-
-export function dockCountForContinent(slug: string) {
-  return docks.filter((d) => d.continentSlug === slug).length;
-}
-
-export function totalPhotoCount() {
-  return docks.filter((d) => d.imageUrl).length;
 }

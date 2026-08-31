@@ -83,7 +83,7 @@ function Wave({ seas }: { seas: string[] }) {
 }
 
 // Fixed family display order so sections line up the same way on every
-// continent — each country lands under its FIRST-listed (primary) sea, so
+// continent , each country lands under its FIRST-listed (primary) sea, so
 // a multi-sea country like Germany still appears exactly once, with a
 // multi-color wave showing every sea it actually touches.
 const FAMILY_ORDER: Water[] = [
@@ -115,7 +115,7 @@ export function ContinentPage(opts: { name: string; slug: string; intro: string;
     .sort((a, b) => FAMILY_ORDER.indexOf(a.family) - FAMILY_ORDER.indexOf(b.family) || a.sea.localeCompare(b.sea));
 
   return (
-    <Layout title={`${opts.name} — Countries | Wildock`} description={opts.intro} path={opts.path}>
+    <Layout title={`Countries in ${opts.name} | Wildock`} description={opts.intro} path={opts.path}>
       <style>{raw(PAGE_CSS)}</style>
       <div class="wrap continent-page">
         <nav class="breadcrumb">
@@ -127,7 +127,7 @@ export function ContinentPage(opts: { name: string; slug: string; intro: string;
           <>
             <div class="kicker">
               <i style={`background:${seaColor(sea)}`} />
-              {sea} <span class="count">— {names.length}</span>
+              {sea} <span class="count">· {names.length}</span>
             </div>
             <div class="country-grid">
               {names.map((name) => {

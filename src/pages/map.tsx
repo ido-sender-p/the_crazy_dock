@@ -1,6 +1,7 @@
 import { Layout } from "../layout";
 import { docks } from "../data";
 import { raw } from "hono/html";
+import { safeJsonForScript } from "../lib/html";
 
 const PAGE_CSS = `
   .map-page { padding: 48px 0 80px; }
@@ -26,16 +27,23 @@ const PAGE_CSS = `
 const MAP_MARKERS = docks.map((d) => ({ name: d.name, slug: d.slug, lat: d.lat, lon: d.lon }));
 
 const MAP_INIT_JS = `
-  var docks = ${JSON.stringify(MAP_MARKERS)};
+  var docks = ${safeJsonForScript(MAP_MARKERS)};
+  var escapeHtml = function (s) {
+    return String(s).replace(/[&<>"']/g, function (ch) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
+    });
+  };
   var map = L.map('wildock-map', { scrollWheelZoom: false }).setView([20, 10], 2);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     maxZoom: 19
   }).addTo(map);
   docks.forEach(function (d) {
+    // Dock names can come from user submissions once approved, so this must
+    // stay HTML-escaped — bindPopup renders its argument as raw HTML.
     L.circleMarker([d.lat, d.lon], { radius: 7, color: '#0b2545', weight: 1.5, fillColor: '#2ec4b6', fillOpacity: 0.9 })
       .addTo(map)
-      .bindPopup('<strong>' + d.name + '</strong><br><a href="/docks/' + d.slug + '">View dock</a>');
+      .bindPopup('<strong>' + escapeHtml(d.name) + '</strong><br><a href="/docks/' + encodeURIComponent(d.slug) + '">View dock</a>');
   });
   if (docks.length) {
     var bounds = L.latLngBounds(docks.map(function (d) { return [d.lat, d.lon]; }));
@@ -46,12 +54,17 @@ const MAP_INIT_JS = `
 export function MapPage() {
   return (
     <Layout
-      title="Map — Wildock"
+      title="Map | Wildock"
       description="Every documented dock, pier and marina plotted on an interactive map."
       path="/map"
     >
       <style>{raw(PAGE_CSS)}</style>
-      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+      <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+        crossorigin=""
+      />
       <div class="wrap map-page">
         <nav class="breadcrumb">
           <a href="/">Wildock</a> / Map
@@ -64,7 +77,11 @@ export function MapPage() {
         <div class="map-canvas">
           <div id="wildock-map" />
         </div>
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script
+          src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+          crossorigin=""
+        ></script>
         <script>{raw(MAP_INIT_JS)}</script>
 
         <div class="pin-list">

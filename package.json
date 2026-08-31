@@ -11,8 +11,6 @@
     "db:migrate:local": "wrangler d1 execute wildock-db --local --file=./src/db/schema.sql",
     "db:migrate:remote": "wrangler d1 execute wildock-db --remote --file=./src/db/schema.sql",
     "fetch:overpass": "node scripts/fetch-overpass.mjs",
-    "load:local": "node scripts/load-docks.mjs --local",
-    "load:remote": "node scripts/load-docks.mjs --remote",
     "typecheck": "tsc --noEmit"
   },
   "keywords": [],
@@ -24,6 +22,6 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260826.1",
     "typescript": "^7.0.2",
-    "wrangler": "^4.126.0"
+    "wrangler": "^4.127.1"
   }
 }
