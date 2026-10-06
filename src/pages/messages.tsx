@@ -4,7 +4,7 @@ import type { MessageListItem, MessageDetail } from "../lib/messages";
 
 const PAGE_CSS = `
   .messages-page { padding: 56px 0 100px; max-width: 680px; }
-  .messages-page h1 { font-size: 1.7rem; }
+
   .messages-tabs { display: flex; gap: 18px; margin: 18px 0 28px; border-bottom: 1px solid var(--border); }
   .messages-tabs a {
     text-decoration: none; color: var(--ink-soft); font-size: 0.9rem; font-weight: 600;

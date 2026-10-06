@@ -5,7 +5,6 @@ import { parsePhotoCredit, WIKIPEDIA_LICENSE } from "../lib/credits";
 
 const PAGE_CSS = `
   .credits-page { padding: 56px 0 100px; max-width: 980px; }
-  .credits-page h1 { font-size: 1.7rem; }
   .credits-page h2 { font-size: 1.15rem; margin-top: 32px; }
   .credits-page p { font-size: 0.95rem; }
   .credits-page .notice {

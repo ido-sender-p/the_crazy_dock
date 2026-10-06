@@ -5,8 +5,9 @@ import { slugify, type Dock } from "../data";
 import { CardThumb, placeLabel, FAMILY_ORDER, LakeIcon } from "./shared";
 
 const PAGE_CSS = `
-  .country-page { padding: 40px 0 80px; }
-  .country-page h1 { font-size: 2.2rem; margin-top: 6px; }
+  .country-page { padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(4rem, 9vw, 7rem); }
+  .country-page .breadcrumb, .country-page .kicker, .country-page h1 { text-align: center; }
+  .country-page h1 { margin-top: 6px; }
   .country-page .sea-head {
     display: flex; align-items: center; gap: 8px;
     color: var(--ink); font-weight: 600; font-size: 0.9rem;

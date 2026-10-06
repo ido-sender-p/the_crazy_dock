@@ -4,7 +4,7 @@ import type { User } from "../lib/db";
 
 const PAGE_CSS = `
   .submit-page { padding: 60px 0 100px; max-width: 620px; }
-  .submit-page h1 { font-size: 1.9rem; }
+
   .submit-page p.intro { color: var(--ink-soft); margin-bottom: 8px; }
   .submit-page div.who { color: var(--ink-soft); font-size: 0.85rem; margin-bottom: 28px; }
   .submit-page div.who a { color: var(--accent-text); text-decoration: none; }

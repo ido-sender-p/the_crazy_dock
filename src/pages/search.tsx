@@ -7,7 +7,7 @@ export type SearchFilter = "all" | "profile" | "location" | "dock";
 
 const PAGE_CSS = `
   .search-page { padding: 56px 0 100px; max-width: 680px; }
-  .search-page h1 { font-size: 1.7rem; }
+
   .search-form { display: flex; gap: 10px; margin: 20px 0 18px; }
   .search-form input {
     flex: 1; padding: 12px 16px; border: 1px solid var(--border); border-radius: 999px;

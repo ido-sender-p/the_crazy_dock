@@ -134,7 +134,7 @@ type CatalogueRow = {
 
 // tsc checks the JSON's field names and primitive types against CatalogueRow; only the
 // string-literal unions widen to string in JSON, hence the narrow cast (validated at build time).
-type LooseRow = Omit<CatalogueRow, "dockType" | "imageOrientation"> & { dockType: string; imageOrientation: string };
+type LooseRow = Omit<CatalogueRow, "dockType" | "imageOrientation" | "nb"> & { dockType: string; imageOrientation: string; nb?: number[] };
 const rows: LooseRow[] = catalogue;
 
 function toDock(r: CatalogueRow): Dock {

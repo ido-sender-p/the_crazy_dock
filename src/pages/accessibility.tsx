@@ -3,7 +3,6 @@ import { raw } from "hono/html";
 
 const PAGE_CSS = `
   .accessibility-page { padding: 56px 0 100px; max-width: 720px; }
-  .accessibility-page h1 { font-size: 1.7rem; }
   .accessibility-page h2 { font-size: 1.15rem; margin-top: 32px; }
   .accessibility-page p, .accessibility-page li { font-size: 0.95rem; color: var(--ink); }
   .accessibility-page ul { padding-inline-start: 22px; display: flex; flex-direction: column; gap: 6px; }

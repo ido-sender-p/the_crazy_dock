@@ -11,6 +11,31 @@ export type DockPhoto = {
   avg_rating: number; // 0 when unrated, otherwise the 1-10 average
 };
 
+// A published gallery photo as the dock page needs it: with who took it and its orientation,
+// so the winner can be shown as the page's main photo.
+export type CommunityPhoto = DockPhoto & { image_orientation: string; username: string };
+
+// "The best shot wins the page": the photo that becomes the dock's main photo once people have
+// rated it. It needs enough votes and a good average so one early 10 can't take the page.
+const COVER_MIN_VOTES = 3;
+const COVER_MIN_AVG = 7;
+
+// Highest average among photos with enough votes; ties go to more votes, then the older upload.
+export function pickCoverPhoto(photos: CommunityPhoto[]): CommunityPhoto | null {
+  let best: CommunityPhoto | null = null;
+  for (const p of photos) {
+    if (p.votes < COVER_MIN_VOTES || p.avg_rating < COVER_MIN_AVG) continue;
+    if (
+      !best ||
+      p.avg_rating > best.avg_rating ||
+      (p.avg_rating === best.avg_rating && (p.votes > best.votes || (p.votes === best.votes && p.id < best.id)))
+    ) {
+      best = p;
+    }
+  }
+  return best;
+}
+
 export type PendingDockPhoto = DockPhoto & {
   dock_slug: string;
   submitted_by: number;
@@ -26,15 +51,17 @@ export const MAX_PENDING_PHOTOS = 5;
 // doesn't favor whichever photo happened to be uploaded first. Ranking still
 // exists (avg_rating), it's just not used to order the display; the page
 // marks only the current #1, nothing else.
-export async function findPublishedPhotosForDock(db: D1Database, dockSlug: string): Promise<DockPhoto[]> {
+export async function findPublishedPhotosForDock(db: D1Database, dockSlug: string): Promise<CommunityPhoto[]> {
   const result = await db
     .prepare(
-      `SELECT id, image_url, title, caption, votes, avg_rating FROM dock_photos
-       WHERE dock_slug = ? AND review_status = 'published'
-       ORDER BY id DESC LIMIT 60`,
+      `SELECT dock_photos.id, dock_photos.image_url, dock_photos.title, dock_photos.caption, dock_photos.votes,
+              dock_photos.avg_rating, dock_photos.image_orientation, users.username
+       FROM dock_photos JOIN users ON users.id = dock_photos.submitted_by
+       WHERE dock_photos.dock_slug = ? AND dock_photos.review_status = 'published'
+       ORDER BY dock_photos.id DESC LIMIT 60`,
     )
     .bind(dockSlug)
-    .all<DockPhoto>();
+    .all<CommunityPhoto>();
   const photos = result.results;
   for (let i = photos.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));

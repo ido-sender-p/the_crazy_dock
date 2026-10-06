@@ -14,13 +14,15 @@ import { account } from "./routes/account";
 import { search } from "./routes/search";
 import { users } from "./routes/users";
 import { messages } from "./routes/messages";
+import { assets } from "./routes/assets";
 
 const app = new Hono<Env>();
 
-// /uploads sends its own locked-down CSP, so the site-wide one is skipped there.
-app.use((c, next) => (c.req.path.startsWith("/uploads/") ? next() : securityHeaders(c, next)));
+// /uploads sends its own locked-down CSP, so the site-wide one is skipped there; /assets is plain CSS/JS.
+app.use((c, next) => (c.req.path.startsWith("/uploads/") || c.req.path.startsWith("/assets/") ? next() : securityHeaders(c, next)));
 app.use(csrf());
 
+app.route("/", assets);
 app.route("/", catalog);
 app.route("/", auth);
 app.route("/", submissions);

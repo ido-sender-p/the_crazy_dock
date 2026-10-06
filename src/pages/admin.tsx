@@ -5,7 +5,7 @@ import type { PendingDockPhoto } from "../lib/gallery";
 
 const PAGE_CSS = `
   .admin-page { padding: 56px 0 100px; max-width: 760px; }
-  .admin-page h1 { font-size: 1.9rem; }
+
   .admin-page p.intro { color: var(--ink-soft); margin-bottom: 32px; }
 
   .admin-page .kicker { margin-top: 40px; }

@@ -5,7 +5,7 @@ import { initials } from "./shared";
 
 const PAGE_CSS = `
   .edit-profile-page { padding: 56px 0 100px; max-width: 480px; }
-  .edit-profile-page h1 { font-size: 1.7rem; }
+
   .edit-profile-page p.intro { color: var(--ink-soft); margin-bottom: 28px; }
   .edit-profile-page form { display: flex; flex-direction: column; gap: 20px; }
   .edit-profile-page label { font-size: 0.85rem; font-weight: 600; color: var(--ink); display: block; margin-bottom: 6px; }

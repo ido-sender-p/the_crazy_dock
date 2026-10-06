@@ -12,7 +12,7 @@ const PAGE_CSS = `
   .profile-head .logout-btn {
     border: none; background: none; padding: 0; font: inherit; color: var(--accent-text); cursor: pointer;
   }
-  .profile-head h1 { font-size: 1.7rem; margin: 0 0 4px; }
+  .profile-head h1 { margin: 0 0 4px; }
   .profile-head .links { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
   .profile-head .links a { color: var(--accent-text); text-decoration: none; }
 

@@ -1,6 +1,9 @@
 import type { FC, PropsWithChildren } from "hono/jsx";
 import { raw } from "hono/html";
 import { safeJsonForScript } from "./lib/html";
+import { siteCssUrl, heroCssUrl, pageCssUrl, scriptUrl } from "./lib/assets";
+import type { PageName } from "./styles";
+import type { ClientScriptName } from "./client";
 
 const GLOBAL_CSS = `
   :root {
@@ -31,6 +34,10 @@ const GLOBAL_CSS = `
     line-height: 1.55;
   }
   h1, h2, h3 { font-family: 'Fraunces', Georgia, serif; margin: 0 0 0.4em; line-height: 1.15; }
+  /* one editorial voice across the site: Fraunces headings and prose in deep navy, calm and spaced */
+  main h1 { font-weight: 500; font-size: clamp(1.75rem, 3.2vw, 2.4rem); letter-spacing: -0.01em; }
+  main h2, main h3 { font-weight: 500; letter-spacing: -0.005em; }
+  main p, main figcaption, main dd { font-family: 'Fraunces', Georgia, serif; line-height: 1.7; }
   a { color: inherit; }
   .wrap { max-width: 1320px; margin: 0 auto; padding: 0 24px; }
 
@@ -139,8 +146,8 @@ const GLOBAL_CSS = `
 
   /* Shared across pages */
   .kicker {
-    color: var(--accent-text); font-weight: 600; font-size: 0.8rem; text-transform: uppercase;
-    letter-spacing: 0.06em;
+    color: var(--accent-text); font-weight: 500; font-size: 0.72rem; text-transform: uppercase;
+    letter-spacing: 0.2em;
   }
   .empty {
     padding: 24px; border: 1px dashed var(--border); border-radius: 12px; color: var(--ink-soft); font-size: 0.9rem;
@@ -217,8 +224,10 @@ export const Layout: FC<
     path?: string;
     noindex?: boolean; // private/utility pages: no canonical, robots noindex
     hero?: boolean; // transparent header over a hero photo
+    page?: PageName; // page stylesheet in src/styles/pages (linked as /assets/page-<name>.<hash>.css)
+    scripts?: ClientScriptName[]; // extra client scripts from src/client, loaded deferred after "site"
   }>
-> = ({ title, description, jsonLd, path = "/", noindex, hero, children }) => (
+> = ({ title, description, jsonLd, path = "/", noindex, hero, page, scripts = [], children }) => (
   <html lang="en">
     <head>
       <meta charset="UTF-8" />
@@ -239,6 +248,11 @@ export const Layout: FC<
       {jsonLd && <script type="application/ld+json">{raw(safeJsonForScript(jsonLd))}</script>}
       <style>{raw(GLOBAL_CSS)}</style>
       {hero && <style>{raw(HERO_CSS)}</style>}
+      <link rel="stylesheet" href={siteCssUrl} />
+      {hero && <link rel="stylesheet" href={heroCssUrl} />}
+      {page && <link rel="stylesheet" href={pageCssUrl(page)} />}
+      <script defer src={scriptUrl("site")}></script>
+      {scripts.map((n) => <script defer src={scriptUrl(n)}></script>)}
     </head>
     <body class={hero ? "hero-page" : undefined}>
       <a class="skip-link" href="#main">Skip to content</a>

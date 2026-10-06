@@ -6,7 +6,7 @@ import { initials, placeLabel } from "./shared";
 
 const PAGE_CSS = `
   .user-profile-page { padding: 56px 0 100px; max-width: 640px; }
-  .profile-head h1 { font-size: 1.7rem; margin: 0; }
+  .profile-head h1 { margin: 0; }
   .user-profile-page .kicker { margin-top: 8px; }
   .user-profile-page section { margin-top: 36px; }
   .user-profile-page h2 { font-size: 1.2rem; margin: 4px 0 16px; }

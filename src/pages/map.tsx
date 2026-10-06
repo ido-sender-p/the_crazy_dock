@@ -4,9 +4,11 @@ import { raw } from "hono/html";
 import { LeafletCss, LeafletMap } from "./leaflet";
 
 const PAGE_CSS = `
-  .map-page { padding: 48px 0 80px; }
-  .map-page h1 { font-size: 2rem; }
-  .map-page p.intro { color: var(--ink-soft); max-width: 620px; }
+  .map-page { padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(4rem, 9vw, 7rem); }
+  .map-page h1, .map-page p.intro { text-align: center; }
+  .map-page p.intro { margin-inline: auto; }
+
+  .map-page p.intro { color: var(--ink-soft); max-width: 40rem; }
   .map-canvas {
     margin: 32px 0;
     border-radius: 20px;

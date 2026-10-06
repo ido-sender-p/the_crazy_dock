@@ -16,7 +16,7 @@ import {
   resolveDock,
 } from "../lib/liveDocks";
 import { staticInContinent, staticInCountryCode, staticInCountryName, staticInRegion, staticInSettlement } from "../lib/staticDocks";
-import { findPublishedPhotosForDock, findUserRatingsForDock } from "../lib/gallery";
+import { findPublishedPhotosForDock, findUserRatingsForDock, pickCoverPhoto } from "../lib/gallery";
 import { currentUser } from "../lib/session";
 import { isFavorited } from "../lib/favorites";
 import { edgeCached } from "../lib/edgeCache";
@@ -49,8 +49,19 @@ catalog.get("/docks/:slug", (c) => {
         ])
       : [[], {}, false];
 
+    // The community's top-rated photo takes over the page's main photo once it has enough votes.
+    const cover = pickCoverPhoto(photos);
+    const shown = cover
+      ? {
+          ...dock,
+          imageUrl: cover.image_url,
+          imageAttribution: `Photo by ${cover.username}, voted the best shot by the community`,
+          imageOrientation: cover.image_orientation === "portrait" ? ("portrait" as const) : ("landscape" as const),
+        }
+      : dock;
+
     return c.html(
-      <DockPage {...dock} photos={photos} isLoggedIn={!!user} yourRatings={yourRatings} isFavorited={favorited} />,
+      <DockPage {...shown} photos={photos} isLoggedIn={!!user} yourRatings={yourRatings} isFavorited={favorited} />,
     );
   });
 });

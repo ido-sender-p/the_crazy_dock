@@ -7,8 +7,9 @@ import { seaColor, waveUrl, type Water } from "../waveCard";
 import { CardThumb, placeLabel, FAMILY_ORDER, LakeIcon } from "./shared";
 
 const PAGE_CSS = `
-  .continent-page { padding: 40px 0 80px; }
-  .continent-page h1 { font-size: 2.2rem; margin-top: 6px; }
+  .continent-page { padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(4rem, 9vw, 7rem); }
+  .continent-page .breadcrumb, .continent-page .kicker, .continent-page h1 { text-align: center; }
+  .continent-page h1 { margin-top: 6px; }
 
   .continent-page .sea-head {
     display: flex; align-items: center; gap: 8px;

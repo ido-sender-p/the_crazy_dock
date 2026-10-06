@@ -3,7 +3,7 @@ import { raw } from "hono/html";
 
 const PAGE_CSS = `
   .add-photo-page { padding: 56px 0 100px; max-width: 560px; }
-  .add-photo-page h1 { font-size: 1.7rem; }
+
   .add-photo-page p.intro { color: var(--ink-soft); margin-bottom: 28px; }
   .add-photo-page form { display: flex; flex-direction: column; gap: 16px; }
   .add-photo-page label { font-size: 0.85rem; font-weight: 600; color: var(--ink); display: block; margin-bottom: 6px; }

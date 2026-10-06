@@ -94,7 +94,7 @@ const PAGE_CSS = `
   .around-extras { margin: 16px 0 0; padding-inline-start: 1.1rem; font-size: 0.92rem; display: flex; flex-direction: column; gap: 4px; }
   .around-src { margin: 14px 0 0; font-size: 0.75rem; color: var(--ink-soft); }
   .around-src a { color: inherit; text-decoration: underline; }
-  .dock-page { padding: 40px 0 80px; }
+  .dock-page { padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(4rem, 9vw, 7rem); }
   .dock-page figure { margin: 0; text-align: center; }
   .dock-page .hero-frame {
     display: inline-flex; max-width: 100%; background: var(--surface);
@@ -143,9 +143,10 @@ const PAGE_CSS = `
     .hero-split { grid-template-columns: 1fr; }
     .hero-img-split { min-height: 240px; }
   }
-  .dock-page h1 { font-size: 2.1rem; margin-top: 4px; }
-  .dock-page .meta { color: var(--ink-soft); margin-bottom: 24px; }
-  .dock-page .title-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .dock-page h1 { margin-top: 4px; }
+  .dock-page .meta { color: var(--ink-soft); margin-bottom: 2rem; text-align: center; }
+  .dock-page .title-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; text-align: center; }
+  .dock-page .breadcrumb { text-align: center; }
   .favorite-btn {
     display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border);
     background: var(--surface); border-radius: 999px; padding: 7px 14px; cursor: pointer;
@@ -162,11 +163,12 @@ const PAGE_CSS = `
   }
   .facts dt { font-weight: 600; color: var(--ink-soft); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
   .facts dd { margin: 4px 0 0; font-size: 1.05rem; }
+  /* the story: centred and calm under a landscape photo, left-aligned beside a portrait one */
   .dock-page p.desc {
-    font-family: 'Fraunces', Georgia, serif; font-size: 1.15rem; line-height: 1.7;
-    max-width: 66ch; color: var(--ink); border-left: 3px solid var(--accent);
-    padding: 4px 0 4px 22px; margin: 32px 0;
+    font-family: 'Fraunces', Georgia, serif; font-weight: 400; font-size: clamp(1.05rem, 1.4vw, 1.15rem); line-height: 1.8;
+    max-width: 40rem; color: #1d3a56; text-align: center; margin: 2.25rem auto;
   }
+  .dock-page .hero-split-text p.desc { text-align: left; margin: 0; }
 
   .gallery-section { margin: 36px 0; }
   .gallery-section h2 { font-size: 1.2rem; margin: 0 0 16px; }
