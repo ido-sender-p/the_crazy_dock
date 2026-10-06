@@ -4,6 +4,7 @@ import { raw } from "hono/html";
 import { safeJsonForScript } from "../lib/html";
 import type { DockPhoto } from "../lib/gallery";
 import { parsePhotoCredit, WIKIPEDIA_LICENSE } from "../lib/credits";
+import { vibe, count, type Nearby } from "../lib/nearby";
 import { placeLabel } from "./shared";
 
 const GALLERY_PREVIEW_LIMIT = 6;
@@ -40,7 +41,59 @@ function TextCreditLine({ value }: { value: string }) {
   );
 }
 
+// "Around the dock": counts of nearby places from OpenStreetMap plus a one-line feel.
+function AroundSection({ name, nearby, dockType }: { name: string; nearby: Nearby; dockType: string }) {
+  const v = vibe(nearby, dockType);
+  const tiles: [number, string][] = [
+    [nearby.eat, "places to eat & drink"],
+    [nearby.stay, "places to stay"],
+    [nearby.shops, "shops"],
+    [nearby.sights, "sights & museums"],
+    [nearby.historic, "historic sites"],
+    [nearby.beaches, "beaches"],
+  ];
+  const shown = tiles.filter(([n]) => n > 0);
+  const extras: string[] = [];
+  if (nearby.malls.length) extras.push(`Shopping centre${nearby.malls.length > 1 ? "s" : ""}: ${nearby.malls.join(", ")}`);
+  if (nearby.landmarks.length) extras.push(`Worth a look: ${nearby.landmarks.join(", ")}`);
+  if (nearby.stations) extras.push("A railway station is within a short walk");
+  if (nearby.ferries) extras.push("A ferry terminal is nearby");
+  return (
+    <section class="around" aria-labelledby="around-h">
+      <h2 id="around-h">Around {name}</h2>
+      <p class="around-vibe"><strong>{v.label}.</strong> {v.blurb}</p>
+      {shown.length > 0 && (
+        <ul class="around-tiles">
+          {shown.map(([n, label]) => (
+            <li><span class="num">{count(n, nearby.capped)}</span><span class="lbl">{label}</span></li>
+          ))}
+        </ul>
+      )}
+      {extras.length > 0 && (
+        <ul class="around-extras">
+          {extras.map((e) => <li>{e}</li>)}
+        </ul>
+      )}
+      <p class="around-src">
+        Counted within about 1 km from{" "}
+        <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> data (&copy; OpenStreetMap contributors, ODbL).
+      </p>
+    </section>
+  );
+}
+
 const PAGE_CSS = `
+  .around { margin-top: 40px; }
+  .around h2 { font-size: 1.3rem; margin: 0 0 6px; }
+  .around-vibe { color: var(--ink-soft); margin: 0 0 16px; }
+  .around-vibe strong { color: var(--ink); }
+  .around-tiles { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 12px; }
+  .around-tiles li { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; background: var(--surface); }
+  .around-tiles .num { display: block; font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.6rem; color: var(--accent-text); line-height: 1.1; }
+  .around-tiles .lbl { display: block; margin-top: 4px; font-size: 0.82rem; color: var(--ink-soft); }
+  .around-extras { margin: 16px 0 0; padding-inline-start: 1.1rem; font-size: 0.92rem; display: flex; flex-direction: column; gap: 4px; }
+  .around-src { margin: 14px 0 0; font-size: 0.75rem; color: var(--ink-soft); }
+  .around-src a { color: inherit; text-decoration: underline; }
   .dock-page { padding: 40px 0 80px; }
   .dock-page figure { margin: 0; text-align: center; }
   .dock-page .hero-frame {
@@ -559,6 +612,7 @@ export function DockPage(
           {d.yearBuilt != null && <div><dt>Built</dt><dd>{d.yearBuilt}</dd></div>}
           <div><dt>Coordinates</dt><dd>{d.lat.toFixed(4)}, {d.lon.toFixed(4)}</dd></div>
         </dl>
+        {d.nearby && <AroundSection name={d.name} nearby={d.nearby} dockType={d.dockType} />}
         {photos.length > 0 && (
           <div class="gallery-section">
             <h2>More photos of {d.name}</h2>

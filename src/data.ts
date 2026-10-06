@@ -68,9 +68,11 @@ export type Dock = {
   imageOrientation: "portrait" | "landscape";
   lengthM: number;
   yearBuilt: number | null;
+  nearby?: Nearby; // places around the dock, from OpenStreetMap; absent for hand-written entries
 };
 
 import catalogue from "./catalogue.json";
+import type { Nearby } from "./lib/nearby";
 
 const legacyDocks: Dock[] = [
   {
@@ -125,6 +127,9 @@ type CatalogueRow = {
   imageOrientation: Dock["imageOrientation"];
   lengthM?: number;
   yearBuilt?: number;
+  nb?: [number, number, number, number, number, number, number, number, 0 | 1]; // eat, stay, shops, sights, historic, beaches, stations, ferries, capped
+  ml?: string[]; // mall names
+  lm?: string[]; // landmark names
 };
 
 // tsc checks the JSON's field names and primitive types against CatalogueRow; only the
@@ -155,6 +160,11 @@ function toDock(r: CatalogueRow): Dock {
     imageOrientation: r.imageOrientation,
     lengthM: r.lengthM ?? 0,
     yearBuilt: r.yearBuilt ?? null,
+    nearby: r.nb && {
+      eat: r.nb[0], stay: r.nb[1], shops: r.nb[2], sights: r.nb[3], historic: r.nb[4],
+      beaches: r.nb[5], stations: r.nb[6], ferries: r.nb[7], capped: r.nb[8] === 1,
+      malls: r.ml ?? [], landmarks: r.lm ?? [],
+    },
   };
 }
 

@@ -42,7 +42,7 @@ export function LeafletMap(opts: { elementId: string; radius: number; zoomContro
       docks.forEach(function (d) {
         // Dock names can come from user submissions once approved, so this must
         // stay HTML-escaped: bindPopup renders its argument as raw HTML.
-        L.circleMarker([d.a, d.o], { radius: ${opts.radius}, color: '#0b2545', weight: 1.5, fillColor: '#2ec4b6', fillOpacity: 0.9 })
+        L.circleMarker([d.a, d.o], { radius: ${opts.radius}, color: '#0b2545', weight: 1.5, fillColor: '#c9a24d', fillOpacity: 0.9 })
           .addTo(map)
           .bindPopup('<strong>' + escapeHtml(d.n) + '</strong><br>' + escapeHtml(String(d.t).replace(/_/g, ' ')) + '<br><a href="/docks/' + encodeURIComponent(d.s) + '">View dock</a>');
       });

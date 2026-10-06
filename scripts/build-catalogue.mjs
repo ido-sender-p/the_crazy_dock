@@ -17,6 +17,8 @@ const WIKI = "https://en.wikipedia.org/wiki/";
 const COMMONS = "https://commons.wikimedia.org/wiki/";
 
 const all = JSON.parse(await readFile(new URL("./data/docks.json", import.meta.url), "utf8"));
+// Places around each dock from scripts/enrich-nearby.mjs (optional: docks without an entry just omit the section).
+const nearby = await readFile(new URL("./data/nearby.json", import.meta.url), "utf8").then(JSON.parse, () => ({}));
 const images = await imagePathsBySlug();
 
 const dropped = { description: 0, author: 0, image: 0 };
@@ -74,6 +76,12 @@ const out = picked.map((d) => {
     imageAttribution: d.imageAttribution.replace(`|${COMMONS}`, "|"),
     imageOrientation: d.imageOrientation,
   };
+  const nb = nearby[d.slug];
+  if (nb) {
+    row.nb = [nb.food, nb.stay, nb.shops, nb.sights, nb.historic, nb.beach, nb.station, nb.ferry, nb.capped ? 1 : 0];
+    if (nb.malls?.length) row.ml = nb.malls;
+    if (nb.landmarks?.length) row.lm = nb.landmarks;
+  }
   if (d.lengthM) row.lengthM = d.lengthM;
   if (d.yearBuilt != null) row.yearBuilt = d.yearBuilt;
   return row;

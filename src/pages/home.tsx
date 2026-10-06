@@ -3,11 +3,16 @@ import { docks, continents } from "../data";
 import { raw } from "hono/html";
 import { WORLD_MAP_VIEWBOX, CONTINENT_SHAPES } from "../continents";
 import { LeafletCss, LeafletMap } from "./leaflet";
-import { CardThumb, DockIcon, Footprints, placeLabel } from "./shared";
+import { CardThumb, placeLabel } from "./shared";
 
 const PAGE_CSS = `
-  .hero { min-height: 560px; }
-  .hero .wrap { max-width: 1320px; padding-top: 60px; padding-bottom: 60px; text-align: left; }
+  .hero { min-height: clamp(32rem, 82svh, 52rem); }
+  .hero .wrap { max-width: 1320px; padding-top: 3.75rem; padding-bottom: 5.5rem; text-align: center; }
+  /* soft dark pool behind the text so the light, busy part of the photo never sits under it */
+  .hero::before {
+    content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background: radial-gradient(ellipse 75% 65% at 50% 52%, rgba(4,14,26,0.6) 0%, rgba(4,14,26,0.35) 45%, rgba(4,14,26,0) 80%);
+  }
   .hero h1 {
     font-family: 'Fraunces', Georgia, serif;
     font-weight: 600;
@@ -23,17 +28,36 @@ const PAGE_CSS = `
     font-family: 'Fraunces', Georgia, serif;
     font-weight: 400;
     font-size: clamp(1rem, 1.6vw, 1.2rem);
-    line-height: 1.5;
-    margin: 18px 0 0;
-    max-width: 620px;
-    color: #eef4f8;
-    text-shadow: 0 1px 12px rgba(0,0,0,0.35);
+    font-weight: 500;
+    line-height: 1.6;
+    margin: 1.75rem auto 0;
+    max-width: 38rem;
+    color: #fff;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 2px 18px rgba(0,0,0,0.55);
   }
-  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 44px; }
-  .hero .btn-cta { margin-top: 0; padding: 12px 24px; font-size: 0.95rem; }
+  .hero-actions { display: flex; gap: 0.9rem; flex-wrap: wrap; justify-content: center; margin-top: 2.75rem; }
+  /* plain serif text link with an arrow, no button chrome */
+  .hero .hero-link {
+    display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0;
+    font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+    color: #fff; text-decoration: none; text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 2px 18px rgba(0,0,0,0.55);
+  }
+  .hero .hero-link svg { width: 0.7em; height: 0.45em; position: relative; top: 0.14em; transition: transform 0.2s ease; }
+  .hero .hero-link svg path { vector-effect: non-scaling-stroke; }
+  .hero .hero-link:hover svg { transform: translateX(3px); }
+  /* the photo dissolves into the page background so the hero flows into the next section */
+  .hero::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 48%; z-index: 0; pointer-events: none;
+    background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, var(--bg) 92%);
+  }
 
-  section.block { padding: 64px 0; }
-  section.block h2 { font-size: 1.8rem; margin-top: 6px; }
+  /* one literary voice for every section: Fraunces, deep sea navy, plenty of air */
+  section.block { padding: clamp(3rem, 8vw, 6rem) 0; }
+  section.block .kicker { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.2em; }
+  section.block h2 {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: clamp(1.5rem, 2.6vw, 2rem);
+    letter-spacing: -0.005em; margin: 0.9rem 0 2.25rem;
+  }
 
   .world-map { width: 100%; margin-top: 8px; }
   .world-map svg { width: 100%; height: auto; display: block; }
@@ -62,7 +86,7 @@ const PAGE_CSS = `
   .map-teaser-copy .btn-cta svg { width: 16px; height: 16px; }
   .map-teaser-copy .btn-cta { box-shadow: 0 4px 14px rgba(11,37,69,0.35); }
   /* on dark panels the navy button would vanish, so it flips to white with navy text */
-  .hero .btn-cta, .submit-cta .btn-cta { background: #fff; color: var(--ink); box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
+  .submit-cta .btn-cta { background: #fff; color: var(--ink); box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
 
   .featured-card {
     display: grid;
@@ -77,40 +101,41 @@ const PAGE_CSS = `
   }
   .featured-card img, .featured-card .thumb-ph { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; object-position: center 40%; display: block; }
   .featured-card .thumb-ph { background: var(--border); }
-  .featured-card .copy { padding: 32px; display: flex; flex-direction: column; justify-content: center; }
-  .featured-card .tag { font-size: 0.75rem; font-weight: 600; color: var(--accent-text); text-transform: uppercase; letter-spacing: 0.05em; }
-  .featured-card h3 { font-size: 1.5rem; margin: 8px 0 10px; }
-  .featured-card p { color: var(--ink-soft); font-size: 0.95rem; }
+  .featured-card .copy { padding: clamp(1.5rem, 3.5vw, 2.75rem); display: flex; flex-direction: column; justify-content: center; }
+  .featured-card .tag { font-size: 0.72rem; font-weight: 500; color: var(--accent-text); text-transform: uppercase; letter-spacing: 0.16em; }
+  .featured-card h3 { font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: clamp(1.3rem, 2vw, 1.6rem); margin: 0.6rem 0 0.9rem; }
+  .featured-card p { font-family: 'Fraunces', Georgia, serif; font-weight: 300; color: #24405c; font-size: 1rem; line-height: 1.8; }
   @media (max-width: 640px) { .featured-card { grid-template-columns: 1fr; } .featured-card img, .featured-card .thumb-ph { aspect-ratio: 16 / 10; } .featured-card .copy { padding: 1.5rem 1.25rem; } }
 
-  .log { margin-top: 28px; border-top: 1px solid var(--border); }
-  .log-entry { display: grid; grid-template-columns: 1fr; justify-items: center; gap: 20px; padding: 26px 0; }
-  .log-num { color: var(--accent-text); width: 60px; height: 60px; }
-  .log-entry h3 { font-family: 'Fraunces', serif; font-size: 1.15rem; margin: 0 0 6px; }
+  /* story block right after the hero: same serif, same navy, lots of air */
+  .log { margin-top: 0; }
+  .log-entry { display: grid; grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 2rem; padding: clamp(2.5rem, 7vw, 5.5rem) 0; }
+  .log-num { width: 3.5rem; height: 3.5rem; }
+  .log-entry > div { max-width: 38rem; }
+  .log-entry h3 {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: clamp(1.25rem, 2vw, 1.55rem);
+    letter-spacing: -0.005em; color: var(--ink); margin: 0 0 1.75rem;
+  }
   .log-entry p {
-    color: var(--ink); font-family: 'GFS Didot', 'Fraunces', serif;
-    font-size: 1.15rem; line-height: 1.5; max-width: 60ch; margin: 0 auto;
+    font-family: 'Fraunces', Georgia, serif; font-weight: 300; font-size: clamp(1.02rem, 1.4vw, 1.15rem);
+    line-height: 1.9; color: #24405c; margin: 0 auto;
   }
-  .trail { position: relative; margin: 32px auto 0; max-width: 480px; }
-  .trail::before {
-    content: ''; position: absolute; left: 50%; margin-left: -10px; top: 4px; bottom: 4px; width: 20px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='40' viewBox='0 0 20 40'%3E%3Cpath d='M10,0 C18,10 2,10 10,20 C18,30 2,30 10,40' fill='none' stroke='%23c9c2b0' stroke-width='2' stroke-dasharray='4 4' stroke-linecap='round'/%3E%3C/svg%3E");
-    background-repeat: repeat-y; background-size: 20px 40px;
+  .log-entry p + p { margin-top: 1.75rem; }
+  /* Get started: three steps, text first; the dashed route only links them in the gaps */
+  .journey { max-width: 44rem; margin: 0 auto; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .step { display: flex; flex-direction: column; align-items: center; }
+  .step-icon { width: 3.1rem; height: 3.1rem; margin-bottom: 1.4rem; color: var(--accent); }
+  .step-icon svg { width: 100%; height: 100%; display: block; }
+  .step h3 {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: clamp(1.4rem, 2vw, 1.625rem);
+    line-height: 1.25; letter-spacing: -0.005em; color: var(--ink); margin: 0 0 1rem;
   }
-  .sailboat { position: relative; z-index: 2; width: 60px; margin: 0 auto; color: var(--accent-text); background: #ffffff; }
-  .sailboat svg { width: 100%; height: auto; display: block; }
-  .trail-stop { position: relative; padding: 44px 0 48px; }
-  .trail-stop:last-child { padding-bottom: 0; }
-  .dock-marker {
-    width: 34px; height: 34px; margin: 0 auto 12px;
-    display: flex; align-items: center; justify-content: center;
-    color: var(--accent-text); background: #ffffff;
+  .step p {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 400; font-size: clamp(1.05rem, 1.4vw, 1.125rem);
+    line-height: 1.62; color: #1d3a56; max-width: 40rem; margin: 0;
   }
-  .dock-marker svg { width: 100%; height: 100%; }
-  .trail-stop h3 { position: relative; z-index: 2; font-family: 'Fraunces', serif; font-size: 1.1rem; margin: 0 0 6px; background: #ffffff; padding: 0 10px; display: inline-block; }
-  .trail-stop p { position: relative; z-index: 2; color: var(--ink-soft); font-size: 0.95rem; max-width: 56ch; margin: 0 auto; background: #ffffff; padding: 2px 10px; }
-  .footprints { display: block; margin: 10px auto 0; width: 26px; height: 26px; opacity: 0.4; }
-  .footprints ellipse { fill: var(--accent-dark); }
+  .route { width: 1.4rem; height: 4.5rem; margin: 2.5rem 0; color: var(--accent); opacity: 0.75; }
+  .route svg { width: 100%; height: 100%; display: block; }
 
   .submit-cta {
     position: relative;
@@ -118,15 +143,15 @@ const PAGE_CSS = `
     background: linear-gradient(180deg, #0b2545 0%, #0b2545 60%, #123a63 100%);
     color: #fff;
     border-radius: 20px;
-    padding: 48px;
+    padding: clamp(2.25rem, 6vw, 4rem);
     text-align: center;
   }
   .submit-cta .dock-scene { position: absolute; right: 10px; bottom: 0; width: 260px; height: auto; opacity: 0.9; }
   .submit-cta .cast-line { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.9; pointer-events: none; }
   .submit-cta .birds { position: absolute; left: 24px; top: 18px; width: 120px; height: 50px; opacity: 0.85; pointer-events: none; }
-  .submit-cta h2 { color: #fff; font-size: 1.7rem; }
+  .submit-cta h2 { color: #fff; font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: clamp(1.5rem, 2.6vw, 2rem); margin: 0 0 1.75rem; }
 
-  /* the hero stays left-aligned over the photo; everything else is centered */
+  /* hero and sections are all centered */
   section.block, .map-teaser-copy, .featured-card .copy { text-align: center; }
 
   @media (max-width: 640px) {
@@ -156,7 +181,6 @@ export function HomePage() {
   return (
     <Layout
       hero
-      displayFonts
       title="Wildock: A Global Catalogue of Docks, Piers & Marinas"
       description="Explore thousands of docks, piers, marinas and floating structures from around the world, each documented with photos, history and precise location."
       jsonLd={jsonLd}
@@ -169,7 +193,12 @@ export function HomePage() {
           <h1>From the whisper of seas<br />To the legends of the lakes</h1>
           <p class="tagline">Wildock is on a mission to map every dock in the world and give people a place to share their stories about them.</p>
           <div class="hero-actions">
-            <a class="btn-cta" href="#continents">Explore docks around the world</a>
+            <a class="hero-link" href="#map">
+              Explore docks on the map
+              <svg aria-hidden="true" viewBox="0 0 32 16" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 8h29M23.5 1.5L30 8l-6.5 6.5" />
+              </svg>
+            </a>
           </div>
         </div>
       </section>
@@ -177,29 +206,25 @@ export function HomePage() {
       <section class="block wrap">
         <div class="log">
           <div class="log-entry">
-            <svg class="log-num" aria-hidden="true" viewBox="-6 -6 52 52" fill="none" stroke="currentColor" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="20" cy="20" r="24" stroke-width="1" opacity="0.6" />
-              <circle cx="20" cy="20" r="18" stroke-width="1.2" />
-              <text x="20" y="-1" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Β</text>
-              <text x="41" y="20" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Α</text>
-              <text x="20" y="41" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Ν</text>
-              <text x="-1" y="20" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Δ</text>
-              {Array.from({ length: 28 }).map((_, i) => {
-                const angle = (i / 28) * Math.PI * 2;
-                return (
-                  <circle
-                    cx={20 + 19.2 * Math.cos(angle)}
-                    cy={20 + 19.2 * Math.sin(angle)}
-                    r="0.7"
-                    fill="currentColor"
-                    stroke="none"
-                    opacity="0.6"
-                  />
-                );
-              })}
-              <polygon points="20,6 24,20 16,20" fill="currentColor" stroke="none" />
-              <polygon points="20,34 24,20 16,20" fill="none" stroke-width="1.1" />
-              <circle cx="20" cy="20" r="1.6" fill="currentColor" stroke="none" />
+            <svg class="log-num" aria-hidden="true" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+              <g fill="#b99a5f">
+                <polygon points="48.4,48.4 51.6,51.6 74,26" />
+                <polygon points="51.6,48.4 48.4,51.6 26,26" />
+                <polygon points="51.6,48.4 48.4,51.6 74,74" />
+                <polygon points="48.4,48.4 51.6,51.6 26,74" />
+              </g>
+              <g fill="#e2c995">
+                <polygon points="50,4 44,46 50,50" />
+                <polygon points="4,50 46,44 50,50" />
+                <polygon points="50,96 44,54 50,50" />
+                <polygon points="96,50 54,44 50,50" />
+              </g>
+              <g fill="#a98a52">
+                <polygon points="50,4 56,46 50,50" />
+                <polygon points="4,50 46,56 50,50" />
+                <polygon points="50,96 56,54 50,50" />
+                <polygon points="96,50 54,56 50,50" />
+              </g>
             </svg>
             <div>
               <h3>The best shot wins the page</h3>
@@ -215,47 +240,23 @@ export function HomePage() {
       <section class="block wrap" style="padding-top: 0;">
         <div class="kicker">Get started</div>
         <h2>Your voyage, from dock to dock</h2>
-        <div class="trail">
-          <div class="sailboat">
-            <svg aria-hidden="true" viewBox="0 0 40 36" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-              <path d="M6,29 Q20,34 34,29" />
-              <path d="M20,29 L20,4" />
-              <path d="M20,6 Q31,15 20,26 Z" fill="currentColor" fill-opacity="0.15" />
-              <path d="M8,26 Q17,17 20,8 Z" fill="currentColor" fill-opacity="0.15" />
-              <path d="M2,32 Q8,30 14,32 Q20,34 26,32 Q32,30 38,32" stroke-width="1" opacity="0.5" />
-            </svg>
-          </div>
-          <div class="trail-stop">
-            <div class="dock-marker">
-              <DockIcon />
-            </div>
+        <div class="journey">
+          <div class="step">
+            <div class="step-icon"><svg viewBox="0 0 100 100" fill="currentColor" aria-hidden="true"><path d="M50 4l6 40 40 6-40 6-6 40-6-40-40-6 40-6z" /><path transform="rotate(45 50 50) translate(50 50) scale(.5) translate(-50 -50)" d="M50 4l6 40 40 6-40 6-6 40-6-40-40-6 40-6z" opacity="0.6" /></svg></div>
             <h3>Explore &amp; rate</h3>
-            <p>
-              Wander the site and take in the photos people have shared. Found one you love?
-              Rate it, and keep exploring from there.
-            </p>
-            <Footprints />
+            <p>Wander the site and discover the photos people have shared. Found one you love? Rate it and keep exploring.</p>
           </div>
-          <div class="trail-stop">
-            <div class="dock-marker">
-              <DockIcon />
-            </div>
+          <div class="route" aria-hidden="true"><svg viewBox="0 0 20 72" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="1 7"><path d="M10 2C18 14 2 24 10 36s8 22 0 34" /></svg></div>
+          <div class="step">
+            <div class="step-icon"><svg viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="20" cy="8" r="3.2" /><path d="M20 11.2V35" /><path d="M13 17h14" /><path d="M7 25c1 6.5 6.5 10 13 10s12-3.5 13-10" /><path d="M4.5 26.5L7 25l2 3" /><path d="M35.5 26.5L33 25l-2 3" /></svg></div>
             <h3>Save your favorites</h3>
-            <p>
-              Found a spot you want to remember? Mark it as a favorite.<br />
-              Maybe it turns into a trip, or a note to the photographer.
-            </p>
-            <Footprints />
+            <p>Found a spot you want to remember? Mark it as a favorite. Maybe it becomes a future trip, or a note to the photographer.</p>
           </div>
-          <div class="trail-stop">
-            <div class="dock-marker">
-              <DockIcon />
-            </div>
+          <div class="route" aria-hidden="true"><svg viewBox="0 0 20 72" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="1 7"><path d="M10 2C18 14 2 24 10 36s8 22 0 34" /></svg></div>
+          <div class="step">
+            <div class="step-icon"><svg viewBox="0 0 40 36" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6,29 Q20,34 34,29" /><path d="M20,29 L20,4" /><path d="M20,6 Q31,15 20,26 Z" fill="currentColor" fill-opacity="0.15" /><path d="M8,26 Q17,17 20,8 Z" fill="currentColor" fill-opacity="0.15" /><path d="M2,32 Q8,30 14,32 Q20,34 26,32 Q32,30 38,32" stroke-width="1" opacity="0.5" /></svg></div>
             <h3>Join in</h3>
-            <p>
-              Want to take a bigger part? Create an account, upload a photo with your own memory
-              attached, and share it with everyone.
-            </p>
+            <p>Want to take a bigger part? Create an account, upload a photo with your own memory, and share it with the community.</p>
           </div>
         </div>
       </section>

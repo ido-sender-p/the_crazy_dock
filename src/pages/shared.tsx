@@ -52,16 +52,6 @@ export function DockIcon() {
   );
 }
 
-export function Footprints() {
-  return (
-    <svg class="footprints" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <ellipse cx="12" cy="10" rx="4" ry="6" transform="rotate(-18 12 10)" />
-      <ellipse cx="26" cy="22" rx="4" ry="6" transform="rotate(14 26 22)" />
-      <ellipse cx="14" cy="34" rx="4" ry="6" transform="rotate(-16 14 34)" />
-    </svg>
-  );
-}
-
 // Card thumbnail for the shared .list grid: the name sits in the adjacent
 // heading so the image is decorative; a neutral block stands in when a dock
 // has no photo yet.

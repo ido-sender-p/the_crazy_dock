@@ -20,7 +20,7 @@ const PAGE_CSS = `
     cursor: pointer; text-align: center; color: var(--ink-soft); font-size: 0.9rem;
     transition: border-color 0.15s ease, background 0.15s ease;
   }
-  .photo-dropzone:hover, .photo-dropzone.drag { border-color: var(--accent); background: rgba(46,196,182,0.05); }
+  .photo-dropzone:hover, .photo-dropzone.drag { border-color: var(--accent); background: rgba(201,162,77,0.08); }
   .photo-dropzone svg { width: 30px; height: 30px; color: var(--accent-text); }
   .photo-dropzone .filename { font-weight: 600; color: var(--ink); }
 

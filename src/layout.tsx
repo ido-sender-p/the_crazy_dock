@@ -8,9 +8,9 @@ const GLOBAL_CSS = `
     --ink-soft: #45607a;
     --bg: #ffffff;
     --surface: #ffffff;
-    --accent: #2ec4b6;
-    --accent-dark: #17a094;
-    --accent-text: #0c7d72; /* accent for text on white, 5:1 */
+    --accent: #c9a24d; /* gold */
+    --accent-dark: #8a6a14;
+    --accent-text: #7a5c0e; /* accent for text on white, 6.2:1 */
     --on-accent: #06121f; /* text on accent fills, 5.8:1 or better */
     --coral: #ff6b6b;
     --border: #e7e2d6;
@@ -42,13 +42,16 @@ const GLOBAL_CSS = `
     display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 20px;
     max-width: none;
   }
-  .logo { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.3rem; text-decoration: none; color: var(--ink); white-space: nowrap; }
-  .logo span { color: var(--accent-text); }
+  /* compass star, very widely spaced thin wordmark, and a tapered wave swoosh, stacked */
+  .logo { display: inline-flex; flex-direction: column; align-items: center; gap: 0.42rem; line-height: 1; text-decoration: none; color: var(--ink); white-space: nowrap; }
+  .logo .logo-star { width: 0.85rem; height: 0.85rem; fill: currentColor; }
+  .logo .logo-word { font-family: 'Montserrat', 'Inter', sans-serif; font-weight: 300; font-size: 0.8rem; letter-spacing: 0.9em; margin-right: -0.9em; }
+  .logo .logo-wave { width: 3.2rem; height: 0.5rem; fill: currentColor; }
   .header-actions { display: flex; align-items: center; gap: 10px; }
   .icon-btn {
     display: inline-flex; align-items: center; justify-content: center;
     width: 38px; height: 38px; border-radius: 50%;
-    border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft);
+    border: 1px solid var(--border); background: transparent; color: var(--ink-soft);
     cursor: pointer; transition: border-color 0.15s ease, color 0.15s ease;
   }
   .icon-btn:hover { border-color: var(--accent); color: var(--accent-text); }
@@ -96,7 +99,7 @@ const GLOBAL_CSS = `
   html.a11y-text-larger { font-size: 125%; }
   html.a11y-contrast {
     --ink: #000000; --ink-soft: #202020; --bg: #ffffff; --surface: #ffffff;
-    --accent: #006b60; --accent-dark: #00453e; --accent-text: #00453e; --on-accent: #ffffff; --border: #000000;
+    --accent: #6b4a12; --accent-dark: #4a3208; --accent-text: #4a3208; --on-accent: #ffffff; --border: #000000;
   }
   html.a11y-underline a:not(.icon-btn):not(.btn-login):not(.btn-cta):not(.logo) { text-decoration: underline; }
   html.a11y-reduce-motion, html.a11y-reduce-motion * { transition: none !important; animation: none !important; }
@@ -185,7 +188,7 @@ const HERO_CSS = `
     align-items: center;
     color: #fff;
     overflow: hidden;
-    background-image: linear-gradient(100deg, rgba(4,14,26,0.78) 0%, rgba(4,14,26,0.55) 32%, rgba(4,14,26,0.15) 58%, rgba(4,14,26,0.25) 100%), linear-gradient(180deg, rgba(6,20,36,0.15) 0%, rgba(6,20,36,0.3) 60%, rgba(6,20,36,0.75) 100%), url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Lighthouse_in_Chania._Crete%2C_Greece.jpg/1280px-Lighthouse_in_Chania._Crete%2C_Greece.jpg');
+    background-image: linear-gradient(rgba(5,32,48,0.38), rgba(5,32,48,0.38)), linear-gradient(180deg, rgba(6,20,36,0.15) 0%, rgba(6,20,36,0.3) 60%, rgba(6,20,36,0.75) 100%), url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Lighthouse_in_Chania._Crete%2C_Greece.jpg/1280px-Lighthouse_in_Chania._Crete%2C_Greece.jpg');
     background-size: cover;
     background-position: center 65%;
   }
@@ -197,9 +200,8 @@ const HERO_CSS = `
     border-bottom: none;
   }
   body.hero-page header.site .logo { color: #fff; }
-  body.hero-page header.site .logo span { color: var(--accent); }
   body.hero-page header.site .icon-btn {
-    background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.4); color: #fff;
+    background: transparent; border-color: rgba(255,255,255,0.4); color: #fff;
   }
   body.hero-page header.site .icon-btn:hover { border-color: #fff; color: #fff; }
   body.hero-page header.site .btn-login { border-color: rgba(255,255,255,0.7); color: #fff; }
@@ -215,9 +217,8 @@ export const Layout: FC<
     path?: string;
     noindex?: boolean; // private/utility pages: no canonical, robots noindex
     hero?: boolean; // transparent header over a hero photo
-    displayFonts?: boolean; // Cinzel + GFS Didot, used only by the home page
   }>
-> = ({ title, description, jsonLd, path = "/", noindex, hero, displayFonts, children }) => (
+> = ({ title, description, jsonLd, path = "/", noindex, hero, children }) => (
   <html lang="en">
     <head>
       <meta charset="UTF-8" />
@@ -232,7 +233,7 @@ export const Layout: FC<
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
       <link
-        href={`https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600${displayFonts ? "&family=Cinzel:wght@600;700&family=GFS+Didot" : ""}&display=swap`}
+        href={`https://fonts.googleapis.com/css2?family=Fraunces:wght@300;400;500;600;700&family=Inter:wght@400;500;600&family=Montserrat:wght@300&display=swap`}
         rel="stylesheet"
       />
       {jsonLd && <script type="application/ld+json">{raw(safeJsonForScript(jsonLd))}</script>}
@@ -243,8 +244,15 @@ export const Layout: FC<
       <a class="skip-link" href="#main">Skip to content</a>
       <header class="site">
         <div class="wrap">
-          <a class="logo" href="/">
-            Wild<span>ock</span>
+          <a class="logo" href="/" aria-label="Wildock home">
+            <svg class="logo-star" aria-hidden="true" viewBox="0 0 24 24">
+              <path d="M12 0l1 10.9L24 12l-11 1.1L12 24l-1-10.9L0 12l11-1.1z" />
+              <path transform="rotate(45 12 12) translate(12 12) scale(.55) translate(-12 -12)" d="M12 0l1 10.9L24 12l-11 1.1L12 24l-1-10.9L0 12l11-1.1z" />
+            </svg>
+            <span class="logo-word" aria-hidden="true">WILDOCK</span>
+            <svg class="logo-wave" aria-hidden="true" viewBox="0 0 100 14" preserveAspectRatio="none">
+              <path d="M2 12C20 3 40 1 58 5s27 5 40-2C86 13 62 11 50 8S18 6 2 12z" />
+            </svg>
           </a>
           <div class="header-actions">
             <a class="icon-btn icon-optional" href="/search" aria-label="Search">

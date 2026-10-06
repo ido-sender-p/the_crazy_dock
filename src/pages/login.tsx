@@ -42,7 +42,7 @@ const PAGE_CSS = `
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
   .auth-card input:focus {
-    border-color: var(--accent-dark); box-shadow: 0 0 0 3px rgba(46,196,182,0.18);
+    border-color: var(--accent-dark); box-shadow: 0 0 0 3px rgba(201,162,77,0.25);
   }
   .auth-card .error { font-size: 0.85rem; text-align: center; }
   .auth-card button.btn-cta {
