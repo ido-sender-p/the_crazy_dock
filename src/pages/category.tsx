@@ -1,21 +1,13 @@
 import { Layout } from "../layout";
 import type { Dock } from "../data";
 import { raw } from "hono/html";
+import { CardThumb, placeLabel } from "./shared";
 
 const PAGE_CSS = `
   .cat-page { padding: 40px 0 80px; }
   .cat-page h1 { font-size: 2rem; }
   .cat-page p.intro { color: var(--ink-soft); max-width: 640px; }
-  .list { display: grid; gap: 16px; margin-top: 28px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-  .list a {
-    display: block; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    overflow: hidden; text-decoration: none; color: var(--ink);
-  }
-  .list img { width: 100%; height: 140px; object-fit: cover; display: block; }
-  .list .copy { padding: 14px; }
-  .list h3 { font-size: 1rem; margin: 0 0 4px; }
-  .list p { margin: 0; font-size: 0.85rem; color: var(--ink-soft); }
-  .empty { margin-top: 28px; padding: 28px; border: 1px dashed var(--border); border-radius: 12px; color: var(--ink-soft); }
+  .cat-page .empty { margin-top: 28px; padding: 28px; font-size: 1rem; }
 `;
 
 export function CategoryPage(opts: {
@@ -37,10 +29,10 @@ export function CategoryPage(opts: {
           <div class="list">
             {opts.matches.map((d) => (
               <a href={`/docks/${d.slug}`}>
-                <img src={d.imageUrl} alt={d.name} />
+                <CardThumb src={d.imageUrl} />
                 <div class="copy">
                   <h3>{d.name}</h3>
-                  <p>{d.settlement}, {d.country}</p>
+                  <p>{placeLabel(d.settlement, d.country)}</p>
                 </div>
               </a>
             ))}

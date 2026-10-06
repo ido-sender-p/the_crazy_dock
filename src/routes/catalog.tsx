@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import type { Env } from "../env";
-import { docks, countries, continents, dedupeDocksBySlug, type Dock } from "../data";
+import { countries, continents, dedupeDocksBySlug, type Dock } from "../data";
 import { HomePage } from "../pages/home";
 import { DockPage } from "../pages/dock";
 import { CategoryPage } from "../pages/category";
@@ -9,40 +9,56 @@ import { CountryPage } from "../pages/country";
 import { MapPage } from "../pages/map";
 import { citiesByCountry, usStates, usStateSea, cityNameForSlug, countryInfoForSlug } from "../continents";
 import {
-  findPublishedDockBySlug,
   findPublishedDocksByContinent,
   findPublishedDocksByCountryName,
   findPublishedDocksBySettlementSlug,
+  findPublishedDocksByRegionSlug,
+  resolveDock,
 } from "../lib/liveDocks";
+import { staticInContinent, staticInCountryCode, staticInCountryName, staticInRegion, staticInSettlement } from "../lib/staticDocks";
 import { findPublishedPhotosForDock, findUserRatingsForDock } from "../lib/gallery";
 import { currentUser } from "../lib/session";
 import { isFavorited } from "../lib/favorites";
+import { edgeCached } from "../lib/edgeCache";
 
 export const catalog = new Hono<Env>();
+
+const LISTING_TTL = 300;
+const DOCK_PAGE_TTL = 60;
 
 catalog.get("/", (c) => c.html(<HomePage />));
 
 catalog.get("/map", (c) => c.html(<MapPage />));
 
-catalog.get("/docks/:slug", async (c) => {
+catalog.get("/docks/:slug", (c) => {
   const slug = c.req.param("slug");
-  const dock = docks.find((d) => d.slug === slug) ?? (c.env.DB ? await findPublishedDockBySlug(c.env.DB, slug) : null);
-  if (!dock) return c.notFound();
 
-  const photos = c.env.DB ? await findPublishedPhotosForDock(c.env.DB, slug) : [];
-  const user = await currentUser(c);
-  const yourRatings = c.env.DB && user ? await findUserRatingsForDock(c.env.DB, user.id, slug) : {};
-  const favorited = c.env.DB && user ? await isFavorited(c.env.DB, user.id, slug) : false;
+  // Anonymous views are cached briefly (a hit costs no D1 reads). Logged-in
+  // requests bypass the cache, they need their own ratings and favorite state.
+  return edgeCached(c, DOCK_PAGE_TTL, async () => {
+    // Static catalogue first, D1 only for slugs that could be user-submitted.
+    const dock = await resolveDock(c.env.DB, slug);
+    if (!dock) return c.notFound();
 
-  return c.html(
-    <DockPage {...dock} photos={photos} isLoggedIn={!!user} yourRatings={yourRatings} isFavorited={favorited} />,
-  );
+    const user = await currentUser(c);
+    const [photos, yourRatings, favorited] = c.env.DB
+      ? await Promise.all([
+          findPublishedPhotosForDock(c.env.DB, slug),
+          user ? findUserRatingsForDock(c.env.DB, user.id, slug) : {},
+          user ? isFavorited(c.env.DB, user.id, slug) : false,
+        ])
+      : [[], {}, false];
+
+    return c.html(
+      <DockPage {...dock} photos={photos} isLoggedIn={!!user} yourRatings={yourRatings} isFavorited={favorited} />,
+    );
+  });
 });
 
 // Two distinct sources feed this one route: a handful of legacy demo
 // countries keyed by 2-letter code (`countries`), and the full 196-country
 // illustrative browse hierarchy keyed by slugified name (`countryInfoForSlug`).
-catalog.get("/countries/:code", async (c) => {
+catalog.get("/countries/:code", (c) => {
   const code = c.req.param("code") as (typeof countries)[number]["code"];
 
   const legacyCountry = countries.find((cn) => cn.code === code);
@@ -52,7 +68,7 @@ catalog.get("/countries/:code", async (c) => {
         title={legacyCountry.name}
         intro={`Docks, piers and marinas documented in ${legacyCountry.name}.`}
         path={`/countries/${code}`}
-        matches={docks.filter((d) => d.countryCode === code)}
+        matches={staticInCountryCode(code)}
       />,
     );
   }
@@ -60,55 +76,65 @@ catalog.get("/countries/:code", async (c) => {
   const info = countryInfoForSlug(code);
   if (!info) return c.notFound();
 
-  const continent = continents.find((ct) => ct.slug === info.continentSlug);
-  const live = c.env.DB ? await findPublishedDocksByCountryName(c.env.DB, info.name) : [];
-  return c.html(
-    <CountryPage
-      name={info.name}
-      continentName={continent?.name ?? info.continentSlug}
-      continentSlug={info.continentSlug}
-      cities={citiesByCountry[info.name] ?? []}
-      states={
-        info.name === "United States"
-          ? usStates.flatMap((s) => (usStateSea[s] ?? []).map((e) => ({ name: s, sea: e.sea, family: e.family })))
-          : undefined
-      }
-      matches={live}
-      path={`/countries/${code}`}
-    />,
-  );
+  return edgeCached(c, LISTING_TTL, async () => {
+    const continent = continents.find((ct) => ct.slug === info.continentSlug);
+    const live = c.env.DB ? await findPublishedDocksByCountryName(c.env.DB, info.name) : [];
+    return c.html(
+      <CountryPage
+        name={info.name}
+        continentName={continent?.name ?? info.continentSlug}
+        continentSlug={info.continentSlug}
+        cities={citiesByCountry[info.name] ?? []}
+        states={
+          info.name === "United States"
+            ? usStates.flatMap((s) => (usStateSea[s] ?? []).map((e) => ({ name: s, sea: e.sea, family: e.family })))
+            : undefined
+        }
+        matches={dedupeDocksBySlug([...staticInCountryName(info.name), ...live])}
+        path={`/countries/${code}`}
+      />,
+    );
+  });
 });
 
-catalog.get("/continents/:slug", async (c) => {
+catalog.get("/continents/:slug", (c) => {
   const slug = c.req.param("slug");
   const continent = continents.find((ct) => ct.slug === slug);
   if (!continent) return c.notFound();
 
-  const live = c.env.DB ? await findPublishedDocksByContinent(c.env.DB, slug) : [];
-  return c.html(
-    <ContinentPage
-      name={continent.name}
-      slug={continent.slug}
-      intro={`Docks, piers and marinas documented across ${continent.name}.`}
-      path={`/continents/${slug}`}
-      matches={dedupeDocksBySlug([...docks.filter((d) => d.continentSlug === slug), ...live])}
-    />,
-  );
+  return edgeCached(c, LISTING_TTL, async () => {
+    const live = c.env.DB ? await findPublishedDocksByContinent(c.env.DB, slug) : [];
+    return c.html(
+      <ContinentPage
+        name={continent.name}
+        slug={continent.slug}
+        intro={`Docks, piers and marinas documented across ${continent.name}.`}
+        path={`/continents/${slug}`}
+        matches={dedupeDocksBySlug([...staticInContinent(slug), ...live])}
+      />,
+    );
+  });
 });
 
 catalog.get("/regions/:slug", (c) => {
   const slug = c.req.param("slug");
-  const matches = docks.filter((d) => d.stateProvinceSlug === slug);
-  const name = matches[0]?.stateProvince;
-  if (!name) return c.notFound();
-  return c.html(
-    <CategoryPage
-      title={name}
-      intro={`Docks, piers and marinas documented in ${name}.`}
-      path={`/regions/${slug}`}
-      matches={matches}
-    />,
-  );
+  // Nothing static and not a plausible live slug means nothing to look up.
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 200) return c.notFound();
+
+  return edgeCached(c, LISTING_TTL, async () => {
+    const live = c.env.DB ? await findPublishedDocksByRegionSlug(c.env.DB, slug) : [];
+    const matches = dedupeDocksBySlug([...staticInRegion(slug), ...live]);
+    const name = matches[0]?.stateProvince;
+    if (!name) return c.notFound();
+    return c.html(
+      <CategoryPage
+        title={name}
+        intro={`Docks, piers and marinas documented in ${name}.`}
+        path={`/regions/${slug}`}
+        matches={matches}
+      />,
+    );
+  });
 });
 
 const SETTLEMENT_ROUTE_PATHS: { path: string; type: Dock["settlementType"] }[] = [
@@ -117,21 +143,38 @@ const SETTLEMENT_ROUTE_PATHS: { path: string; type: Dock["settlementType"] }[] =
   { path: "villages", type: "village" },
 ];
 
-for (const { path } of SETTLEMENT_ROUTE_PATHS) {
-  catalog.get(`/${path}/:slug`, async (c) => {
+const settlementPathByType = Object.fromEntries(SETTLEMENT_ROUTE_PATHS.map(({ path, type }) => [type, path])) as Record<
+  Dock["settlementType"],
+  string
+>;
+
+for (const { path, type } of SETTLEMENT_ROUTE_PATHS) {
+  catalog.get(`/${path}/:slug`, (c) => {
     const slug = c.req.param("slug");
-    const live = c.env.DB ? await findPublishedDocksBySettlementSlug(c.env.DB, slug) : [];
-    const matches = dedupeDocksBySlug([...docks.filter((d) => d.settlementSlug === slug), ...live]);
-    const name = matches[0]?.settlement ?? cityNameForSlug(slug);
-    if (!name) return c.notFound();
-    return c.html(
-      <CategoryPage
-        title={name}
-        intro={`Docks, piers and marinas documented in ${name}.`}
-        path={`/${path}/${slug}`}
-        matches={matches}
-      />,
-    );
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 200) return c.notFound();
+
+    return edgeCached(c, LISTING_TTL, async () => {
+      const live = c.env.DB ? await findPublishedDocksBySettlementSlug(c.env.DB, slug) : [];
+      const matches = dedupeDocksBySlug([...staticInSettlement(slug), ...live]);
+      const first = matches[0];
+
+      // A place lives under exactly one prefix (its settlementType). The other
+      // two redirect there instead of serving the same page three times.
+      if (first && first.settlementType !== type) {
+        return c.redirect(`/${settlementPathByType[first.settlementType]}/${slug}`, 301);
+      }
+      // No docks yet: only the illustrative city hierarchy has an empty page.
+      const name = first?.settlement ?? (type === "city" ? cityNameForSlug(slug) : undefined);
+      if (!name) return c.notFound();
+      return c.html(
+        <CategoryPage
+          title={name}
+          intro={`Docks, piers and marinas documented in ${name}.`}
+          path={`/${path}/${slug}`}
+          matches={matches}
+        />,
+      );
+    });
   });
 }
 

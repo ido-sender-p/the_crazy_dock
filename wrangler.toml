@@ -1,7 +1,6 @@
 name = "wildock"
 main = "src/index.tsx"
 compatibility_date = "2026-08-01"
-compatibility_flags = ["nodejs_compat"]
 
 [observability]
 enabled = true
@@ -11,22 +10,15 @@ enabled = true
 # [assets]
 # directory = "./public"
 # binding = "ASSETS"
-
-# Local-only SQLite for now (login + submissions + everything built on top
-# of it: search, messages, favorites, comments, profile). Keep this block
-# UNCOMMENTED for local dev — `wrangler dev` doesn't validate database_id,
-# it just uses the local sqlite file regardless. The CLOUDFLARE_WORKERS_ID
-# token still can't create/reach a real D1 database (auth error), and
-# Cloudflare rejects a *deploy* outright if this binding points at an
-# invalid database_id — so comment this block back out ONLY right before
-# running `wrangler deploy`, then restore it immediately after for local
-# dev to keep working. Every route touching c.env.DB already no-ops or
-# 404s gracefully without it (see currentUser() in lib/session.ts).
-# Replace database_id with a real one once D1 is actually provisioned.
+# Real D1 database (login + submissions + everything built on top of it:
+# search, messages, favorites, comments, profile), created 2026-10-05 with the
+# CLOUDFLARE_D1 token and migrated from src/db/schema.sql. `wrangler dev` still
+# uses its own local sqlite file, never this remote one. Every route touching
+# c.env.DB no-ops or 404s gracefully without it (see currentUser() in lib/session.ts).
 [[d1_databases]]
 binding = "DB"
 database_name = "wildock-db"
-database_id = "local-dev-placeholder"
+database_id = "8cf59c65-de32-46b7-9edd-26be4b65a7c5"
 
 # Real bucket, auto-provisioned on the 2026-08-30 deploy.
 [[r2_buckets]]
@@ -35,3 +27,5 @@ bucket_name = "wildock-photos"
 
 [vars]
 SITE_URL = "https://wildock.com"
+# Public address for takedown/credit requests, shown on /credits. Empty = the page says it is being set up.
+CONTACT_EMAIL = ""

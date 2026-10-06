@@ -1,4 +1,4 @@
-// Hardcoded pilot data , stands in for D1 until the Overpass pipeline is wired up.
+// Static dock catalogue: a few hand-written entries plus the generated one in catalogue.json.
 //
 // Geographic breakdown (matches how the pSEO URL/category structure is organized):
 //   Continent -> Country -> State/Province -> Settlement (City | Town | Village) -> Dock
@@ -7,8 +7,21 @@
 
 export type SettlementType = "city" | "town" | "village";
 
+// Same logic as scripts/lib/slugify.mjs (the catalogue build); keep the two in sync.
 export function slugify(s: string) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+  return s
+    .toLowerCase()
+    .replace(/ı/g, "i")
+    .replace(/ł/g, "l")
+    .replace(/ø/g, "o")
+    .replace(/đ/g, "d")
+    .replace(/ß/g, "ss")
+    .replace(/æ/g, "ae")
+    .replace(/œ/g, "oe")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
 }
 
 // Listing pages merge the hardcoded `docks` array with live D1 rows, and a
@@ -33,12 +46,12 @@ export type Dock = {
   continentSlug: string;
 
   country: string;
-  countryCode: string; // "gr" | "hr" | "it" for the legacy demo entries; "" for D1-backed submissions, which route by country-name slug instead
+  countryCode: string; // "it" for the legacy demo entry; "" for D1-backed submissions, which route by country-name slug instead
 
-  stateProvince: string; // state/province/autonomous region , the tier below country
+  stateProvince: string; // state/province/autonomous region, the tier below country
   stateProvinceSlug: string;
 
-  settlement: string; // city, town or village , the tier below state/province
+  settlement: string; // city, town or village, the tier below state/province
   settlementType: SettlementType;
   settlementSlug: string;
 
@@ -47,6 +60,7 @@ export type Dock = {
   description: string;
   imageUrl: string;
   imageAttribution: string;
+  descriptionSource?: string; // "Name|url", shown as a credit under the description
   // Drives which dock-page layout renders: a phone-shot portrait photo gets
   // the side-by-side "featured card" treatment (photo next to the story),
   // a landscape one gets the photo-above-text layout. Unknown/undetected
@@ -56,7 +70,9 @@ export type Dock = {
   yearBuilt: number | null;
 };
 
-export const docks: Dock[] = [
+import catalogue from "./catalogue.json";
+
+const legacyDocks: Dock[] = [
   {
     slug: "marina-piccola-capri",
     name: "Marina Piccola",
@@ -82,19 +98,6 @@ export const docks: Dock[] = [
   },
 ];
 
-export const dockTypes: { slug: Dock["dockType"]; label: string; blurb: string; emoji: string }[] = [
-  { slug: "marina", label: "Marinas", blurb: "Berths, breakwaters & yacht harbours", emoji: "⛵" },
-  { slug: "pier", label: "Piers", blurb: "Historic & recreational piers", emoji: "🌉" },
-  { slug: "floating_dock", label: "Floating Docks", blurb: "Modular & pontoon structures", emoji: "🟦" },
-  { slug: "industrial", label: "Industrial Docks", blurb: "Loading docks & cargo berths", emoji: "🏗️" },
-];
-
-export const countries: { code: Dock["countryCode"]; name: string }[] = [
-  { code: "gr", name: "Greece" },
-  { code: "hr", name: "Croatia" },
-  { code: "it", name: "Italy" },
-];
-
 export const continents: { slug: string; name: string }[] = [
   { slug: "europe", name: "Europe" },
   { slug: "asia", name: "Asia" },
@@ -104,6 +107,59 @@ export const continents: { slug: string; name: string }[] = [
   { slug: "oceania", name: "Oceania" },
 ];
 
-export function dockCountForType(type: Dock["dockType"]) {
-  return docks.filter((d) => d.dockType === type).length;
+// Compact catalogue row written by scripts/build-catalogue.mjs (which asserts the
+// union-typed fields below). Derived fields are rebuilt in toDock().
+type CatalogueRow = {
+  slug: string;
+  name: string;
+  dockType: Dock["dockType"];
+  continentSlug: string;
+  country: string;
+  stateProvince: string;
+  settlement: string;
+  lat: number;
+  lon: number;
+  description: string;
+  wiki: string; // Wikipedia article path
+  imageAttribution: string; // "Photo: ..., via Wikimedia Commons|File:Name.jpg"
+  imageOrientation: Dock["imageOrientation"];
+  lengthM?: number;
+  yearBuilt?: number;
+};
+
+// tsc checks the JSON's field names and primitive types against CatalogueRow; only the
+// string-literal unions widen to string in JSON, hence the narrow cast (validated at build time).
+type LooseRow = Omit<CatalogueRow, "dockType" | "imageOrientation"> & { dockType: string; imageOrientation: string };
+const rows: LooseRow[] = catalogue;
+
+function toDock(r: CatalogueRow): Dock {
+  return {
+    slug: r.slug,
+    name: r.name,
+    dockType: r.dockType,
+    continent: continents.find((c) => c.slug === r.continentSlug)?.name ?? "",
+    continentSlug: r.continentSlug,
+    country: r.country,
+    countryCode: "",
+    stateProvince: r.stateProvince,
+    stateProvinceSlug: slugify(r.stateProvince),
+    settlement: r.settlement,
+    settlementType: "city",
+    settlementSlug: slugify(r.settlement),
+    lat: r.lat,
+    lon: r.lon,
+    description: r.description,
+    imageUrl: `/uploads/dock-${r.slug}`,
+    imageAttribution: r.imageAttribution.replace("|File:", "|https://commons.wikimedia.org/wiki/File:"),
+    descriptionSource: `Wikipedia|https://en.wikipedia.org/wiki/${r.wiki}`,
+    imageOrientation: r.imageOrientation,
+    lengthM: r.lengthM ?? 0,
+    yearBuilt: r.yearBuilt ?? null,
+  };
 }
+
+// Static catalogue built from Wikidata/Wikipedia/Commons by scripts/build-catalogue.mjs.
+// Legacy entries come first so the homepage featured dock stays the same.
+export const docks: Dock[] = [...legacyDocks, ...(rows as CatalogueRow[]).map(toDock)];
+
+export const countries: { code: Dock["countryCode"]; name: string }[] = [{ code: "it", name: "Italy" }];

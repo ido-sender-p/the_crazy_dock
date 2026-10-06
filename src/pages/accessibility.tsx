@@ -43,8 +43,9 @@ export function AccessibilityPage(opts: { path: string }) {
           <li>Underlined links</li>
           <li>Readable font</li>
           <li>Enlarged cursor</li>
-          <li>Reading guide that follows the mouse</li>
+          <li>Reading guide that follows the mouse pointer (mouse only; it does not follow keyboard focus)</li>
           <li>Stopping animations and transitions</li>
+          <li>Skip to content link and visible keyboard focus on every page</li>
         </ul>
         <p>These options can be turned on from the accessibility icon at the top of every page.</p>
 

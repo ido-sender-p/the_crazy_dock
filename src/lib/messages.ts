@@ -2,23 +2,37 @@
 // marker, inbox vs sent), not a live chat: no presence, no typing state,
 // no realtime delivery.
 
+export const MAX_MESSAGES_PER_HOUR = 20;
+
+// List rows carry only a 120 char snippet, the full body is on the single
+// message view.
 export type MessageListItem = {
   id: number;
   subject: string;
-  body: string;
+  snippet: string;
   read_at: string | null;
   created_at: string;
   other_username: string;
 };
 
-export type MessageDetail = MessageListItem & {
+export type MessageDetail = Omit<MessageListItem, "snippet"> & {
+  body: string;
   sender_id: number;
   recipient_id: number;
   sender_username: string;
   recipient_username: string;
 };
 
+export async function countRecentMessages(db: D1Database, senderId: number): Promise<number> {
+  const row = await db
+    .prepare("SELECT COUNT(*) AS n FROM messages WHERE sender_id = ? AND created_at > datetime('now', '-1 hour')")
+    .bind(senderId)
+    .first<{ n: number }>();
+  return row?.n ?? 0;
+}
+
 export function sendMessage(db: D1Database, senderId: number, recipientId: number, subject: string, body: string) {
+  if (senderId === recipientId) throw new Error("cannot message yourself");
   return db
     .prepare("INSERT INTO messages (sender_id, recipient_id, subject, body) VALUES (?, ?, ?, ?)")
     .bind(senderId, recipientId, subject, body)
@@ -28,11 +42,11 @@ export function sendMessage(db: D1Database, senderId: number, recipientId: numbe
 export async function findInbox(db: D1Database, userId: number): Promise<MessageListItem[]> {
   const result = await db
     .prepare(
-      `SELECT messages.id, messages.subject, messages.body, messages.read_at, messages.created_at,
-              users.username AS other_username
+      `SELECT messages.id, messages.subject, substr(messages.body, 1, 120) AS snippet, messages.read_at,
+              messages.created_at, users.username AS other_username
        FROM messages JOIN users ON users.id = messages.sender_id
        WHERE messages.recipient_id = ?
-       ORDER BY messages.created_at DESC`,
+       ORDER BY messages.created_at DESC LIMIT 50`,
     )
     .bind(userId)
     .all<MessageListItem>();
@@ -42,11 +56,11 @@ export async function findInbox(db: D1Database, userId: number): Promise<Message
 export async function findSent(db: D1Database, userId: number): Promise<MessageListItem[]> {
   const result = await db
     .prepare(
-      `SELECT messages.id, messages.subject, messages.body, messages.read_at, messages.created_at,
-              users.username AS other_username
+      `SELECT messages.id, messages.subject, substr(messages.body, 1, 120) AS snippet, messages.read_at,
+              messages.created_at, users.username AS other_username
        FROM messages JOIN users ON users.id = messages.recipient_id
        WHERE messages.sender_id = ?
-       ORDER BY messages.created_at DESC`,
+       ORDER BY messages.created_at DESC LIMIT 50`,
     )
     .bind(userId)
     .all<MessageListItem>();
@@ -70,6 +84,9 @@ export function findMessageById(db: D1Database, id: number) {
     .first<MessageDetail>();
 }
 
-export function markMessageRead(db: D1Database, id: number) {
-  return db.prepare("UPDATE messages SET read_at = datetime('now') WHERE id = ? AND read_at IS NULL").bind(id).run();
+export function markMessageRead(db: D1Database, id: number, recipientId: number) {
+  return db
+    .prepare("UPDATE messages SET read_at = datetime('now') WHERE id = ? AND recipient_id = ? AND read_at IS NULL")
+    .bind(id, recipientId)
+    .run();
 }

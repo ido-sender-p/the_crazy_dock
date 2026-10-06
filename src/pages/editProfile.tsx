@@ -1,6 +1,7 @@
 import { Layout } from "../layout";
 import { raw } from "hono/html";
 import type { User } from "../lib/db";
+import { initials } from "./shared";
 
 const PAGE_CSS = `
   .edit-profile-page { padding: 56px 0 100px; max-width: 480px; }
@@ -16,16 +17,6 @@ const PAGE_CSS = `
     font-size: 0.95rem; font-family: inherit; color: var(--ink);
   }
   .edit-profile-page button.btn-cta { border: none; cursor: pointer; align-self: flex-start; }
-  .edit-profile-page .error {
-    background: #fdecea; border: 1px solid #f3b4ab; color: #9c2c1f;
-    padding: 10px 14px; border-radius: 10px; font-size: 0.88rem;
-  }
-  .edit-profile-page .success {
-    background: #eafaf3; border: 1px solid #9fe0c0; color: #146b43;
-    padding: 10px 14px; border-radius: 10px; font-size: 0.88rem;
-  }
-  .back-link { display: inline-block; margin-top: 18px; font-size: 0.85rem; color: var(--ink-soft); text-decoration: none; }
-  .back-link:hover { color: var(--accent-dark); }
 
   .avatar-row { display: flex; align-items: center; gap: 16px; }
   .avatar-preview {
@@ -34,11 +25,7 @@ const PAGE_CSS = `
   }
   .avatar-preview.placeholder {
     display: flex; align-items: center; justify-content: center;
-    color: #fff; font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.3rem;
-  }
-  .photo-input {
-    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
-    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    color: var(--on-accent); font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.3rem;
   }
   .avatar-picker {
     display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px;
@@ -53,10 +40,6 @@ const PAGE_CSS = `
   .section-hint { color: var(--ink-soft); font-size: 0.85rem; margin: -12px 0 0; }
 `;
 
-function initials(name: string) {
-  return name.trim().split(/\s+/).map((p) => p[0]?.toUpperCase()).slice(0, 2).join("");
-}
-
 export function EditProfilePage(opts: {
   user: User;
   hasPassword: boolean;
@@ -65,19 +48,19 @@ export function EditProfilePage(opts: {
   success?: boolean;
 }) {
   return (
-    <Layout title="Edit profile | Wildock" description="Update your Wildock profile." path={opts.path}>
+    <Layout title="Edit profile | Wildock" description="Update your Wildock profile." path={opts.path} noindex>
       <style>{raw(PAGE_CSS)}</style>
       <div class="wrap edit-profile-page">
         <h1>Edit profile</h1>
         <p class="intro">Update your details, or change your password.</p>
-        {opts.error && <div class="error">{opts.error}</div>}
-        {opts.success && <div class="success">Saved.</div>}
+        {opts.error && <div class="error" role="alert">{opts.error}</div>}
+        {opts.success && <div class="success" role="status">Saved.</div>}
         <form method="post" action="/profile/edit" enctype="multipart/form-data">
           <div class="avatar-row">
             {opts.user.avatar_url ? (
               <img class="avatar-preview" id="avatar-preview" src={opts.user.avatar_url} alt="" />
             ) : (
-              <div class="avatar-preview placeholder" id="avatar-preview-placeholder">{initials(opts.user.username)}</div>
+              <div class="avatar-preview placeholder" id="avatar-preview">{initials(opts.user.username)}</div>
             )}
             <div>
               <input class="photo-input" id="avatar" name="avatar" type="file" accept="image/*" />
@@ -86,7 +69,7 @@ export function EditProfilePage(opts: {
           </div>
           <div>
             <label for="username">Display name</label>
-            <input id="username" name="username" type="text" value={opts.user.username} maxlength={60} required />
+            <input id="username" name="username" type="text" value={opts.user.username} minlength={3} maxlength={30} pattern="[A-Za-z0-9_.\-]+" title="3 to 30 letters, numbers, dots, dashes or underscores" required />
           </div>
           <div>
             <label for="email">Email</label>
@@ -114,6 +97,7 @@ export function EditProfilePage(opts: {
             {opts.hasPassword
               ? "Leave these blank to keep your current password."
               : "You signed up with Google. Set a password here if you'd also like to log in with email."}
+            {opts.hasPassword && " Your current password is also needed to change your email."}
           </p>
           {opts.hasPassword && (
             <div>
@@ -143,6 +127,19 @@ export function EditProfilePage(opts: {
             if (!file) return;
             var label = document.getElementById('avatar-picker-label');
             if (label) label.textContent = file.name;
+            var prev = document.getElementById('avatar-preview');
+            if (!prev || !file.type || file.type.indexOf('image/') !== 0) return;
+            var url = URL.createObjectURL(file);
+            if (prev.tagName === 'IMG') {
+              prev.src = url;
+            } else {
+              var img = document.createElement('img');
+              img.className = 'avatar-preview';
+              img.id = 'avatar-preview';
+              img.alt = '';
+              img.src = url;
+              prev.replaceWith(img);
+            }
           });
         })();
       `)}</script>

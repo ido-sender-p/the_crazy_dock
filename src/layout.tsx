@@ -1,5 +1,6 @@
 import type { FC, PropsWithChildren } from "hono/jsx";
 import { raw } from "hono/html";
+import { safeJsonForScript } from "./lib/html";
 
 const GLOBAL_CSS = `
   :root {
@@ -9,10 +10,19 @@ const GLOBAL_CSS = `
     --surface: #ffffff;
     --accent: #2ec4b6;
     --accent-dark: #17a094;
+    --accent-text: #0c7d72; /* accent for text on white, 5:1 */
+    --on-accent: #06121f; /* text on accent fills, 5.8:1 or better */
     --coral: #ff6b6b;
     --border: #e7e2d6;
   }
   * { box-sizing: border-box; }
+  :focus-visible { outline: 2px solid var(--accent-dark); outline-offset: 2px; }
+  main:focus { outline: none; }
+  .skip-link {
+    position: absolute; left: 8px; top: -60px; z-index: 100; background: var(--ink); color: #fff;
+    padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.9rem;
+  }
+  .skip-link:focus { top: 8px; }
   body {
     margin: 0;
     font-family: 'Inter', system-ui, sans-serif;
@@ -24,36 +34,16 @@ const GLOBAL_CSS = `
   a { color: inherit; }
   .wrap { max-width: 1320px; margin: 0 auto; padding: 0 24px; }
 
-  .hero {
-    position: relative;
-    display: flex;
-    align-items: center;
-    color: #fff;
-    overflow: hidden;
-    background-image: linear-gradient(100deg, rgba(4,14,26,0.78) 0%, rgba(4,14,26,0.55) 32%, rgba(4,14,26,0.15) 58%, rgba(4,14,26,0.25) 100%), linear-gradient(180deg, rgba(6,20,36,0.15) 0%, rgba(6,20,36,0.3) 60%, rgba(6,20,36,0.75) 100%), url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Lighthouse_in_Chania._Crete%2C_Greece.jpg/1280px-Lighthouse_in_Chania._Crete%2C_Greece.jpg');
-    background-size: cover;
-    background-position: center 65%;
-  }
-  .hero .wrap { position: relative; z-index: 1; }
-
   header.site {
     border-bottom: 1px solid var(--border);
     background: var(--surface);
-  }
-  header.site:has(~ .hero) {
-    position: absolute;
-    top: 0; left: 0; right: 0; z-index: 5;
-    background: transparent;
-    border-bottom: none;
   }
   header.site .wrap {
     display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 20px;
     max-width: none;
   }
   .logo { font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.3rem; text-decoration: none; color: var(--ink); white-space: nowrap; }
-  .logo span { color: var(--accent-dark); }
-  header.site:has(~ .hero) .logo { color: #fff; }
-  header.site:has(~ .hero) .logo span { color: var(--accent); }
+  .logo span { color: var(--accent-text); }
   .header-actions { display: flex; align-items: center; gap: 10px; }
   .icon-btn {
     display: inline-flex; align-items: center; justify-content: center;
@@ -61,27 +51,22 @@ const GLOBAL_CSS = `
     border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft);
     cursor: pointer; transition: border-color 0.15s ease, color 0.15s ease;
   }
-  .icon-btn:hover { border-color: var(--accent); color: var(--accent-dark); }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent-text); }
   .icon-btn svg { width: 18px; height: 18px; }
-  header.site:has(~ .hero) .icon-btn {
-    background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.4); color: #fff;
-  }
-  header.site:has(~ .hero) .icon-btn:hover { border-color: #fff; color: #fff; }
   .btn-login {
     display: inline-flex; align-items: center; text-decoration: none;
     border: 1px solid var(--border); border-radius: 999px;
     padding: 9px 18px; font-size: 0.88rem; font-weight: 600; color: var(--ink);
     white-space: nowrap; transition: border-color 0.15s ease, color 0.15s ease;
   }
-  .btn-login:hover { border-color: var(--accent); color: var(--accent-dark); }
-  header.site:has(~ .hero) .btn-login { border-color: rgba(255,255,255,0.7); color: #fff; }
-  header.site:has(~ .hero) .btn-login:hover { border-color: #fff; }
+  .btn-login:hover { border-color: var(--accent); color: var(--accent-text); }
 
-  /* Logo + two icon buttons + login pill can outrun very narrow phones
-     (~320px). The icons are the least essential nav, so they're what gives
-     first when space runs out. */
+  /* Logo + icons + login pill can outrun very narrow phones (~320px). The
+     search icon gives first; the accessibility button always stays. */
   @media (max-width: 400px) {
-    .icon-btn { display: none; }
+    .icon-optional { display: none; }
+    .header-actions { gap: 6px; }
+    .btn-login { padding: 8px 12px; }
   }
 
   .a11y-wrap { position: relative; }
@@ -100,10 +85,10 @@ const GLOBAL_CSS = `
     padding: 7px 0; cursor: pointer; font-family: inherit; font-size: 0.85rem;
   }
   .a11y-seg button:last-child { border-right: none; }
-  .a11y-seg button.active { background: var(--accent); color: #fff; }
+  .a11y-seg button.active { background: var(--ink); color: #fff; }
   .a11y-check { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--ink); cursor: pointer; }
   .a11y-reset {
-    align-self: flex-start; border: none; background: none; color: var(--accent-dark);
+    align-self: flex-start; border: none; background: none; color: var(--accent-text);
     font-size: 0.8rem; font-weight: 600; cursor: pointer; padding: 0; text-decoration: underline;
   }
 
@@ -111,7 +96,7 @@ const GLOBAL_CSS = `
   html.a11y-text-larger { font-size: 125%; }
   html.a11y-contrast {
     --ink: #000000; --ink-soft: #202020; --bg: #ffffff; --surface: #ffffff;
-    --accent: #006b60; --accent-dark: #00453e; --border: #000000;
+    --accent: #006b60; --accent-dark: #00453e; --accent-text: #00453e; --on-accent: #ffffff; --border: #000000;
   }
   html.a11y-underline a:not(.icon-btn):not(.btn-login):not(.btn-cta):not(.logo) { text-decoration: underline; }
   html.a11y-reduce-motion, html.a11y-reduce-motion * { transition: none !important; animation: none !important; }
@@ -134,11 +119,11 @@ const GLOBAL_CSS = `
   footer.site a { color: var(--ink-soft); }
 
   .breadcrumb { font-size: 0.85em; color: var(--ink-soft); margin-bottom: 16px; }
-  .breadcrumb a { text-decoration: none; color: var(--accent-dark); }
+  .breadcrumb a { text-decoration: none; color: var(--accent-text); }
 
   .btn-cta {
     display: inline-block;
-    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    background: var(--ink);
     color: #fff;
     text-decoration: none;
     font-weight: 600;
@@ -147,37 +132,123 @@ const GLOBAL_CSS = `
     border-radius: 999px;
     transition: transform 0.15s ease, box-shadow 0.15s ease;
   }
-  .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(23,160,148,0.28); }
+  .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(11,37,69,0.3); }
+
+  /* Shared across pages */
+  .kicker {
+    color: var(--accent-text); font-weight: 600; font-size: 0.8rem; text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .empty {
+    padding: 24px; border: 1px dashed var(--border); border-radius: 12px; color: var(--ink-soft); font-size: 0.9rem;
+  }
+  .error {
+    background: #fdecea; border: 1px solid #f3b4ab; color: #9c2c1f;
+    padding: 10px 14px; border-radius: 10px; font-size: 0.88rem; margin-bottom: 16px;
+  }
+  .success {
+    background: #eafaf3; border: 1px solid #9fe0c0; color: #146b43;
+    padding: 10px 14px; border-radius: 10px; font-size: 0.88rem; margin-bottom: 16px;
+  }
+  .back-link { display: inline-block; margin-top: 18px; font-size: 0.85rem; color: var(--ink-soft); text-decoration: none; }
+  .back-link:hover { color: var(--accent-text); }
+  .photo-input {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+  }
+  .photo-input:focus-visible + label { outline: 2px solid var(--accent-dark); outline-offset: 2px; }
+  .profile-head { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; }
+  .profile-avatar {
+    width: 64px; height: 64px; border-radius: 50%; flex: none; object-fit: cover;
+    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+    color: var(--on-accent); display: flex; align-items: center; justify-content: center;
+    font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.5rem;
+  }
+  .list { display: grid; gap: 16px; margin-top: 28px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+  .list a {
+    display: block; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    overflow: hidden; text-decoration: none; color: var(--ink);
+  }
+  .list img, .list .thumb-ph { width: 100%; height: 140px; object-fit: cover; display: block; }
+  .list .thumb-ph { background: var(--border); }
+  .list .copy { padding: 14px; }
+  .list h3 { font-size: 1rem; margin: 0 0 4px; }
+  .list p { margin: 0; font-size: 0.85rem; color: var(--ink-soft); }
+`;
+
+// Only hero pages (home, auth) include this: the transparent header over the
+// photo, keyed off a body class rather than :has() so the logo always shows.
+const HERO_CSS = `
+  .hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    color: #fff;
+    overflow: hidden;
+    background-image: linear-gradient(100deg, rgba(4,14,26,0.78) 0%, rgba(4,14,26,0.55) 32%, rgba(4,14,26,0.15) 58%, rgba(4,14,26,0.25) 100%), linear-gradient(180deg, rgba(6,20,36,0.15) 0%, rgba(6,20,36,0.3) 60%, rgba(6,20,36,0.75) 100%), url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Lighthouse_in_Chania._Crete%2C_Greece.jpg/1280px-Lighthouse_in_Chania._Crete%2C_Greece.jpg');
+    background-size: cover;
+    background-position: center 65%;
+  }
+  .hero .wrap { position: relative; z-index: 1; }
+  body.hero-page header.site {
+    position: absolute;
+    top: 0; left: 0; right: 0; z-index: 5;
+    background: transparent;
+    border-bottom: none;
+  }
+  body.hero-page header.site .logo { color: #fff; }
+  body.hero-page header.site .logo span { color: var(--accent); }
+  body.hero-page header.site .icon-btn {
+    background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.4); color: #fff;
+  }
+  body.hero-page header.site .icon-btn:hover { border-color: #fff; color: #fff; }
+  body.hero-page header.site .btn-login { border-color: rgba(255,255,255,0.7); color: #fff; }
+  body.hero-page header.site .btn-login:hover { border-color: #fff; }
+  body.hero-page header.site :focus-visible { outline-color: #fff; }
 `;
 
 export const Layout: FC<
-  PropsWithChildren<{ title: string; description: string; jsonLd?: object; path?: string }>
-> = ({ title, description, jsonLd, path = "/", children }) => (
+  PropsWithChildren<{
+    title: string;
+    description: string;
+    jsonLd?: object;
+    path?: string;
+    noindex?: boolean; // private/utility pages: no canonical, robots noindex
+    hero?: boolean; // transparent header over a hero photo
+    displayFonts?: boolean; // Cinzel + GFS Didot, used only by the home page
+  }>
+> = ({ title, description, jsonLd, path = "/", noindex, hero, displayFonts, children }) => (
   <html lang="en">
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1" />
       <title>{title}</title>
       <meta name="description" content={description} />
-      <link rel="canonical" href={`https://wildock.com${path}`} />
+      {noindex ? (
+        <meta name="robots" content="noindex,nofollow" />
+      ) : (
+        <link rel="canonical" href={`https://wildock.com${path}`} />
+      )}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
       <link
-        href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600&family=Cinzel:wght@600;700&family=GFS+Didot&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap"
+        href={`https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600${displayFonts ? "&family=Cinzel:wght@600;700&family=GFS+Didot" : ""}&display=swap`}
         rel="stylesheet"
       />
-      {jsonLd && <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>}
+      {jsonLd && <script type="application/ld+json">{raw(safeJsonForScript(jsonLd))}</script>}
       <style>{raw(GLOBAL_CSS)}</style>
+      {hero && <style>{raw(HERO_CSS)}</style>}
     </head>
-    <body>
+    <body class={hero ? "hero-page" : undefined}>
+      <a class="skip-link" href="#main">Skip to content</a>
       <header class="site">
         <div class="wrap">
           <a class="logo" href="/">
             Wild<span>ock</span>
           </a>
           <div class="header-actions">
-            <a class="icon-btn" href="/search" aria-label="Search">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <a class="icon-btn icon-optional" href="/search" aria-label="Search">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                 <circle cx="11" cy="11" r="7" />
                 <path d="M21 21l-4.3-4.3" />
               </svg>
@@ -191,7 +262,7 @@ export const Layout: FC<
                 aria-controls="a11y-panel"
                 id="a11y-toggle"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <circle cx="12" cy="4.5" r="1.6" fill="currentColor" stroke="none" />
                   <path d="M4 8.5c2.5 1 5.3 1.5 8 1.5s5.5-.5 8-1.5" />
                   <path d="M12 10v11" />
@@ -200,7 +271,7 @@ export const Layout: FC<
                   <path d="M8.5 13.5l7-1.5" />
                 </svg>
               </button>
-              <div class="a11y-panel" id="a11y-panel" hidden>
+              <div class="a11y-panel" id="a11y-panel" role="group" aria-label="Accessibility options" hidden>
                 <div class="a11y-row">
                   <span class="a11y-label">Text size</span>
                   <div class="a11y-seg">
@@ -220,7 +291,7 @@ export const Layout: FC<
               </div>
             </div>
             <a class="icon-btn" href="/profile" aria-label="Profile" id="profile-link" style="display:none;">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="8" r="4" />
                 <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" />
               </svg>
@@ -280,7 +351,9 @@ export const Layout: FC<
             if (prefs.cursor) cl.add('a11y-big-cursor');
             if (prefs.motion) cl.add('a11y-reduce-motion');
             textButtons.forEach(function (btn) {
-              btn.classList.toggle('active', (btn.getAttribute('data-a11y-text') || '') === (prefs.text || ''));
+              var on = (btn.getAttribute('data-a11y-text') || '') === (prefs.text || '');
+              btn.classList.toggle('active', on);
+              btn.setAttribute('aria-pressed', on ? 'true' : 'false');
             });
             if (contrastCheck) contrastCheck.checked = !!prefs.contrast;
             if (grayscaleCheck) grayscaleCheck.checked = !!prefs.grayscale;
@@ -301,6 +374,8 @@ export const Layout: FC<
           function openPanel() {
             panel.removeAttribute('hidden');
             toggle.setAttribute('aria-expanded', 'true');
+            var first = panel.querySelector('button, input');
+            if (first) first.focus();
           }
           function closePanel() {
             panel.setAttribute('hidden', '');
@@ -310,6 +385,11 @@ export const Layout: FC<
           toggle.addEventListener('click', function (e) {
             e.stopPropagation();
             if (panel.hasAttribute('hidden')) openPanel(); else closePanel();
+          });
+          // Tabbing out of the panel closes it without stealing focus back.
+          panel.addEventListener('focusout', function (e) {
+            var next = e.relatedTarget;
+            if (next && !panel.contains(next) && next !== toggle) closePanel();
           });
           document.addEventListener('click', function (e) {
             if (panel.hasAttribute('hidden')) return;
@@ -357,12 +437,12 @@ export const Layout: FC<
           });
         })();
       `)}</script>
-      {children}
+      <main id="main" tabindex={-1}>{children}</main>
       <footer class="site">
         <div class="wrap">
           <span>© {new Date().getFullYear()} Wildock, a global catalogue of docks, piers & marinas.</span>
           <span>
-            <a href="/accessibility">Accessibility</a> · <a href="/sitemap.xml">Sitemap</a>
+            <a href="/credits">Credits</a> · <a href="/accessibility">Accessibility</a> · <a href="/sitemap.xml">Sitemap</a>
           </span>
         </div>
       </footer>

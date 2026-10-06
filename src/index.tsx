@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { csrf } from "hono/csrf";
 import type { Env } from "./env";
 import { securityHeaders } from "./middleware/security";
+import { uploads } from "./routes/uploads";
 import { catalog } from "./routes/catalog";
 import { auth } from "./routes/auth";
 import { submissions } from "./routes/submissions";
@@ -13,17 +14,17 @@ import { account } from "./routes/account";
 import { search } from "./routes/search";
 import { users } from "./routes/users";
 import { messages } from "./routes/messages";
-import { syncUiLoggedInCookie } from "./lib/session";
 
 const app = new Hono<Env>();
 
-app.use(securityHeaders);
+// /uploads sends its own locked-down CSP, so the site-wide one is skipped there.
+app.use((c, next) => (c.req.path.startsWith("/uploads/") ? next() : securityHeaders(c, next)));
 app.use(csrf());
-app.use(syncUiLoggedInCookie);
 
 app.route("/", catalog);
 app.route("/", auth);
 app.route("/", submissions);
+app.route("/", uploads);
 app.route("/", gallery);
 app.route("/", admin);
 app.route("/", meta);

@@ -2,8 +2,9 @@ import { Hono } from "hono";
 import type { Env } from "../env";
 import { type Dock } from "../data";
 import { SubmitPage } from "../pages/submit";
-import { insertSubmission } from "../lib/db";
-import { currentUser } from "../lib/session";
+import { insertSubmission, countPendingSubmissions, MAX_PENDING_SUBMISSIONS } from "../lib/db";
+import { requireUser } from "../lib/session";
+import { smallBody } from "../middleware/limits";
 
 export const submissions = new Hono<Env>();
 
@@ -17,8 +18,8 @@ const FIELD_LIMITS = {
 } as const;
 
 submissions.get("/submit", async (c) => {
-  const user = await currentUser(c);
-  if (!user) return c.redirect("/login?next=/submit");
+  const user = await requireUser(c, "/submit");
+  if (user instanceof Response) return user;
   return c.html(<SubmitPage user={user} path="/submit" />);
 });
 
@@ -26,9 +27,9 @@ function trimmedField(form: FormData, field: string, maxLength: number) {
   return String(form.get(field) ?? "").trim().slice(0, maxLength);
 }
 
-submissions.post("/submit", async (c) => {
-  const user = await currentUser(c);
-  if (!user) return c.redirect("/login?next=/submit");
+submissions.post("/submit", smallBody, async (c) => {
+  const user = await requireUser(c, "/submit");
+  if (user instanceof Response) return user;
 
   const form = await c.req.formData();
   const rejectWith = (error: string) => c.html(<SubmitPage user={user} path="/submit" error={error} />, 400);
@@ -41,6 +42,10 @@ submissions.post("/submit", async (c) => {
   const settlement = trimmedField(form, "settlement", FIELD_LIMITS.settlement);
   if (!name || !country || !settlement) return rejectWith("Please fill in all required fields.");
 
+  if ((await countPendingSubmissions(c.env.DB, user.id)) >= MAX_PENDING_SUBMISSIONS) {
+    return rejectWith(`You already have ${MAX_PENDING_SUBMISSIONS} submissions waiting for review. Please wait for those first.`);
+  }
+
   await insertSubmission(c.env.DB, {
     submittedBy: user.id,
     name,
@@ -51,17 +56,4 @@ submissions.post("/submit", async (c) => {
   });
 
   return c.html(<SubmitPage user={user} path="/submit" success />);
-});
-
-submissions.get("/uploads/:key", async (c) => {
-  const object = await c.env.PHOTOS.get(c.req.param("key"));
-  if (!object) return c.notFound();
-  return new Response(object.body, {
-    headers: {
-      "content-type": object.httpMetadata?.contentType ?? "application/octet-stream",
-      "cache-control": "public, max-age=31536000, immutable",
-      "x-content-type-options": "nosniff",
-      "content-disposition": "inline",
-    },
-  });
 });

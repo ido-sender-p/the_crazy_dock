@@ -1,43 +1,48 @@
 import { Hono } from "hono";
 import type { Env } from "../env";
-import { docks } from "../data";
 import { AddPhotoPage } from "../pages/addPhoto";
-import { currentUser, safeNextPath } from "../lib/session";
-import { insertDockPhoto, ratePhoto, findCommentsForPhoto, addComment } from "../lib/gallery";
+import { currentUser, requireUser } from "../lib/session";
+import {
+  insertDockPhoto,
+  ratePhoto,
+  findCommentsForPhoto,
+  addComment,
+  countPendingPhotos,
+  MAX_PENDING_PHOTOS,
+} from "../lib/gallery";
 import { detectImageType, detectImageOrientation, MAX_PHOTO_BYTES } from "../lib/imageValidation";
-import { findPublishedDockBySlug } from "../lib/liveDocks";
+import { resolveDock } from "../lib/liveDocks";
+import { smallBody, uploadBody } from "../middleware/limits";
 
 export const gallery = new Hono<Env>();
 
-async function resolveDockName(env: Env["Bindings"], slug: string): Promise<string | null> {
-  const staticDock = docks.find((d) => d.slug === slug);
-  if (staticDock) return staticDock.name;
-  const liveDock = env.DB ? await findPublishedDockBySlug(env.DB, slug) : null;
-  return liveDock?.name ?? null;
+// Positive integer from a path param, or null.
+function parseId(raw: string): number | null {
+  return /^\d{1,12}$/.test(raw) && Number(raw) > 0 ? Number(raw) : null;
 }
 
 gallery.get("/docks/:slug/add-photo", async (c) => {
   const slug = c.req.param("slug");
-  const dockName = await resolveDockName(c.env, slug);
-  if (!dockName) return c.notFound();
+  const dock = await resolveDock(c.env.DB, slug);
+  if (!dock) return c.notFound();
 
-  const user = await currentUser(c);
-  if (!user) return c.redirect(`/login?next=${encodeURIComponent(safeNextPath(`/docks/${slug}/add-photo`))}`);
+  const user = await requireUser(c, `/docks/${slug}/add-photo`);
+  if (user instanceof Response) return user;
 
-  return c.html(<AddPhotoPage user={user} dockName={dockName} dockSlug={slug} path={`/docks/${slug}/add-photo`} />);
+  return c.html(<AddPhotoPage dockName={dock.name} dockSlug={slug} path={`/docks/${slug}/add-photo`} />);
 });
 
-gallery.post("/docks/:slug/add-photo", async (c) => {
+gallery.post("/docks/:slug/add-photo", uploadBody, async (c) => {
   const slug = c.req.param("slug");
-  const dockName = await resolveDockName(c.env, slug);
-  if (!dockName) return c.notFound();
+  const dock = await resolveDock(c.env.DB, slug);
+  if (!dock) return c.notFound();
 
-  const user = await currentUser(c);
-  if (!user) return c.redirect(`/login?next=${encodeURIComponent(safeNextPath(`/docks/${slug}/add-photo`))}`);
+  const user = await requireUser(c, `/docks/${slug}/add-photo`);
+  if (user instanceof Response) return user;
 
   const form = await c.req.formData();
   const rejectWith = (error: string) =>
-    c.html(<AddPhotoPage user={user} dockName={dockName} dockSlug={slug} path={`/docks/${slug}/add-photo`} error={error} />, 400);
+    c.html(<AddPhotoPage dockName={dock.name} dockSlug={slug} path={`/docks/${slug}/add-photo`} error={error} />, 400);
 
   const photoEntries = form.getAll("photo");
   if (photoEntries.length !== 1) return rejectWith("Please attach exactly one photo.");
@@ -56,34 +61,44 @@ gallery.post("/docks/:slug/add-photo", async (c) => {
   const caption = String(form.get("caption") ?? "").trim().slice(0, 1000);
   if (!caption) return rejectWith("Please tell us the story behind it.");
 
+  if ((await countPendingPhotos(c.env.DB, user.id)) >= MAX_PENDING_PHOTOS) {
+    return rejectWith(`You already have ${MAX_PENDING_PHOTOS} photos waiting for review. Please wait for those first.`);
+  }
+
   const photoKey = crypto.randomUUID();
   await c.env.PHOTOS.put(photoKey, photoBytes, { httpMetadata: { contentType: detectedType } });
 
-  await insertDockPhoto(c.env.DB, {
-    dockSlug: slug,
-    submittedBy: user.id,
-    imageUrl: `/uploads/${photoKey}`,
-    title,
-    caption,
-    imageOrientation: detectImageOrientation(photoBytes, detectedType) ?? "landscape",
-  });
+  try {
+    await insertDockPhoto(c.env.DB, {
+      dockSlug: slug,
+      submittedBy: user.id,
+      imageUrl: `/uploads/${photoKey}`,
+      title,
+      caption,
+      imageOrientation: detectImageOrientation(photoBytes, detectedType) ?? "landscape",
+    });
+  } catch (err) {
+    await c.env.PHOTOS.delete(photoKey);
+    throw err;
+  }
 
-  return c.html(<AddPhotoPage user={user} dockName={dockName} dockSlug={slug} path={`/docks/${slug}/add-photo`} success />);
+  return c.html(<AddPhotoPage dockName={dock.name} dockSlug={slug} path={`/docks/${slug}/add-photo`} success />);
 });
 
-gallery.post("/docks/:slug/photos/:photoId/vote", async (c) => {
+gallery.post("/docks/:slug/photos/:photoId/vote", smallBody, async (c) => {
   const user = await currentUser(c);
   if (!user) return c.json({ error: "login required" }, 401);
 
-  const photoId = Number(c.req.param("photoId"));
-  if (!Number.isInteger(photoId)) return c.json({ error: "invalid photo" }, 400);
+  const photoId = parseId(c.req.param("photoId"));
+  if (!photoId) return c.json({ error: "invalid photo" }, 400);
 
   const body = await c.req.json().catch(() => null);
   const rating = Number(body?.rating);
 
-  const result = await ratePhoto(c.env.DB, photoId, user.id, rating);
+  const result = await ratePhoto(c.env.DB, photoId, c.req.param("slug"), user.id, rating);
   if (!result.ok) {
-    return c.json({ error: result.reason }, result.reason === "invalid_rating" ? 400 : 404);
+    const status = result.reason === "invalid_rating" ? 400 : result.reason === "rate_limited" ? 429 : 404;
+    return c.json({ error: result.reason }, status);
   }
   return c.json({ votes: result.votes, avgRating: result.avgRating, yourRating: rating });
 });
@@ -91,25 +106,25 @@ gallery.post("/docks/:slug/photos/:photoId/vote", async (c) => {
 gallery.get("/docks/:slug/photos/:photoId/comments", async (c) => {
   if (!c.env.DB) return c.json({ comments: [] });
 
-  const photoId = Number(c.req.param("photoId"));
-  if (!Number.isInteger(photoId)) return c.json({ error: "invalid photo" }, 400);
+  const photoId = parseId(c.req.param("photoId"));
+  if (!photoId) return c.json({ error: "invalid photo" }, 400);
 
-  const comments = await findCommentsForPhoto(c.env.DB, photoId);
+  const comments = await findCommentsForPhoto(c.env.DB, photoId, c.req.param("slug"));
   return c.json({ comments });
 });
 
-gallery.post("/docks/:slug/photos/:photoId/comments", async (c) => {
+gallery.post("/docks/:slug/photos/:photoId/comments", smallBody, async (c) => {
   const user = await currentUser(c);
   if (!user) return c.json({ error: "login required" }, 401);
 
-  const photoId = Number(c.req.param("photoId"));
-  if (!Number.isInteger(photoId)) return c.json({ error: "invalid photo" }, 400);
+  const photoId = parseId(c.req.param("photoId"));
+  if (!photoId) return c.json({ error: "invalid photo" }, 400);
 
   const body = await c.req.json().catch(() => null);
   const text = String(body?.body ?? "").trim().slice(0, 500);
   if (!text) return c.json({ error: "empty comment" }, 400);
 
-  const comment = await addComment(c.env.DB, photoId, user.id, text);
-  if (!comment) return c.json({ error: "not found" }, 404);
-  return c.json({ comment });
+  const result = await addComment(c.env.DB, photoId, c.req.param("slug"), user, text);
+  if (!result.ok) return c.json({ error: result.reason }, result.reason === "rate_limited" ? 429 : 404);
+  return c.json({ comment: result.comment });
 });

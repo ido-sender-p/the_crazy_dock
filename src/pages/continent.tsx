@@ -4,20 +4,20 @@ import { raw } from "hono/html";
 import { countriesByContinent, oceanByCountry } from "../continents";
 import { slugify } from "../data";
 import { seaColor, waveUrl, type Water } from "../waveCard";
+import { CardThumb, placeLabel, FAMILY_ORDER, LakeIcon } from "./shared";
 
 const PAGE_CSS = `
   .continent-page { padding: 40px 0 80px; }
   .continent-page h1 { font-size: 2.2rem; margin-top: 6px; }
-  .continent-page p.intro { color: var(--ink-soft); max-width: 640px; }
 
-  .continent-page .kicker {
+  .continent-page .sea-head {
     display: flex; align-items: center; gap: 8px;
     color: var(--ink); font-weight: 600; font-size: 0.9rem;
     margin-top: 36px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
   }
-  .continent-page .kicker:first-of-type { margin-top: 28px; }
-  .continent-page .kicker i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
-  .continent-page .kicker .count { color: var(--ink-soft); font-weight: 400; }
+  .continent-page .sea-head.first { margin-top: 28px; }
+  .continent-page .sea-head i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+  .continent-page .sea-head .count { color: var(--ink-soft); font-weight: 400; }
 
   .country-grid {
     display: grid; gap: 18px 14px; margin: 18px 0 0;
@@ -41,31 +41,7 @@ const PAGE_CSS = `
   .country-card.lake { border-bottom: 1px solid var(--border); border-radius: 12px; padding-bottom: 14px; }
   .country-card.lake svg { width: 38px; height: auto; margin-bottom: 8px; }
 
-  .list { display: grid; gap: 16px; margin-top: 28px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-  .list a {
-    display: block; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    overflow: hidden; text-decoration: none; color: var(--ink);
-  }
-  .list img { width: 100%; height: 140px; object-fit: cover; display: block; }
-  .list .copy { padding: 14px; }
-  .list h3 { font-size: 1rem; margin: 0 0 4px; }
-  .list p { margin: 0; font-size: 0.85rem; color: var(--ink-soft); }
 `;
-
-function LakeIcon() {
-  return (
-    <svg viewBox="0 0 40 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="20" cy="19.5" rx="16" ry="4.5" fill="var(--accent)" fill-opacity="0.2" stroke="var(--accent-dark)" stroke-width="1.1" />
-      <path
-        d="M5,19.5 L13,6.5 L18,13.5 L25,3.5 L35,19.5"
-        stroke="var(--ink)"
-        stroke-width="1.3"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-    </svg>
-  );
-}
 
 function Wave({ seas }: { seas: string[] }) {
   const n = seas.length;
@@ -80,23 +56,6 @@ function Wave({ seas }: { seas: string[] }) {
     </>
   );
 }
-
-// Fixed family display order so sections line up the same way on every
-// continent , each country lands under its FIRST-listed (primary) sea, so
-// a multi-sea country like Germany still appears exactly once, with a
-// multi-color wave showing every sea it actually touches.
-const FAMILY_ORDER: Water[] = [
-  "atlantic",
-  "pacific",
-  "indian",
-  "mediterranean",
-  "caspian",
-  "melanesia",
-  "micronesia",
-  "polynesia",
-  "australasia",
-  "lake",
-];
 
 export function ContinentPage(opts: { name: string; slug: string; intro: string; path: string; matches: Dock[] }) {
   const countries = countriesByContinent[opts.slug] ?? [];
@@ -122,10 +81,10 @@ export function ContinentPage(opts: { name: string; slug: string; intro: string;
         </nav>
         <h1>{opts.name}</h1>
 
-        {groups.map(({ sea, family, names }) => (
+        {groups.map(({ sea, family, names }, gi) => (
           <>
-            <div class="kicker">
-              <i style={`background:${seaColor(sea)}`} />
+            <div class={gi === 0 ? "sea-head first" : "sea-head"}>
+              <i style={`background:${seaColor(sea)}`} aria-hidden="true" />
               {sea} <span class="count">· {names.length}</span>
             </div>
             <div class="country-grid">
@@ -151,10 +110,10 @@ export function ContinentPage(opts: { name: string; slug: string; intro: string;
           <div class="list">
             {opts.matches.map((d) => (
               <a href={`/docks/${d.slug}`}>
-                <img src={d.imageUrl} alt={d.name} />
+                <CardThumb src={d.imageUrl} />
                 <div class="copy">
                   <h3>{d.name}</h3>
-                  <p>{d.settlement}, {d.country}</p>
+                  <p>{placeLabel(d.settlement, d.country)}</p>
                 </div>
               </a>
             ))}

@@ -8,10 +8,7 @@ const PAGE_CSS = `
   .admin-page h1 { font-size: 1.9rem; }
   .admin-page p.intro { color: var(--ink-soft); margin-bottom: 32px; }
 
-  .admin-page .kicker {
-    color: var(--accent-dark); font-weight: 600; font-size: 0.8rem; text-transform: uppercase;
-    letter-spacing: 0.06em; margin-top: 40px;
-  }
+  .admin-page .kicker { margin-top: 40px; }
   .admin-page .kicker:first-of-type { margin-top: 0; }
   .admin-page h2 { font-size: 1.2rem; margin: 4px 0 16px; }
 
@@ -43,30 +40,27 @@ const PAGE_CSS = `
   .review-card button {
     border: none; cursor: pointer; border-radius: 999px; padding: 8px 18px; font-size: 0.82rem; font-weight: 600;
   }
-  .btn-approve { background: linear-gradient(135deg, var(--accent), var(--accent-dark)); color: #fff; }
+  .btn-approve { background: var(--ink); color: #fff; }
   .btn-reject { background: #fdecea; color: #9c2c1f; }
 
-  .admin-page .empty { padding: 20px; border: 1px dashed var(--border); border-radius: 12px; color: var(--ink-soft); font-size: 0.9rem; }
+  .admin-page .empty { padding: 20px; }
 `;
 
 function ReviewCard({ s, blocked }: { s: ReviewSubmission; blocked?: boolean }) {
   return (
     <div class="review-card">
-      {s.image_url ? <img src={s.image_url} alt={s.name} /> : <div class="no-photo">No photo yet</div>}
+      {s.image_url ? <img src={s.image_url} alt="" width={140} height={100} loading="lazy" decoding="async" /> : <div class="no-photo">No photo yet</div>}
       <div>
         <p class="name">{s.name}</p>
-        <p class="place">{s.settlement}, {s.country} · {s.dock_type}</p>
-        <p class="desc">
-          {s.description ? `${s.description.slice(0, 160)}${s.description.length > 160 ? "…" : ""}` : "No description yet."}
-        </p>
+        <p class="place">{s.settlement}, {s.country} · {s.dock_type.replaceAll("_", " ")}</p>
         <p class="meta">Submitted by {s.submitted_by_username}</p>
         {blocked && s.block_reason && <p class="block-reason">Waiting for path creation: {s.block_reason}</p>}
         <div class="actions">
           <form method="post" action={`/admin/submissions/${s.id}/approve`}>
-            <button class="btn-approve" type="submit">Approve</button>
+            <button class="btn-approve" type="submit" aria-label={`Approve ${s.name}`}>Approve</button>
           </form>
           <form method="post" action={`/admin/submissions/${s.id}/reject`}>
-            <button class="btn-reject" type="submit">Reject</button>
+            <button class="btn-reject" type="submit" aria-label={`Reject ${s.name}`}>Reject</button>
           </form>
         </div>
       </div>
@@ -77,7 +71,7 @@ function ReviewCard({ s, blocked }: { s: ReviewSubmission; blocked?: boolean }) 
 function PhotoReviewCard({ p }: { p: PendingDockPhoto }) {
   return (
     <div class="review-card">
-      <img src={p.image_url} alt={p.title} />
+      <img src={p.image_url} alt={p.title} width={140} height={100} loading="lazy" decoding="async" />
       <div>
         <p class="name">{p.title}</p>
         <p class="place">{p.caption}</p>
@@ -85,10 +79,10 @@ function PhotoReviewCard({ p }: { p: PendingDockPhoto }) {
         <p class="meta">Submitted by {p.submitted_by_username}</p>
         <div class="actions">
           <form method="post" action={`/admin/photos/${p.id}/approve`}>
-            <button class="btn-approve" type="submit">Approve</button>
+            <button class="btn-approve" type="submit" aria-label={`Approve photo ${p.title}`}>Approve</button>
           </form>
           <form method="post" action={`/admin/photos/${p.id}/reject`}>
-            <button class="btn-reject" type="submit">Reject</button>
+            <button class="btn-reject" type="submit" aria-label={`Reject photo ${p.title}`}>Reject</button>
           </form>
         </div>
       </div>
@@ -103,7 +97,7 @@ export function AdminPage(opts: {
   path: string;
 }) {
   return (
-    <Layout title="Review submissions | Wildock" description="Review pending Wildock submissions." path={opts.path}>
+    <Layout title="Review submissions | Wildock" description="Review pending Wildock submissions." path={opts.path} noindex>
       <style>{raw(PAGE_CSS)}</style>
       <div class="wrap admin-page">
         <h1>Review submissions</h1>

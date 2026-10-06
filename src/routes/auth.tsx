@@ -6,36 +6,53 @@ import { ProfilePage } from "../pages/profile";
 import { verifyPassword, hashPassword, newSessionToken, DUMMY_PASSWORD_HASH } from "../lib/auth";
 import {
   findUserByEmail,
+  findUserWithHashByEmail,
   findUserByGoogleId,
-  linkGoogleId,
+  linkGoogleToUser,
   createGoogleUser,
   createUser,
   createSession,
   deleteSession,
   findSubmissionsByUser,
-  isLoginLocked,
+  checkLoginThrottle,
   recordLoginFailure,
   clearLoginFailures,
+  signupThrottled,
+  type User,
 } from "../lib/db";
-import { currentUser, safeNextPath, SESSION_COOKIE, UI_LOGGED_IN_COOKIE } from "../lib/session";
-import { buildGoogleAuthUrl, exchangeGoogleCode, fetchGoogleProfile } from "../lib/googleAuth";
+import {
+  currentUser,
+  requireUser,
+  clientIp,
+  safeNextPath,
+  setSessionCookies,
+  sessionCookieOpts,
+  SESSION_COOKIE,
+  UI_LOGGED_IN_COOKIE,
+} from "../lib/session";
+import { buildGoogleAuthUrl, exchangeGoogleCode, fetchGoogleProfile, isEmailVerified } from "../lib/googleAuth";
 import { findFavoriteSlugsForUser } from "../lib/favorites";
-import { resolveDock } from "../lib/liveDocks";
+import { resolveDocks } from "../lib/liveDocks";
 import { findRatingHistoryForUser } from "../lib/gallery";
+import {
+  MAX_PASSWORD_LENGTH,
+  checkUsername,
+  checkEmail,
+  checkNewPassword,
+  isUniqueViolation,
+  uniqueViolationField,
+  usernameFromName,
+  USERNAME_TAKEN_ERROR,
+  EMAIL_TAKEN_ERROR,
+} from "../lib/validation";
+import { smallBody } from "../middleware/limits";
 
 export const auth = new Hono<Env>();
 
 async function startSession(c: Context<Env>, userId: number) {
   const token = newSessionToken();
   await createSession(c.env.DB, userId, token);
-  setCookie(c, SESSION_COOKIE, token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "Lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
-  setCookie(c, UI_LOGGED_IN_COOKIE, "1", { secure: true, sameSite: "Lax", path: "/", maxAge: 60 * 60 * 24 * 30 });
+  setSessionCookies(c, token);
 }
 
 auth.get("/login", async (c) => {
@@ -44,24 +61,27 @@ auth.get("/login", async (c) => {
   return c.html(<LoginPage next={next} path="/login" />);
 });
 
-auth.post("/login", async (c) => {
+auth.post("/login", smallBody, async (c) => {
   const form = await c.req.formData();
-  const email = String(form.get("email") ?? "").trim();
+  const email = String(form.get("email") ?? "").trim().slice(0, 255);
   const password = String(form.get("password") ?? "");
   const next = safeNextPath(String(form.get("next") ?? ""), "/profile");
+  const ip = clientIp(c);
 
   const genericError = "Invalid email or password.";
-  if (await isLoginLocked(c.env.DB, email)) {
+  const throttle = await checkLoginThrottle(c.env.DB, email, ip);
+  if (throttle.locked) {
     return c.html(<LoginPage next={next} path="/login" error="Too many attempts. Try again in a few minutes." />, 429);
   }
 
-  const user = await findUserByEmail(c.env.DB, email);
-  const passwordOk = await verifyPassword(password, user?.password_hash ?? DUMMY_PASSWORD_HASH);
+  const user = await findUserWithHashByEmail(c.env.DB, email);
+  const passwordOk =
+    password.length <= MAX_PASSWORD_LENGTH && (await verifyPassword(password, user?.password_hash ?? DUMMY_PASSWORD_HASH));
   if (!user || !passwordOk) {
-    await recordLoginFailure(c.env.DB, email);
+    await recordLoginFailure(c.env.DB, email, ip);
     return c.html(<LoginPage next={next} path="/login" error={genericError} />, 401);
   }
-  await clearLoginFailures(c.env.DB, email);
+  if (throttle.emailFailures > 0) await clearLoginFailures(c.env.DB, email);
   await startSession(c, user.id);
   return c.redirect(next);
 });
@@ -72,30 +92,35 @@ auth.get("/signup", async (c) => {
   return c.html(<SignupPage next={next} path="/signup" />);
 });
 
-auth.post("/signup", async (c) => {
+auth.post("/signup", smallBody, async (c) => {
   const form = await c.req.formData();
   const next = safeNextPath(String(form.get("next") ?? ""), "/profile");
-  const rejectWith = (error: string) => c.html(<SignupPage next={next} path="/signup" error={error} />, 400);
+  const rejectWith = (error: string, status: 400 | 429 = 400) =>
+    c.html(<SignupPage next={next} path="/signup" error={error} />, status);
 
-  const username = String(form.get("username") ?? "").trim().slice(0, 60);
-  if (!username) return rejectWith("Please enter a display name.");
-
-  const email = String(form.get("email") ?? "").trim().toLowerCase().slice(0, 255);
-  if (!email || !email.includes("@")) return rejectWith("Please enter a valid email address.");
+  const username = checkUsername(String(form.get("username") ?? ""));
+  if (!username.ok) return rejectWith(username.error);
+  const email = checkEmail(String(form.get("email") ?? ""));
+  if (!email.ok) return rejectWith(email.error);
 
   const password = String(form.get("password") ?? "");
-  const confirmPassword = String(form.get("confirmPassword") ?? "");
-  if (password.length < 8) return rejectWith("Password must be at least 8 characters.");
-  if (password !== confirmPassword) return rejectWith("Passwords don't match.");
+  const passwordError = checkNewPassword(password, String(form.get("confirmPassword") ?? ""));
+  if (passwordError) return rejectWith(passwordError);
 
-  const existing = await findUserByEmail(c.env.DB, email);
-  if (existing) return rejectWith("That email is already registered. Try logging in instead.");
+  if (await signupThrottled(c.env.DB, clientIp(c))) {
+    return rejectWith("Too many sign-ups from this network. Please try again later.", 429);
+  }
 
-  await createUser(c.env.DB, email, username, await hashPassword(password));
-  const user = await findUserByEmail(c.env.DB, email);
-  if (!user) return rejectWith("Could not create your account. Please try again.");
+  let created: { id: number } | null;
+  try {
+    created = await createUser(c.env.DB, email.value, username.value, await hashPassword(password));
+  } catch (err) {
+    if (!isUniqueViolation(err)) throw err;
+    return rejectWith(uniqueViolationField(err) === "username" ? USERNAME_TAKEN_ERROR : EMAIL_TAKEN_ERROR);
+  }
+  if (!created) return rejectWith("Could not create your account. Please try again.");
 
-  await startSession(c, user.id);
+  await startSession(c, created.id);
   return c.redirect(next);
 });
 
@@ -113,22 +138,33 @@ auth.get("/login/google", async (c) => {
   const next = safeNextPath(c.req.query("next"), "/profile");
   const state = crypto.randomUUID();
   // The next path rides along in the same short-lived cookie as the CSRF
-  // state — one fewer thing to trust from the query string on the way back.
-  setCookie(c, GOOGLE_STATE_COOKIE, `${state}:${next}`, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "Lax",
-    path: "/",
-    maxAge: 600,
-  });
+  // state, one fewer thing to trust from the query string on the way back.
+  setCookie(c, GOOGLE_STATE_COOKIE, `${state}:${next}`, { ...sessionCookieOpts, maxAge: 600 });
   return c.redirect(buildGoogleAuthUrl(c.env.GOOGLE_CLIENT_ID, googleRedirectUri(c), state));
 });
 
+// A fresh Google user gets Google's display name squeezed into the username
+// rules, with a numeric suffix if it's taken.
+async function createGoogleUserWithFreeName(c: Context<Env>, email: string, name: string | undefined, sub: string) {
+  const base = usernameFromName(name ?? "", email);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const username = attempt === 0 ? base : `${base}${Math.floor(1000 + Math.random() * 9000)}`;
+    try {
+      return await createGoogleUser(c.env.DB, email, username, sub);
+    } catch (err) {
+      if (!isUniqueViolation(err) || uniqueViolationField(err) !== "username") throw err;
+    }
+  }
+  return null;
+}
+
 auth.get("/auth/google/callback", async (c) => {
-  const saved = getCookie(c, GOOGLE_STATE_COOKIE);
+  const saved = getCookie(c, GOOGLE_STATE_COOKIE) ?? "";
   deleteCookie(c, GOOGLE_STATE_COOKIE, { path: "/" });
-  const [savedState, savedNext] = (saved ?? "").split(":");
-  const next = safeNextPath(savedNext, "/profile");
+  // Split on the first colon only: the next path may itself contain ":".
+  const sep = saved.indexOf(":");
+  const savedState = sep === -1 ? saved : saved.slice(0, sep);
+  const next = safeNextPath(sep === -1 ? "" : saved.slice(sep + 1), "/profile");
 
   const code = c.req.query("code");
   const returnedState = c.req.query("state");
@@ -144,20 +180,28 @@ auth.get("/auth/google/callback", async (c) => {
   } catch {
     return fail("Google sign-in failed. Please try again.");
   }
-  if (!profile.email_verified) return fail("That Google account's email isn't verified.");
+  if (!isEmailVerified(profile) || !profile.sub || !profile.email) return fail("That Google account's email isn't verified.");
+  const email = profile.email.toLowerCase();
 
-  let user = await findUserByGoogleId(c.env.DB, profile.sub);
+  let user: Pick<User, "id"> | null = await findUserByGoogleId(c.env.DB, profile.sub);
   if (!user) {
-    // Same email, no Google link yet — link it instead of creating a
-    // duplicate account, so a password user who later tries Google keeps
-    // one identity.
-    const existing = await findUserByEmail(c.env.DB, profile.email);
+    const existing = await findUserByEmail(c.env.DB, email);
     if (existing) {
-      await linkGoogleId(c.env.DB, existing.id, profile.sub);
+      // Same email, no Google link yet: link it instead of creating a
+      // duplicate. Any password the account had is dropped and its sessions
+      // revoked (see linkGoogleToUser), so whoever registered that email first
+      // can't stay logged in. Refuses if it's linked to another Google account.
+      if (!(await linkGoogleToUser(c.env.DB, existing.id, profile.sub))) {
+        return fail("That email is already linked to a different Google account.");
+      }
       user = existing;
     } else {
-      await createGoogleUser(c.env.DB, profile.email, profile.name || profile.email.split("@")[0], profile.sub);
-      user = await findUserByEmail(c.env.DB, profile.email);
+      try {
+        user = await createGoogleUserWithFreeName(c, email, profile.name, profile.sub);
+      } catch (err) {
+        if (!isUniqueViolation(err)) throw err;
+        return fail("Could not create your account. Please try again.");
+      }
     }
   }
   if (!user) return fail("Could not create your account. Please try again.");
@@ -166,25 +210,24 @@ auth.get("/auth/google/callback", async (c) => {
   return c.redirect(next);
 });
 
-auth.get("/logout", async (c) => {
+auth.post("/logout", smallBody, async (c) => {
   const token = getCookie(c, SESSION_COOKIE);
   if (token && c.env.DB) await deleteSession(c.env.DB, token);
   deleteCookie(c, SESSION_COOKIE, { path: "/" });
   deleteCookie(c, UI_LOGGED_IN_COOKIE, { path: "/" });
-  return c.redirect("/");
+  return c.redirect("/", 303);
 });
 
 auth.get("/profile", async (c) => {
-  const user = await currentUser(c);
-  if (!user) return c.redirect("/login?next=/profile");
+  const user = await requireUser(c);
+  if (user instanceof Response) return user;
 
-  const submissions = c.env.DB ? await findSubmissionsByUser(c.env.DB, user.id) : [];
-  const ratingHistory = c.env.DB ? await findRatingHistoryForUser(c.env.DB, user.id) : [];
-
-  const favoriteSlugs = c.env.DB ? await findFavoriteSlugsForUser(c.env.DB, user.id) : [];
-  const favorites = (
-    await Promise.all(favoriteSlugs.map((slug) => resolveDock(c.env.DB, slug)))
-  ).filter((d): d is NonNullable<typeof d> => d !== null);
+  const [submissions, ratingHistory, favoriteSlugs] = await Promise.all([
+    findSubmissionsByUser(c.env.DB, user.id),
+    findRatingHistoryForUser(c.env.DB, user.id),
+    findFavoriteSlugsForUser(c.env.DB, user.id),
+  ]);
+  const favorites = await resolveDocks(c.env.DB, favoriteSlugs);
 
   return c.html(
     <ProfilePage user={user} submissions={submissions} favorites={favorites} ratingHistory={ratingHistory} path="/profile" />,

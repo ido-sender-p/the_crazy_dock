@@ -1,6 +1,7 @@
 import { Layout } from "../layout";
 import { raw } from "hono/html";
-import type { UserSearchResult, LocationSearchResult } from "../lib/search";
+import { initials } from "./shared";
+import { MIN_SEARCH_LENGTH, type UserSearchResult, type LocationSearchResult } from "../lib/search";
 
 export type SearchFilter = "all" | "profile" | "location" | "dock";
 
@@ -12,9 +13,9 @@ const PAGE_CSS = `
     flex: 1; padding: 12px 16px; border: 1px solid var(--border); border-radius: 999px;
     font-size: 0.95rem; font-family: inherit; color: var(--ink);
   }
-  .search-form input:focus { outline: none; border-color: var(--accent); }
+  .search-form input:focus-visible { border-color: var(--accent-dark); }
   .search-form button {
-    border: none; border-radius: 999px; padding: 0 22px; background: var(--accent); color: #06121f;
+    border: none; border-radius: 999px; padding: 0 22px; background: var(--ink); color: #fff;
     font-weight: 600; cursor: pointer; font-size: 0.9rem;
   }
 
@@ -25,14 +26,11 @@ const PAGE_CSS = `
     font-size: 0.85rem; font-weight: 600; color: var(--ink-soft);
     transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
   }
-  .search-filters a:hover { border-color: var(--accent); color: var(--accent-dark); }
-  .search-filters a.active { background: var(--accent); border-color: var(--accent); color: #06121f; }
+  .search-filters a:hover { border-color: var(--accent); color: var(--accent-text); }
+  .search-filters a.active { background: var(--ink); border-color: var(--ink); color: #fff; }
 
   .search-page section { margin-top: 28px; }
-  .search-page .kicker {
-    color: var(--accent-dark); font-weight: 600; font-size: 0.78rem; text-transform: uppercase;
-    letter-spacing: 0.06em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
-  }
+  .search-page .kicker { font-size: 0.78rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .search-page .kicker svg { width: 14px; height: 14px; }
   .result-list { display: flex; flex-direction: column; gap: 10px; }
   .result-row {
@@ -44,34 +42,29 @@ const PAGE_CSS = `
   .result-icon {
     width: 38px; height: 38px; border-radius: 50%; flex: none; object-fit: cover;
     background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-    color: #fff; display: flex; align-items: center; justify-content: center;
+    color: var(--on-accent); display: flex; align-items: center; justify-content: center;
     font-family: 'Fraunces', serif; font-weight: 600; font-size: 0.9rem;
   }
-  .result-icon.location { background: var(--surface); border: 1px solid var(--border); color: var(--accent-dark); }
+  .result-icon.location { background: var(--surface); border: 1px solid var(--border); color: var(--accent-text); }
   .result-icon svg { width: 17px; height: 17px; }
   .result-row .name { font-weight: 600; font-size: 0.92rem; }
   .result-row .place { color: var(--ink-soft); font-size: 0.83rem; }
-  .search-page .empty { padding: 24px; border: 1px dashed var(--border); border-radius: 12px; color: var(--ink-soft); font-size: 0.9rem; }
 `;
 
-function initials(name: string) {
-  return name.trim().split(/\s+/).map((p) => p[0]?.toUpperCase()).slice(0, 2).join("");
-}
-
 const PinIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M12 21s7-6.1 7-11.5A7 7 0 0 0 5 9.5C5 14.9 12 21 12 21z" />
     <circle cx="12" cy="9.5" r="2.3" />
   </svg>
 );
 const AnchorIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="5" r="2" />
     <path d="M12 7v13M5 13a7 7 0 0 0 14 0M5 13H3M21 13h-2" />
   </svg>
 );
 const UserIcon = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="8" r="4" />
     <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" />
   </svg>
@@ -95,6 +88,7 @@ export function SearchPage(opts: {
   path: string;
 }) {
   const hasQuery = opts.q.length > 0;
+  const tooShort = hasQuery && opts.q.length < MIN_SEARCH_LENGTH;
 
   const counts: Record<SearchFilter, number> = {
     all: opts.users.length + opts.docks.length + opts.locations.length,
@@ -102,7 +96,7 @@ export function SearchPage(opts: {
     location: opts.locations.length,
     dock: opts.docks.length,
   };
-  const noResults = hasQuery && counts[opts.filter] === 0;
+  const noResults = hasQuery && !tooShort && counts[opts.filter] === 0;
 
   const showUsers = opts.filter === "all" || opts.filter === "profile";
   const showLocations = opts.filter === "all" || opts.filter === "location";
@@ -116,19 +110,24 @@ export function SearchPage(opts: {
       <div class="wrap search-page">
         <form class="search-form" method="get" action="/search">
           <input type="hidden" name="type" value={opts.filter} />
-          <input type="text" name="q" value={opts.q} placeholder="Search Wildock…" autofocus />
+          <input type="text" name="q" value={opts.q} placeholder="Search Wildock…" aria-label="Search Wildock" />
           <button type="submit">Search</button>
         </form>
 
-        <div class="search-filters">
+        <nav class="search-filters" aria-label="Filter results">
           {FILTER_LABELS.map((f) => (
-            <a class={opts.filter === f.value ? "active" : ""} href={filterHref(f.value)}>
+            <a
+              class={opts.filter === f.value ? "active" : ""}
+              href={filterHref(f.value)}
+              aria-current={opts.filter === f.value ? "page" : undefined}
+            >
               {f.label}
             </a>
           ))}
-        </div>
+        </nav>
 
-        {noResults && <div class="empty">No matches for "{opts.q}".</div>}
+        {tooShort && <div class="empty" role="status">Type at least {MIN_SEARCH_LENGTH} characters to search.</div>}
+        {noResults && <div class="empty" role="status">No matches for "{opts.q}".</div>}
 
         {showUsers && opts.users.length > 0 && (
           <section>

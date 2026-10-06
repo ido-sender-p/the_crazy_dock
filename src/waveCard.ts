@@ -14,7 +14,7 @@ export type Water =
   | "polynesia"
   | "australasia";
 
-export const SEA_COLOR: Record<string, string> = {
+const SEA_COLOR: Record<string, string> = {
   "Atlantic Ocean": "#1a7a8c",
   "North Sea": "#2f9e8f",
   "Baltic Sea": "#3f6fae",
@@ -49,7 +49,7 @@ export const SEA_COLOR: Record<string, string> = {
 };
 
 // Fallback family color, only used if a sea name isn't in SEA_COLOR yet.
-export const WATER_COLOR: Record<Water, string> = {
+const WATER_COLOR: Record<Water, string> = {
   pacific: "#2f6fb0",
   atlantic: "#17a094",
   indian: "#7c5fb0",

@@ -44,9 +44,14 @@ export async function exchangeGoogleCode(
 export type GoogleProfile = {
   sub: string;
   email: string;
-  email_verified: boolean;
+  email_verified: boolean | string; // userinfo sometimes sends the string "true"
   name?: string;
 };
+
+// Strict: anything other than true or "true" (missing, "false", 1) is unverified.
+export function isEmailVerified(profile: GoogleProfile): boolean {
+  return profile.email_verified === true || profile.email_verified === "true";
+}
 
 export async function fetchGoogleProfile(accessToken: string): Promise<GoogleProfile> {
   const res = await fetch(USERINFO_URL, { headers: { Authorization: `Bearer ${accessToken}` } });

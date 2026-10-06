@@ -9,6 +9,8 @@ import { secureHeaders } from "hono/secure-headers";
 // on inline <style>/<script> tags per page (no per-request nonce plumbing
 // exists), so this CSP's job is narrowing *which hosts* can load, not
 // eliminating inline code, which would need a larger templating change.
+const LEAFLET_CDN = "https://unpkg.com/leaflet@1.9.4/dist/";
+
 export const securityHeaders = secureHeaders({
   contentSecurityPolicy: {
     defaultSrc: ["'self'"],
@@ -18,9 +20,12 @@ export const securityHeaders = secureHeaders({
     objectSrc: ["'none'"],
     imgSrc: ["'self'", "data:", "https://upload.wikimedia.org", "https://*.tile.openstreetmap.org"],
     fontSrc: ["'self'", "https://fonts.gstatic.com"],
-    styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://unpkg.com"],
-    scriptSrc: ["'self'", "'unsafe-inline'", "https://unpkg.com"],
-    connectSrc: ["'self'", "https://*.tile.openstreetmap.org"],
+    styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", LEAFLET_CDN],
+    scriptSrc: ["'self'", "'unsafe-inline'", LEAFLET_CDN],
+    connectSrc: ["'self'"],
   },
+  // Hono defaults to "no-referrer", but OSM's tile servers reject requests with
+  // no Referer (403). Origin-only on cross-origin keeps paths private.
+  referrerPolicy: "strict-origin-when-cross-origin",
   crossOriginEmbedderPolicy: false, // would block the Leaflet/OSM tile and font resources above
 });

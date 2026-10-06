@@ -3,24 +3,20 @@ import { raw } from "hono/html";
 import type { User, Submission } from "../lib/db";
 import type { Dock } from "../data";
 import type { RatingHistoryEntry } from "../lib/gallery";
+import { initials, placeLabel } from "./shared";
 
 const PAGE_CSS = `
   .profile-page { padding: 56px 0 100px; max-width: 640px; }
-  .profile-head { display: flex; align-items: center; gap: 18px; margin-bottom: 36px; }
-  .profile-avatar {
-    width: 64px; height: 64px; border-radius: 50%; flex: none; object-fit: cover;
-    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-    color: #fff; display: flex; align-items: center; justify-content: center;
-    font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.5rem;
+  .profile-page .profile-head { margin-bottom: 36px; }
+  .profile-head .logout-form { display: inline; }
+  .profile-head .logout-btn {
+    border: none; background: none; padding: 0; font: inherit; color: var(--accent-text); cursor: pointer;
   }
   .profile-head h1 { font-size: 1.7rem; margin: 0 0 4px; }
-  .profile-head p { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
-  .profile-head p a { color: var(--accent-dark); text-decoration: none; }
+  .profile-head .links { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
+  .profile-head .links a { color: var(--accent-text); text-decoration: none; }
 
-  .profile-page .kicker {
-    color: var(--accent-dark); font-weight: 600; font-size: 0.8rem; text-transform: uppercase;
-    letter-spacing: 0.06em; margin-top: 8px;
-  }
+  .profile-page .kicker { margin-top: 8px; }
   .profile-page section { margin-top: 40px; }
   .profile-page h2 { font-size: 1.3rem; margin: 4px 0 18px; }
 
@@ -42,7 +38,7 @@ const PAGE_CSS = `
   .rating-history-row img { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; flex: none; }
   .rating-history-row .caption { font-size: 0.88rem; flex: 1; min-width: 0; }
   .rating-history-row .your-rating {
-    font-size: 0.8rem; font-weight: 600; color: var(--accent-dark);
+    font-size: 0.8rem; font-weight: 600; color: var(--accent-text);
     background: var(--surface-alt, #f4f1ea); padding: 4px 10px; border-radius: 999px; white-space: nowrap;
   }
 
@@ -56,20 +52,10 @@ const PAGE_CSS = `
   .status {
     font-size: 0.75rem; font-weight: 600; padding: 5px 12px; border-radius: 999px; white-space: nowrap;
   }
-  .status.pending { background: #fdf3e2; color: #9c6b1f; }
+  .status.pending { background: #fdf3e2; color: #7a5108; }
   .status.published { background: #eafaf3; color: #146b43; }
 
-  .profile-page .empty { padding: 24px; border: 1px dashed var(--border); border-radius: 12px; color: var(--ink-soft); font-size: 0.9rem; }
 `;
-
-function initials(name: string) {
-  return name
-    .trim()
-    .split(/\s+/)
-    .map((p) => p[0]?.toUpperCase())
-    .slice(0, 2)
-    .join("");
-}
 
 export function ProfilePage(opts: {
   user: User;
@@ -79,7 +65,7 @@ export function ProfilePage(opts: {
   path: string;
 }) {
   return (
-    <Layout title={`${opts.user.username} | Wildock`} description="Your Wildock profile." path={opts.path}>
+    <Layout title={`${opts.user.username} | Wildock`} description="Your Wildock profile." path={opts.path} noindex>
       <style>{raw(PAGE_CSS)}</style>
       <div class="wrap profile-page">
         <div class="profile-head">
@@ -90,7 +76,7 @@ export function ProfilePage(opts: {
           )}
           <div>
             <h1>{opts.user.username}</h1>
-            <p>
+            <div class="links">
               {opts.user.email} ·{" "}
               <a href="/profile/edit">Edit profile</a> ·{" "}
               <a href="/messages">Messages</a> ·{" "}
@@ -99,8 +85,10 @@ export function ProfilePage(opts: {
                   <a href="/admin/submissions">Review submissions</a> ·{" "}
                 </>
               ) : null}
-              <a href="/logout">Log out</a>
-            </p>
+              <form class="logout-form" method="post" action="/logout">
+                <button class="logout-btn" type="submit">Log out</button>
+              </form>
+            </div>
           </div>
         </div>
 
@@ -117,7 +105,7 @@ export function ProfilePage(opts: {
                 <div class="submission-row">
                   <div>
                     <div class="name">{s.name}</div>
-                    <div class="place">{s.settlement}, {s.country}</div>
+                    <div class="place">{placeLabel(s.settlement, s.country)}</div>
                   </div>
                   <span class={`status ${s.published ? "published" : "pending"}`}>
                     {s.published ? "Published" : "Pending review"}
@@ -141,7 +129,7 @@ export function ProfilePage(opts: {
                 <a class="favorite-row" href={`/docks/${d.slug}`}>
                   <div>
                     <div class="name">{d.name}</div>
-                    <div class="place">{d.settlement}, {d.country}</div>
+                    <div class="place">{placeLabel(d.settlement, d.country)}</div>
                   </div>
                 </a>
               ))}
@@ -158,7 +146,7 @@ export function ProfilePage(opts: {
             <div class="rating-history-list">
               {opts.ratingHistory.map((r) => (
                 <a class="rating-history-row" href={`/docks/${r.dock_slug}`}>
-                  <img src={r.image_url} alt={r.title} />
+                  <img src={r.image_url} alt="" width={48} height={48} loading="lazy" decoding="async" />
                   <div class="caption">{r.title || r.dock_slug}</div>
                   <span class="your-rating">Your rating: {r.rating}/10</span>
                 </a>

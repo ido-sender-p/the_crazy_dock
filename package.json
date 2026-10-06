@@ -1,20 +1,23 @@
 {
   "name": "wildock",
   "version": "0.1.0",
-  "description": "Programmatic SEO site cataloguing docks, piers and marinas worldwide",
+  "description": "Wildock: a programmatic SEO catalogue of docks, piers and marinas worldwide, built on Hono and Cloudflare Workers",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "db:create": "wrangler d1 create wildock-db",
     "db:migrate:local": "wrangler d1 execute wildock-db --local --file=./src/db/schema.sql",
     "db:migrate:remote": "wrangler d1 execute wildock-db --remote --file=./src/db/schema.sql",
-    "fetch:overpass": "node scripts/fetch-overpass.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "catalogue:import": "node scripts/import-wikidata.mjs",
+    "catalogue:build": "node scripts/build-catalogue.mjs",
+    "catalogue:images": "node scripts/load-images.mjs"
   },
-  "keywords": [],
-  "author": "",
   "license": "ISC",
   "dependencies": {
     "hono": "^4.13.5"

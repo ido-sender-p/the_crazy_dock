@@ -2,7 +2,8 @@ import { Layout } from "../layout";
 import { docks, continents } from "../data";
 import { raw } from "hono/html";
 import { WORLD_MAP_VIEWBOX, CONTINENT_SHAPES } from "../continents";
-import { safeJsonForScript } from "../lib/html";
+import { LeafletCss, LeafletMap } from "./leaflet";
+import { CardThumb, DockIcon, Footprints, placeLabel } from "./shared";
 
 const PAGE_CSS = `
   .hero { min-height: 560px; }
@@ -32,9 +33,7 @@ const PAGE_CSS = `
   .hero .btn-cta { margin-top: 0; padding: 12px 24px; font-size: 0.95rem; }
 
   section.block { padding: 64px 0; }
-  section.block .kicker { color: var(--accent-dark); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; }
   section.block h2 { font-size: 1.8rem; margin-top: 6px; }
-  section.block p.intro { color: var(--ink-soft); max-width: 620px; margin-bottom: 32px; }
 
   .world-map { width: 100%; margin-top: 8px; }
   .world-map svg { width: 100%; height: auto; display: block; }
@@ -47,18 +46,23 @@ const PAGE_CSS = `
   }
 
   .map-teaser {
+    position: relative;
     display: block;
     border-radius: 16px;
     overflow: hidden;
     border: 1px solid var(--border);
     background: var(--surface);
   }
-  #home-map { height: 320px; width: 100%; background: #0b2545; }
-  .map-teaser-copy { display: flex; align-items: center; justify-content: center; padding: 26px 24px; }
+  #home-map { width: 100%; height: auto; aspect-ratio: 16 / 8; background: #0b2545; }
+  /* the button floats over the map corner; z-index keeps it above Leaflet's panes and controls */
+  .map-teaser-copy { position: absolute; top: 0.9rem; right: 0.9rem; z-index: 1000; display: flex; }
   .map-teaser-copy .btn-cta {
     display: inline-flex; align-items: center; gap: 9px; padding: 10px 20px; font-size: 0.85rem;
   }
   .map-teaser-copy .btn-cta svg { width: 16px; height: 16px; }
+  .map-teaser-copy .btn-cta { box-shadow: 0 4px 14px rgba(11,37,69,0.35); }
+  /* on dark panels the navy button would vanish, so it flips to white with navy text */
+  .hero .btn-cta, .submit-cta .btn-cta { background: #fff; color: var(--ink); box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
 
   .featured-card {
     display: grid;
@@ -71,45 +75,41 @@ const PAGE_CSS = `
     text-decoration: none;
     color: var(--ink);
   }
-  .featured-card img { width: 100%; height: 100%; object-fit: cover; display: block; min-height: 260px; }
+  .featured-card img, .featured-card .thumb-ph { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; object-position: center 40%; display: block; }
+  .featured-card .thumb-ph { background: var(--border); }
   .featured-card .copy { padding: 32px; display: flex; flex-direction: column; justify-content: center; }
-  .featured-card .tag { font-size: 0.75rem; font-weight: 600; color: var(--accent-dark); text-transform: uppercase; letter-spacing: 0.05em; }
+  .featured-card .tag { font-size: 0.75rem; font-weight: 600; color: var(--accent-text); text-transform: uppercase; letter-spacing: 0.05em; }
   .featured-card h3 { font-size: 1.5rem; margin: 8px 0 10px; }
   .featured-card p { color: var(--ink-soft); font-size: 0.95rem; }
-  @media (max-width: 640px) { .featured-card { grid-template-columns: 1fr; } .featured-card img { min-height: 200px; } }
+  @media (max-width: 640px) { .featured-card { grid-template-columns: 1fr; } .featured-card img, .featured-card .thumb-ph { aspect-ratio: 16 / 10; } .featured-card .copy { padding: 1.5rem 1.25rem; } }
 
   .log { margin-top: 28px; border-top: 1px solid var(--border); }
-  .log-entry {
-    display: grid; grid-template-columns: 56px 1fr; gap: 20px;
-    padding: 26px 0;
-  }
-  @media (max-width: 560px) { .log-entry { grid-template-columns: 36px 1fr; gap: 14px; } }
-  .log-num { color: var(--accent-dark); width: 60px; height: 60px; }
+  .log-entry { display: grid; grid-template-columns: 1fr; justify-items: center; gap: 20px; padding: 26px 0; }
+  .log-num { color: var(--accent-text); width: 60px; height: 60px; }
   .log-entry h3 { font-family: 'Fraunces', serif; font-size: 1.15rem; margin: 0 0 6px; }
   .log-entry p {
     color: var(--ink); font-family: 'GFS Didot', 'Fraunces', serif;
-    font-size: 1.15rem; line-height: 1.5; max-width: 60ch; margin: 0;
+    font-size: 1.15rem; line-height: 1.5; max-width: 60ch; margin: 0 auto;
   }
-  .trail { position: relative; margin-top: 32px; max-width: 620px; padding-left: 46px; }
+  .trail { position: relative; margin: 32px auto 0; max-width: 480px; }
   .trail::before {
-    content: ''; position: absolute; left: 5px; top: 4px; bottom: 4px; width: 20px;
+    content: ''; position: absolute; left: 50%; margin-left: -10px; top: 4px; bottom: 4px; width: 20px;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='40' viewBox='0 0 20 40'%3E%3Cpath d='M10,0 C18,10 2,10 10,20 C18,30 2,30 10,40' fill='none' stroke='%23c9c2b0' stroke-width='2' stroke-dasharray='4 4' stroke-linecap='round'/%3E%3C/svg%3E");
     background-repeat: repeat-y; background-size: 20px 40px;
   }
-  .sailboat { position: relative; z-index: 2; width: 60px; margin: 0 auto; color: var(--accent-dark); background: #ffffff; }
+  .sailboat { position: relative; z-index: 2; width: 60px; margin: 0 auto; color: var(--accent-text); background: #ffffff; }
   .sailboat svg { width: 100%; height: auto; display: block; }
-  .trail-stop { position: relative; padding-bottom: 48px; }
+  .trail-stop { position: relative; padding: 44px 0 48px; }
   .trail-stop:last-child { padding-bottom: 0; }
   .dock-marker {
-    position: absolute; left: -46px; top: -4px; z-index: 1;
-    width: 34px; height: 34px;
+    width: 34px; height: 34px; margin: 0 auto 12px;
     display: flex; align-items: center; justify-content: center;
-    color: var(--accent-dark); background: #ffffff;
+    color: var(--accent-text); background: #ffffff;
   }
   .dock-marker svg { width: 100%; height: 100%; }
   .trail-stop h3 { position: relative; z-index: 2; font-family: 'Fraunces', serif; font-size: 1.1rem; margin: 0 0 6px; background: #ffffff; padding: 0 10px; display: inline-block; }
-  .trail-stop p { position: relative; z-index: 2; color: var(--ink-soft); font-size: 0.95rem; max-width: 56ch; margin: 0; background: #ffffff; padding: 2px 10px; }
-  .footprints { position: absolute; left: -34px; bottom: 10px; width: 26px; height: 26px; opacity: 0.4; }
+  .trail-stop p { position: relative; z-index: 2; color: var(--ink-soft); font-size: 0.95rem; max-width: 56ch; margin: 0 auto; background: #ffffff; padding: 2px 10px; }
+  .footprints { display: block; margin: 10px auto 0; width: 26px; height: 26px; opacity: 0.4; }
   .footprints ellipse { fill: var(--accent-dark); }
 
   .submit-cta {
@@ -125,44 +125,14 @@ const PAGE_CSS = `
   .submit-cta .cast-line { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.9; pointer-events: none; }
   .submit-cta .birds { position: absolute; left: 24px; top: 18px; width: 120px; height: 50px; opacity: 0.85; pointer-events: none; }
   .submit-cta h2 { color: #fff; font-size: 1.7rem; }
-  .submit-cta p { color: #cfe0ee; max-width: 480px; margin: 8px auto 24px; }
 
-  /* center all text on this page (hero stays left-aligned over the photo) */
+  /* the hero stays left-aligned over the photo; everything else is centered */
   section.block, .map-teaser-copy, .featured-card .copy { text-align: center; }
-  section.block p.intro, .log-entry p, .trail-stop p { margin-left: auto; margin-right: auto; }
-  .log-entry, .trail-stop { justify-items: center; }
-  .log-entry { grid-template-columns: 1fr; }
-  .trail { padding-left: 0; max-width: 480px; margin-left: auto; margin-right: auto; }
-  .trail::before { left: 50%; margin-left: -10px; }
-  .trail-stop { padding-top: 44px; }
-  .dock-marker { position: static; margin: 0 auto 12px; }
-  .footprints { position: static; display: block; margin: 10px auto 0; }
-`;
 
-const HOME_MAP_MARKERS = docks.map((d) => ({ name: d.name, slug: d.slug, lat: d.lat, lon: d.lon }));
-
-const HOME_MAP_JS = `
-  var docks = ${safeJsonForScript(HOME_MAP_MARKERS)};
-  var escapeHtml = function (s) {
-    return String(s).replace(/[&<>"']/g, function (ch) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
-    });
-  };
-  var map = L.map('home-map', { scrollWheelZoom: false, zoomControl: false }).setView([20, 10], 2);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-    maxZoom: 19
-  }).addTo(map);
-  docks.forEach(function (d) {
-    // Dock names can come from user submissions once approved, so this must
-    // stay HTML-escaped — bindPopup renders its argument as raw HTML.
-    L.circleMarker([d.lat, d.lon], { radius: 6, color: '#0b2545', weight: 1.5, fillColor: '#2ec4b6', fillOpacity: 0.9 })
-      .addTo(map)
-      .bindPopup('<strong>' + escapeHtml(d.name) + '</strong><br><a href="/docks/' + encodeURIComponent(d.slug) + '">View dock</a>');
-  });
-  if (docks.length) {
-    var bounds = L.latLngBounds(docks.map(function (d) { return [d.lat, d.lon]; }));
-    map.fitBounds(bounds.pad(0.5), { maxZoom: 6 });
+  @media (max-width: 640px) {
+    #home-map { aspect-ratio: 4 / 3; }
+    .submit-cta { padding: 32px 20px; }
+    .submit-cta .dock-scene, .submit-cta .cast-line, .submit-cta .birds { display: none; }
   }
 `;
 
@@ -176,8 +146,17 @@ export function HomePage() {
       "A growing global catalogue of docks, piers, marinas and floating structures, searchable by continent and type.",
   };
 
+  const featured = docks[0];
+  const featuredDesc = featured
+    ? featured.description.length > 160
+      ? `${featured.description.slice(0, 160)}…`
+      : featured.description
+    : "";
+
   return (
     <Layout
+      hero
+      displayFonts
       title="Wildock: A Global Catalogue of Docks, Piers & Marinas"
       description="Explore thousands of docks, piers, marinas and floating structures from around the world, each documented with photos, history and precise location."
       jsonLd={jsonLd}
@@ -198,7 +177,7 @@ export function HomePage() {
       <section class="block wrap">
         <div class="log">
           <div class="log-entry">
-            <svg class="log-num" viewBox="-6 -6 52 52" fill="none" stroke="currentColor" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg">
+            <svg class="log-num" aria-hidden="true" viewBox="-6 -6 52 52" fill="none" stroke="currentColor" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg">
               <circle cx="20" cy="20" r="24" stroke-width="1" opacity="0.6" />
               <circle cx="20" cy="20" r="18" stroke-width="1.2" />
               <text x="20" y="-1" text-anchor="middle" dominant-baseline="middle" font-size="7" font-family="'Cinzel', serif" fill="currentColor" stroke="none">Β</text>
@@ -231,9 +210,6 @@ export function HomePage() {
         </div>
       </section>
 
-      <div class="wrap">
-        <hr style="border: none; border-top: 1px solid var(--border); margin: 0 auto 48px; max-width: 620px;" />
-      </div>
 
       <div style="background: #ffffff;">
       <section class="block wrap" style="padding-top: 0;">
@@ -241,7 +217,7 @@ export function HomePage() {
         <h2>Your voyage, from dock to dock</h2>
         <div class="trail">
           <div class="sailboat">
-            <svg viewBox="0 0 40 36" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+            <svg aria-hidden="true" viewBox="0 0 40 36" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
               <path d="M6,29 Q20,34 34,29" />
               <path d="M20,29 L20,4" />
               <path d="M20,6 Q31,15 20,26 Z" fill="currentColor" fill-opacity="0.15" />
@@ -251,55 +227,29 @@ export function HomePage() {
           </div>
           <div class="trail-stop">
             <div class="dock-marker">
-              <svg viewBox="0 0 24 34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12,4 C16,4 17,10 15,15 C14,19 13,23 12,29 C11,23 10,19 9,15 C7,10 8,4 12,4 Z" />
-                <path d="M8.5,12.5 L15.5,12.5" />
-                <path d="M8,18.5 L16,18.5" />
-                <circle cx="12" cy="2.5" r="1.3" fill="currentColor" stroke="none" />
-                <path d="M4,31 Q8,28.5 12,31 Q16,33.5 20,31" stroke-width="1.2" opacity="0.6" />
-              </svg>
+              <DockIcon />
             </div>
             <h3>Explore &amp; rate</h3>
             <p>
               Wander the site and take in the photos people have shared. Found one you love?
               Rate it, and keep exploring from there.
             </p>
-            <svg class="footprints" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-              <ellipse cx="12" cy="10" rx="4" ry="6" transform="rotate(-18 12 10)" />
-              <ellipse cx="26" cy="22" rx="4" ry="6" transform="rotate(14 26 22)" />
-              <ellipse cx="14" cy="34" rx="4" ry="6" transform="rotate(-16 14 34)" />
-            </svg>
+            <Footprints />
           </div>
           <div class="trail-stop">
             <div class="dock-marker">
-              <svg viewBox="0 0 24 34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12,4 C16,4 17,10 15,15 C14,19 13,23 12,29 C11,23 10,19 9,15 C7,10 8,4 12,4 Z" />
-                <path d="M8.5,12.5 L15.5,12.5" />
-                <path d="M8,18.5 L16,18.5" />
-                <circle cx="12" cy="2.5" r="1.3" fill="currentColor" stroke="none" />
-                <path d="M4,31 Q8,28.5 12,31 Q16,33.5 20,31" stroke-width="1.2" opacity="0.6" />
-              </svg>
+              <DockIcon />
             </div>
             <h3>Save your favorites</h3>
             <p>
               Found a spot you want to remember? Mark it as a favorite.<br />
               Maybe it turns into a trip, or a note to the photographer.
             </p>
-            <svg class="footprints" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
-              <ellipse cx="12" cy="10" rx="4" ry="6" transform="rotate(-18 12 10)" />
-              <ellipse cx="26" cy="22" rx="4" ry="6" transform="rotate(14 26 22)" />
-              <ellipse cx="14" cy="34" rx="4" ry="6" transform="rotate(-16 14 34)" />
-            </svg>
+            <Footprints />
           </div>
           <div class="trail-stop">
             <div class="dock-marker">
-              <svg viewBox="0 0 24 34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12,4 C16,4 17,10 15,15 C14,19 13,23 12,29 C11,23 10,19 9,15 C7,10 8,4 12,4 Z" />
-                <path d="M8.5,12.5 L15.5,12.5" />
-                <path d="M8,18.5 L16,18.5" />
-                <circle cx="12" cy="2.5" r="1.3" fill="currentColor" stroke="none" />
-                <path d="M4,31 Q8,28.5 12,31 Q16,33.5 20,31" stroke-width="1.2" opacity="0.6" />
-              </svg>
+              <DockIcon />
             </div>
             <h3>Join in</h3>
             <p>
@@ -311,22 +261,25 @@ export function HomePage() {
       </section>
       </div>
 
-      <div class="wrap">
-        <hr style="border: none; border-top: 1px solid var(--border); margin: 0 auto 48px; max-width: 620px;" />
-      </div>
 
-      <section class="block wrap">
-        <div class="kicker">Featured</div>
-        <h2>Pick of the week</h2>
-        <a class="featured-card" href={`/docks/${docks[0].slug}`}>
-          <img src={docks[0].imageUrl} alt={docks[0].name} />
-          <div class="copy">
-            <span class="tag">{docks[0].settlement}, {docks[0].country}</span>
-            <h3>{docks[0].name}</h3>
-            <p>{docks[0].description.slice(0, 160)}…</p>
-          </div>
-        </a>
-      </section>
+      {featured && (
+        <section class="block wrap" style="padding-top: 160px;">
+          <div class="kicker">Featured</div>
+          <h2>Pick of the week</h2>
+          <a class="featured-card" href={`/docks/${featured.slug}`}>
+            {featured.imageUrl ? (
+              <img src={featured.imageUrl} alt="" width={640} height={420} loading="lazy" decoding="async" />
+            ) : (
+              <div class="thumb-ph" aria-hidden="true" />
+            )}
+            <div class="copy">
+              <span class="tag">{placeLabel(featured.settlement, featured.country)}</span>
+              <h3>{featured.name}</h3>
+              <p>{featuredDesc}</p>
+            </div>
+          </a>
+        </section>
+      )}
 
       <section class="block wrap" id="continents">
         <div class="kicker">Browse</div>
@@ -350,10 +303,10 @@ export function HomePage() {
         <div class="kicker">Browse</div>
         <h2>By map</h2>
         <div class="map-teaser">
-          <div id="home-map" />
+          <div id="home-map" role="region" aria-label="Map of docks" />
           <span class="map-teaser-copy">
             <a class="btn-cta" href="/map">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
                 <line x1="8" y1="2" x2="8" y2="18" />
                 <line x1="16" y1="6" x2="16" y2="22" />
@@ -362,18 +315,8 @@ export function HomePage() {
             </a>
           </span>
         </div>
-        <link
-          rel="stylesheet"
-          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-          crossorigin=""
-        />
-        <script
-          src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-          crossorigin=""
-        ></script>
-        <script>{raw(HOME_MAP_JS)}</script>
+        <LeafletCss />
+        <LeafletMap elementId="home-map" radius={6} zoomControl={false} />
       </section>
 
       <section class="block wrap">

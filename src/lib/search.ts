@@ -1,12 +1,22 @@
 import { docks, continents, slugify, type Dock } from "../data";
 import { countriesByContinent, citiesByCountry } from "../continents";
 
+export const MIN_SEARCH_LENGTH = 3;
+
 export type UserSearchResult = { id: number; username: string; avatar_url: string | null };
 
+// Prefix match as a range scan on idx_users_username (username COLLATE NOCASE),
+// no wildcard escaping needed and no table scan.
 export async function searchUsers(db: D1Database, query: string): Promise<UserSearchResult[]> {
+  const prefix = query.trim().toLowerCase();
+  if (prefix.length < MIN_SEARCH_LENGTH) return [];
   const result = await db
-    .prepare("SELECT id, username, avatar_url FROM users WHERE username LIKE ? ESCAPE '\\' ORDER BY username LIMIT 20")
-    .bind(likePattern(query))
+    .prepare(
+      `SELECT id, username, avatar_url FROM users
+       WHERE username COLLATE NOCASE >= ? AND username COLLATE NOCASE < ?
+       ORDER BY username COLLATE NOCASE LIMIT 20`,
+    )
+    .bind(prefix, prefix + "\uffff")
     .all<UserSearchResult>();
   return result.results;
 }
@@ -24,7 +34,7 @@ type DockRow = {
 // dock-listing feature (favorites, liveDocks) already has to handle.
 export async function searchDocks(db: D1Database | undefined, query: string): Promise<DockRow[]> {
   const needle = query.trim().toLowerCase();
-  if (!needle) return [];
+  if (needle.length < MIN_SEARCH_LENGTH) return [];
 
   const staticMatches: DockRow[] = docks
     .filter(
@@ -33,10 +43,12 @@ export async function searchDocks(db: D1Database | undefined, query: string): Pr
         d.settlement.toLowerCase().includes(needle) ||
         d.country.toLowerCase().includes(needle),
     )
+    .slice(0, 20)
     .map((d) => ({ slug: d.slug, name: d.name, dock_type: d.dockType, country: d.country, settlement: d.settlement }));
 
   if (!db) return staticMatches;
 
+  const pattern = prefixPattern(query);
   const result = await db
     .prepare(
       `SELECT slug, name, dock_type, country, settlement FROM docks
@@ -44,7 +56,7 @@ export async function searchDocks(db: D1Database | undefined, query: string): Pr
        AND (name LIKE ? ESCAPE '\\' OR settlement LIKE ? ESCAPE '\\' OR country LIKE ? ESCAPE '\\')
        LIMIT 20`,
     )
-    .bind(likePattern(query), likePattern(query), likePattern(query))
+    .bind(pattern, pattern, pattern)
     .all<DockRow>();
 
   const seen = new Set(staticMatches.map((d) => d.slug));
@@ -59,7 +71,7 @@ export type LocationSearchResult = { kind: "continent" | "country" | "city"; lab
 // yet), but they're still real, navigable pages worth surfacing in search.
 export function searchLocations(query: string): LocationSearchResult[] {
   const needle = query.trim().toLowerCase();
-  if (!needle) return [];
+  if (needle.length < MIN_SEARCH_LENGTH) return [];
 
   const results: LocationSearchResult[] = [];
 
@@ -88,7 +100,7 @@ export function searchLocations(query: string): LocationSearchResult[] {
   return results.slice(0, 20);
 }
 
-function likePattern(raw: string): string {
+function prefixPattern(raw: string): string {
   const escaped = raw.trim().replace(/[\\%_]/g, (ch) => `\\${ch}`);
-  return `%${escaped}%`;
+  return `${escaped}%`;
 }

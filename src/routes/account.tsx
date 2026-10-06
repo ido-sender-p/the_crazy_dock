@@ -1,90 +1,127 @@
 import { Hono } from "hono";
+import { getCookie } from "hono/cookie";
 import type { Env } from "../env";
 import { EditProfilePage } from "../pages/editProfile";
-import { currentUser } from "../lib/session";
-import { updateUsername, updateAvatarUrl, updateUserPassword, updateEmail, updateProfileDetails, findUserByEmail } from "../lib/db";
-import { hashPassword, verifyPassword } from "../lib/auth";
+import { requireUser, SESSION_COOKIE } from "../lib/session";
+import { updateProfile, findPasswordHash, changePassword, deleteOtherSessions } from "../lib/db";
+import { hashPassword, verifyPassword, hasRealPassword } from "../lib/auth";
 import { detectImageType, MAX_PHOTO_BYTES } from "../lib/imageValidation";
+import {
+  checkUsername,
+  checkEmail,
+  checkNewPassword,
+  checkDateOfBirth,
+  isUniqueViolation,
+  uniqueViolationField,
+  USERNAME_TAKEN_ERROR,
+} from "../lib/validation";
+import { uploadBody } from "../middleware/limits";
 
 export const account = new Hono<Env>();
 
-function hasPassword(user: { password_hash: string }) {
-  return user.password_hash !== "oauth:google";
-}
+const UPLOAD_KEY_RE = /^\/uploads\/([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
 
 account.get("/profile/edit", async (c) => {
-  const user = await currentUser(c);
-  if (!user) return c.redirect("/login?next=/profile/edit");
-  return c.html(<EditProfilePage user={user} hasPassword={hasPassword(user)} path="/profile/edit" />);
+  const user = await requireUser(c);
+  if (user instanceof Response) return user;
+  const hash = await findPasswordHash(c.env.DB, user.id);
+  return c.html(<EditProfilePage user={user} hasPassword={!!hash && hasRealPassword(hash)} path="/profile/edit" />);
 });
 
-// Old standalone change-password page, folded into /profile/edit.
-account.get("/profile/password", (c) => c.redirect("/profile/edit"));
+account.post("/profile/edit", uploadBody, async (c) => {
+  const user = await requireUser(c);
+  if (user instanceof Response) return user;
 
-account.post("/profile/edit", async (c) => {
-  const user = await currentUser(c);
-  if (!user) return c.redirect("/login?next=/profile/edit");
+  const passwordHash = await findPasswordHash(c.env.DB, user.id);
+  const userHasPassword = !!passwordHash && hasRealPassword(passwordHash);
 
   const form = await c.req.formData();
-  const rejectWith = (error: string, patchedUser = user) =>
-    c.html(<EditProfilePage user={patchedUser} hasPassword={hasPassword(user)} path="/profile/edit" error={error} />, 400);
+  const rejectWith = (error: string) =>
+    c.html(<EditProfilePage user={user} hasPassword={userHasPassword} path="/profile/edit" error={error} />, 400);
 
-  const username = String(form.get("username") ?? "").trim().slice(0, 60);
-  if (!username) return rejectWith("Please enter a display name.");
+  const username = checkUsername(String(form.get("username") ?? ""));
+  if (!username.ok) return rejectWith(username.error);
 
-  const email = String(form.get("email") ?? "").trim().toLowerCase().slice(0, 255);
-  if (!email || !email.includes("@")) return rejectWith("Please enter a valid email address.");
-  if (email !== user.email) {
-    const existing = await findUserByEmail(c.env.DB, email);
-    if (existing) return rejectWith("That email is already in use by another account.");
-  }
+  const email = checkEmail(String(form.get("email") ?? ""));
+  if (!email.ok) return rejectWith(email.error);
 
   const dateOfBirth = String(form.get("dateOfBirth") ?? "").trim();
+  if (dateOfBirth && !checkDateOfBirth(dateOfBirth)) return rejectWith("Please enter a valid date of birth.");
   const location = String(form.get("location") ?? "").trim().slice(0, 120);
+
+  const currentPassword = String(form.get("currentPassword") ?? "");
+  const newPassword = String(form.get("newPassword") ?? "");
+  const confirmPassword = String(form.get("confirmPassword") ?? "");
+  const changingEmail = email.value !== user.email;
+  const changingPassword = !!(newPassword || confirmPassword);
+
+  // Changing the email or password needs the current password, so a stolen
+  // session alone can't take over the account.
+  if (changingEmail && !userHasPassword) return rejectWith("Accounts that sign in with Google can't change their email here.");
+  if ((changingEmail || changingPassword) && userHasPassword) {
+    if (!currentPassword || !(await verifyPassword(currentPassword, passwordHash!))) {
+      return rejectWith("Enter your current password to change your email or password.");
+    }
+  }
+  let newPasswordHash: string | null = null;
+  if (changingPassword) {
+    const passwordError = checkNewPassword(newPassword, confirmPassword);
+    if (passwordError) return rejectWith(passwordError);
+    newPasswordHash = await hashPassword(newPassword);
+  }
 
   const avatarEntries = form.getAll("avatar");
   if (avatarEntries.length > 1) return rejectWith("Please attach only one photo.");
   const avatar = avatarEntries[0];
 
-  let avatarUrl: string | null = null;
+  // Everything is validated before anything is written to R2.
+  let avatarBytes: Uint8Array | null = null;
+  let avatarType: string | null = null;
   if (avatar instanceof File && avatar.size > 0) {
     if (avatar.size > MAX_PHOTO_BYTES) return rejectWith("Photo is too large (8 MB max).");
-    const bytes = new Uint8Array(await avatar.arrayBuffer());
-    const detectedType = detectImageType(bytes);
-    if (!detectedType) return rejectWith("That file doesn't look like a supported image (JPEG, PNG, GIF or WEBP).");
-
-    const key = crypto.randomUUID();
-    await c.env.PHOTOS.put(key, bytes, { httpMetadata: { contentType: detectedType } });
-    avatarUrl = `/uploads/${key}`;
+    avatarBytes = new Uint8Array(await avatar.arrayBuffer());
+    avatarType = detectImageType(avatarBytes);
+    if (!avatarType) return rejectWith("That file doesn't look like a supported image (JPEG, PNG, GIF or WEBP).");
   }
 
-  // Password change is optional, only touched when a new password was typed.
-  const newPassword = String(form.get("newPassword") ?? "");
-  const confirmPassword = String(form.get("confirmPassword") ?? "");
-  if (newPassword || confirmPassword) {
-    if (hasPassword(user)) {
-      const currentPassword = String(form.get("currentPassword") ?? "");
-      if (!(await verifyPassword(currentPassword, user.password_hash))) {
-        return rejectWith("Current password is incorrect.");
-      }
-    }
-    if (newPassword.length < 8) return rejectWith("New password must be at least 8 characters.");
-    if (newPassword !== confirmPassword) return rejectWith("New passwords don't match.");
-    await updateUserPassword(c.env.DB, user.id, await hashPassword(newPassword));
+  let avatarKey: string | null = null;
+  if (avatarBytes && avatarType) {
+    avatarKey = crypto.randomUUID();
+    await c.env.PHOTOS.put(avatarKey, avatarBytes, { httpMetadata: { contentType: avatarType } });
+  }
+  const avatarUrl = avatarKey ? `/uploads/${avatarKey}` : undefined;
+
+  try {
+    await updateProfile(c.env.DB, user.id, {
+      username: username.value,
+      email: email.value,
+      dateOfBirth: dateOfBirth || null,
+      location: location || null,
+      avatarUrl,
+    });
+  } catch (err) {
+    if (avatarKey) await c.env.PHOTOS.delete(avatarKey);
+    if (!isUniqueViolation(err)) throw err;
+    return rejectWith(
+      uniqueViolationField(err) === "username" ? USERNAME_TAKEN_ERROR : "That email is already in use by another account.",
+    );
   }
 
-  await updateUsername(c.env.DB, user.id, username);
-  await updateEmail(c.env.DB, user.id, email);
-  await updateProfileDetails(c.env.DB, user.id, dateOfBirth || null, location || null);
-  if (avatarUrl) await updateAvatarUrl(c.env.DB, user.id, avatarUrl);
+  const token = getCookie(c, SESSION_COOKIE);
+  if (newPasswordHash) await changePassword(c.env.DB, user.id, newPasswordHash, token);
+  else if (changingEmail) await deleteOtherSessions(c.env.DB, user.id, token);
+
+  // The old avatar is orphaned now, drop it from R2.
+  const oldKey = avatarKey ? UPLOAD_KEY_RE.exec(user.avatar_url ?? "")?.[1] : undefined;
+  if (oldKey) await c.env.PHOTOS.delete(oldKey);
 
   const updated = {
     ...user,
-    username,
-    email,
+    username: username.value,
+    email: email.value,
     date_of_birth: dateOfBirth || null,
     location: location || null,
     avatar_url: avatarUrl ?? user.avatar_url,
   };
-  return c.html(<EditProfilePage user={updated} hasPassword={hasPassword(updated)} path="/profile/edit" success />);
+  return c.html(<EditProfilePage user={updated} hasPassword={userHasPassword || !!newPasswordHash} path="/profile/edit" success />);
 });

@@ -21,7 +21,10 @@ const PAGE_CSS = `
   .message-row .who { font-weight: 600; font-size: 0.9rem; }
   .message-row .subject { color: var(--ink-soft); font-size: 0.85rem; }
   .message-row .when { color: var(--ink-soft); font-size: 0.78rem; white-space: nowrap; }
-  .messages-page .empty { padding: 24px; border: 1px dashed var(--border); border-radius: 12px; color: var(--ink-soft); font-size: 0.9rem; }
+  .unread-badge {
+    display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; vertical-align: middle;
+    background: var(--ink); color: #fff; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+  }
 
   .compose-form { display: flex; flex-direction: column; gap: 16px; max-width: 520px; }
   .compose-form label { font-size: 0.85rem; font-weight: 600; color: var(--ink); display: block; margin-bottom: 6px; }
@@ -31,37 +34,40 @@ const PAGE_CSS = `
   }
   .compose-form textarea { resize: vertical; min-height: 140px; }
   .compose-form button { border: none; cursor: pointer; align-self: flex-start; }
-  .messages-page .error {
-    background: #fdecea; border: 1px solid #f3b4ab; color: #9c2c1f;
-    padding: 10px 14px; border-radius: 10px; font-size: 0.88rem; margin-bottom: 16px;
-  }
 
   .message-detail { border: 1px solid var(--border); border-radius: 14px; padding: 24px; background: var(--surface); }
   .message-detail .meta { color: var(--ink-soft); font-size: 0.85rem; margin-bottom: 18px; }
   .message-detail .subject { font-size: 1.2rem; font-weight: 600; margin-bottom: 4px; }
   .message-detail .body { white-space: pre-wrap; font-size: 0.95rem; }
   .message-detail .reply { display: inline-block; margin-top: 20px; }
-  .back-link { display: inline-block; margin-top: 18px; font-size: 0.85rem; color: var(--ink-soft); text-decoration: none; }
-  .back-link:hover { color: var(--accent-dark); }
 `;
 
-function Tabs({ active }: { active: "inbox" | "sent" }) {
+const TAB_LINKS = [
+  { key: "inbox", href: "/messages", label: "Inbox" },
+  { key: "sent", href: "/messages/sent", label: "Sent" },
+  { key: "compose", href: "/messages/compose", label: "Compose" },
+] as const;
+
+function Tabs({ active }: { active: (typeof TAB_LINKS)[number]["key"] }) {
   return (
-    <div class="messages-tabs">
-      <a href="/messages" class={active === "inbox" ? "active" : ""}>Inbox</a>
-      <a href="/messages/sent" class={active === "sent" ? "active" : ""}>Sent</a>
-      <a href="/messages/compose">Compose</a>
-    </div>
+    <nav class="messages-tabs" aria-label="Messages">
+      {TAB_LINKS.map((t) => (
+        <a href={t.href} class={active === t.key ? "active" : ""} aria-current={active === t.key ? "page" : undefined}>
+          {t.label}
+        </a>
+      ))}
+    </nav>
   );
 }
 
-function relativeDate(iso: string) {
-  return iso.replace("T", " ").slice(0, 16);
+// Timestamps are stored in UTC, so say so rather than imply local time.
+function formatDate(iso: string) {
+  return `${iso.replace("T", " ").slice(0, 16)} UTC`;
 }
 
 export function InboxPage(opts: { messages: MessageListItem[]; path: string }) {
   return (
-    <Layout title="Inbox | Wildock" description="Your Wildock messages." path={opts.path}>
+    <Layout title="Inbox | Wildock" description="Your Wildock messages." path={opts.path} noindex>
       <style>{raw(PAGE_CSS)}</style>
       <div class="wrap messages-page">
         <h1>Messages</h1>
@@ -73,10 +79,13 @@ export function InboxPage(opts: { messages: MessageListItem[]; path: string }) {
             {opts.messages.map((m) => (
               <a class={`message-row${m.read_at ? "" : " unread"}`} href={`/messages/${m.id}`}>
                 <div>
-                  <div class="who">{m.other_username}</div>
+                  <div class="who">
+                    {m.other_username}
+                    {!m.read_at && <span class="unread-badge">Unread</span>}
+                  </div>
                   <div class="subject">{m.subject}</div>
                 </div>
-                <div class="when">{relativeDate(m.created_at)}</div>
+                <div class="when">{formatDate(m.created_at)}</div>
               </a>
             ))}
           </div>
@@ -88,7 +97,7 @@ export function InboxPage(opts: { messages: MessageListItem[]; path: string }) {
 
 export function SentPage(opts: { messages: MessageListItem[]; path: string }) {
   return (
-    <Layout title="Sent | Wildock" description="Messages you've sent on Wildock." path={opts.path}>
+    <Layout title="Sent | Wildock" description="Messages you've sent on Wildock." path={opts.path} noindex>
       <style>{raw(PAGE_CSS)}</style>
       <div class="wrap messages-page">
         <h1>Messages</h1>
@@ -103,7 +112,7 @@ export function SentPage(opts: { messages: MessageListItem[]; path: string }) {
                   <div class="who">To {m.other_username}</div>
                   <div class="subject">{m.subject}</div>
                 </div>
-                <div class="when">{relativeDate(m.created_at)}</div>
+                <div class="when">{formatDate(m.created_at)}</div>
               </a>
             ))}
           </div>
@@ -115,11 +124,12 @@ export function SentPage(opts: { messages: MessageListItem[]; path: string }) {
 
 export function ComposePage(opts: { to: string; subject: string; body: string; error?: string; path: string }) {
   return (
-    <Layout title="New message | Wildock" description="Send a message to another Wildock user." path={opts.path}>
+    <Layout title="New message | Wildock" description="Send a message to another Wildock user." path={opts.path} noindex>
       <style>{raw(PAGE_CSS)}</style>
       <div class="wrap messages-page">
         <h1>New message</h1>
-        {opts.error && <div class="error">{opts.error}</div>}
+        <Tabs active="compose" />
+        {opts.error && <div class="error" role="alert">{opts.error}</div>}
         <form class="compose-form" method="post" action="/messages/compose">
           <div>
             <label for="to">To (username)</label>
@@ -143,7 +153,7 @@ export function ComposePage(opts: { to: string; subject: string; body: string; e
 export function MessageViewPage(opts: { message: MessageDetail; isSender: boolean; path: string }) {
   const other = opts.isSender ? opts.message.recipient_username : opts.message.sender_username;
   return (
-    <Layout title={`${opts.message.subject} | Wildock`} description="A Wildock message." path={opts.path}>
+    <Layout title={`${opts.message.subject} | Wildock`} description="A Wildock message." path={opts.path} noindex>
       <style>{raw(PAGE_CSS)}</style>
       <div class="wrap messages-page">
         <h1>Message</h1>
@@ -151,7 +161,7 @@ export function MessageViewPage(opts: { message: MessageDetail; isSender: boolea
         <div class="message-detail">
           <div class="subject">{opts.message.subject}</div>
           <div class="meta">
-            {opts.isSender ? "To" : "From"} {other} · {relativeDate(opts.message.created_at)}
+            {opts.isSender ? "To" : "From"} {other} · {formatDate(opts.message.created_at)}
           </div>
           <div class="body">{opts.message.body}</div>
           <a class="btn-cta reply" href={`/messages/compose?to=${encodeURIComponent(other)}&subject=${encodeURIComponent(`Re: ${opts.message.subject}`)}`}>

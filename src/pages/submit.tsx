@@ -6,8 +6,8 @@ const PAGE_CSS = `
   .submit-page { padding: 60px 0 100px; max-width: 620px; }
   .submit-page h1 { font-size: 1.9rem; }
   .submit-page p.intro { color: var(--ink-soft); margin-bottom: 8px; }
-  .submit-page p.who { color: var(--ink-soft); font-size: 0.85rem; margin-bottom: 28px; }
-  .submit-page p.who a { color: var(--accent-dark); text-decoration: none; }
+  .submit-page div.who { color: var(--ink-soft); font-size: 0.85rem; margin-bottom: 28px; }
+  .submit-page div.who a { color: var(--accent-text); text-decoration: none; }
   .submit-page form { display: flex; flex-direction: column; gap: 16px; }
   .submit-page .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   @media (max-width: 560px) { .submit-page .row { grid-template-columns: 1fr; } }
@@ -21,32 +21,30 @@ const PAGE_CSS = `
   }
   .submit-page .photo-note { font-size: 0.8rem; color: var(--ink-soft); margin: 0; }
   .submit-page button.btn-cta { border: none; cursor: pointer; margin-top: 6px; align-self: flex-start; }
-  .submit-page .success {
-    background: #eafaf3; border: 1px solid #9fe0c0; color: #146b43;
-    padding: 18px 20px; border-radius: 12px; font-size: 0.95rem;
-  }
-  .submit-page .error {
-    background: #fdecea; border: 1px solid #f3b4ab; color: #9c2c1f;
-    padding: 10px 14px; border-radius: 10px; font-size: 0.88rem; margin-bottom: 16px;
-  }
+  .submit-page .success { padding: 18px 20px; border-radius: 12px; font-size: 0.95rem; }
+  .submit-page form .error { margin-bottom: 0; }
+  .submit-page .logout-form { display: inline; }
+  .submit-page .logout-btn { border: none; background: none; padding: 0; font: inherit; color: var(--accent-text); cursor: pointer; }
 `;
 
 export function SubmitPage(opts: { user: User; path: string; success?: boolean; error?: string }) {
   return (
-    <Layout title="Submit a dock | Wildock" description="Submit a new dock, pier or marina to the Wildock catalogue." path={opts.path}>
+    <Layout title="Submit a dock | Wildock" description="Submit a new dock, pier or marina to the Wildock catalogue." path={opts.path} noindex>
       <style>{raw(PAGE_CSS)}</style>
       <div class="wrap submit-page">
         <h1>Submit a dock, pier or marina</h1>
         <p class="intro">Know a spot we're missing? Add it below and we'll review it before it goes live.</p>
-        <p class="who">
-          Logged in as <a href="/profile">{opts.user.username}</a> · <a href="/logout">Log out</a>
-        </p>
+        <div class="who">
+          Logged in as <a href="/profile">{opts.user.username}</a> · <form class="logout-form" method="post" action="/logout">
+            <button class="logout-btn" type="submit">Log out</button>
+          </form>
+        </div>
 
         {opts.success ? (
-          <div class="success">Thanks! Your submission was received and is waiting for review.</div>
+          <div class="success" role="status">Thanks! Your submission was received and is waiting for review.</div>
         ) : (
           <form method="post" action="/submit">
-            {opts.error && <div class="error">{opts.error}</div>}
+            {opts.error && <div class="error" role="alert">{opts.error}</div>}
             <div>
               <label for="name">Dock, pier or marina name</label>
               <input id="name" name="name" type="text" required />

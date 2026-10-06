@@ -2,18 +2,19 @@ import { Layout } from "../layout";
 import { raw } from "hono/html";
 import { seaColor, waveUrl, type Water } from "../waveCard";
 import { slugify, type Dock } from "../data";
+import { CardThumb, placeLabel, FAMILY_ORDER, LakeIcon } from "./shared";
 
 const PAGE_CSS = `
   .country-page { padding: 40px 0 80px; }
   .country-page h1 { font-size: 2.2rem; margin-top: 6px; }
-  .country-page .kicker {
+  .country-page .sea-head {
     display: flex; align-items: center; gap: 8px;
     color: var(--ink); font-weight: 600; font-size: 0.9rem;
     margin-top: 32px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
   }
-  .country-page .kicker:first-of-type { margin-top: 24px; }
-  .country-page .kicker i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
-  .country-page .kicker .count { color: var(--ink-soft); font-weight: 400; }
+  .country-page .sea-head.first { margin-top: 24px; }
+  .country-page .sea-head i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+  .country-page .sea-head .count { color: var(--ink-soft); font-weight: 400; }
 
   .card-grid {
     display: grid; gap: 18px 14px; margin: 18px 0 0;
@@ -44,50 +45,13 @@ const PAGE_CSS = `
   .lake-card svg { width: 42px; height: auto; }
   .lake-card .name { font-weight: 600; font-size: 0.9rem; }
 
-  .empty { margin-top: 28px; padding: 28px; border: 1px dashed var(--border); border-radius: 12px; color: var(--ink-soft); }
-
-  .list { display: grid; gap: 16px; margin-top: 18px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
-  .list a {
-    display: block; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-    overflow: hidden; text-decoration: none; color: var(--ink);
-  }
-  .list img { width: 100%; height: 140px; object-fit: cover; display: block; }
-  .list .copy { padding: 14px; }
-  .list h3 { font-size: 1rem; margin: 0 0 4px; }
-  .list p { margin: 0; font-size: 0.85rem; color: var(--ink-soft); }
+  .country-page .empty { margin-top: 28px; padding: 28px; font-size: 1rem; }
+  .country-page .list { margin-top: 18px; }
 `;
 
 type Entry = { name: string; sea: string; family: Water };
 
-function LakeIcon() {
-  return (
-    <svg viewBox="0 0 40 26" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="20" cy="19.5" rx="16" ry="4.5" fill="var(--accent)" fill-opacity="0.2" stroke="var(--accent-dark)" stroke-width="1.1" />
-      <path
-        d="M5,19.5 L13,6.5 L18,13.5 L25,3.5 L35,19.5"
-        stroke="var(--ink)"
-        stroke-width="1.3"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      />
-    </svg>
-  );
-}
-
-const FAMILY_ORDER: Water[] = [
-  "atlantic",
-  "pacific",
-  "indian",
-  "mediterranean",
-  "caspian",
-  "melanesia",
-  "micronesia",
-  "polynesia",
-  "australasia",
-  "lake",
-];
-
-function EntryGroup({ kicker, entries, linkable }: { kicker: string; entries: Entry[]; linkable?: boolean }) {
+function EntryGroup({ kicker, entries, linkBase }: { kicker: string; entries: Entry[]; linkBase: string }) {
   if (entries.length === 0) return null;
   const bySea = new Map<string, { family: Water; items: Entry[] }>();
   for (const e of entries) {
@@ -100,40 +64,26 @@ function EntryGroup({ kicker, entries, linkable }: { kicker: string; entries: En
 
   return (
     <>
-      {groups.map(({ sea, family, items }) => (
+      {groups.map(({ sea, family, items }, gi) => (
         <>
-          <div class="kicker">
-            <i style={`background:${seaColor(sea)}`} />
+          <div class={gi === 0 ? "sea-head first" : "sea-head"}>
+            <i style={`background:${seaColor(sea)}`} aria-hidden="true" />
             {kicker} · {sea} <span class="count">· {items.length}</span>
           </div>
           <div class="card-grid">
-            {family === "lake"
-              ? items.map((e) =>
-                  linkable ? (
-                    <a class="lake-card" href={`/cities/${slugify(e.name)}`}>
-                      <LakeIcon />
-                      <span class="name">{e.name}</span>
-                    </a>
-                  ) : (
-                    <div class="lake-card">
-                      <LakeIcon />
-                      <span class="name">{e.name}</span>
-                    </div>
-                  ),
-                )
-              : items.map((e) =>
-                  linkable ? (
-                    <a class="wave-card" href={`/cities/${slugify(e.name)}`}>
-                      <span class="name">{e.name}</span>
-                      <span class="wave" style={`background-image:${waveUrl(seaColor(e.sea))}`} />
-                    </a>
-                  ) : (
-                    <div class="wave-card">
-                      <span class="name">{e.name}</span>
-                      <span class="wave" style={`background-image:${waveUrl(seaColor(e.sea))}`} />
-                    </div>
-                  ),
-                )}
+            {items.map((e) =>
+              family === "lake" ? (
+                <a class="lake-card" href={`${linkBase}/${slugify(e.name)}`}>
+                  <LakeIcon />
+                  <span class="name">{e.name}</span>
+                </a>
+              ) : (
+                <a class="wave-card" href={`${linkBase}/${slugify(e.name)}`}>
+                  <span class="name">{e.name}</span>
+                  <span class="wave" style={`background-image:${waveUrl(seaColor(e.sea))}`} />
+                </a>
+              ),
+            )}
           </div>
         </>
       ))}
@@ -160,9 +110,9 @@ export function CountryPage(opts: {
         <h1>{opts.name}</h1>
 
         {opts.states && opts.states.length > 0 ? (
-          <EntryGroup kicker="States" entries={opts.states} />
+          <EntryGroup kicker="States" entries={opts.states} linkBase="/regions" />
         ) : opts.cities.length > 0 ? (
-          <EntryGroup kicker="Cities" entries={opts.cities} linkable />
+          <EntryGroup kicker="Cities" entries={opts.cities} linkBase="/cities" />
         ) : (
           <div class="empty">No cities documented here yet. The catalogue is growing daily.</div>
         )}
@@ -171,10 +121,10 @@ export function CountryPage(opts: {
           <div class="list">
             {opts.matches.map((d) => (
               <a href={`/docks/${d.slug}`}>
-                <img src={d.imageUrl} alt={d.name} />
+                <CardThumb src={d.imageUrl} />
                 <div class="copy">
                   <h3>{d.name}</h3>
-                  <p>{d.settlement}, {d.country}</p>
+                  <p>{placeLabel(d.settlement, d.country)}</p>
                 </div>
               </a>
             ))}

@@ -50,3 +50,18 @@ export function newSessionToken(): string {
 // full PBKDF2 derivation) is measurably slower than "no such account"
 // (returns immediately), letting an attacker enumerate registered emails.
 export const DUMMY_PASSWORD_HASH = `pbkdf2$${PBKDF2_ITERATIONS}$${"00".repeat(16)}$${"00".repeat(32)}`;
+
+// password_hash value for accounts that only sign in with Google. It can never
+// parse as "pbkdf2$...", so verifyPassword always rejects it.
+export const GOOGLE_PASSWORD_SENTINEL = "oauth:google";
+
+export function hasRealPassword(passwordHash: string): boolean {
+  return passwordHash !== GOOGLE_PASSWORD_SENTINEL;
+}
+
+// Sessions are stored as the SHA-256 of the cookie token, so a leaked DB
+// can't be replayed as live sessions.
+export async function sha256Hex(input: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
+  return toHex(new Uint8Array(digest));
+}

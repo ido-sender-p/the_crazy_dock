@@ -1,5 +1,6 @@
 import { Layout } from "../layout";
 import { raw } from "hono/html";
+import { DockIcon } from "./shared";
 
 const PAGE_CSS = `
   .hero.auth-hero {
@@ -24,7 +25,7 @@ const PAGE_CSS = `
     box-shadow: 0 30px 70px rgba(4,14,26,0.4);
   }
   .auth-icon {
-    width: 40px; height: 40px; margin: 0 auto 18px; color: var(--accent-dark);
+    width: 40px; height: 40px; margin: 0 auto 18px; color: var(--accent-text);
     display: flex; align-items: center; justify-content: center;
   }
   .auth-icon svg { width: 100%; height: 100%; }
@@ -41,12 +42,9 @@ const PAGE_CSS = `
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
   .auth-card input:focus {
-    outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(46,196,182,0.18);
+    border-color: var(--accent-dark); box-shadow: 0 0 0 3px rgba(46,196,182,0.18);
   }
-  .auth-card .error {
-    background: #fdecea; border: 1px solid #f3b4ab; color: #9c2c1f;
-    padding: 10px 14px; border-radius: 10px; font-size: 0.85rem; text-align: center;
-  }
+  .auth-card .error { font-size: 0.85rem; text-align: center; }
   .auth-card button.btn-cta {
     border: none; cursor: pointer; margin-top: 6px; width: 100%; text-align: center;
     font-size: 0.95rem; padding: 13px 22px;
@@ -55,11 +53,11 @@ const PAGE_CSS = `
     display: block; text-align: center; margin-top: 18px; font-size: 0.85rem;
     color: var(--ink-soft); text-decoration: none;
   }
-  .auth-card .forgot:hover { color: var(--accent-dark); }
+  .auth-card .forgot:hover { color: var(--accent-text); }
   .auth-card .switch {
     text-align: center; margin-top: 14px; font-size: 0.85rem; color: var(--ink-soft);
   }
-  .auth-card .switch a { color: var(--accent-dark); font-weight: 600; text-decoration: none; }
+  .auth-card .switch a { color: var(--accent-text); font-weight: 600; text-decoration: none; }
   .auth-card .switch a:hover { text-decoration: underline; }
   .auth-card p.body { color: var(--ink-soft); text-align: center; font-size: 0.92rem; line-height: 1.55; margin: 0 0 22px; }
 
@@ -78,7 +76,7 @@ const PAGE_CSS = `
 
 function GoogleIcon() {
   return (
-    <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+    <svg aria-hidden="true" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
       <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.9 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z" />
       <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.5 15.1 18.9 12 24 12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.5 29.6 4 24 4 16.3 4 9.7 8.3 6.3 14.7z" />
       <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.6-5.2l-6.3-5.3C29.3 35.5 26.8 36 24 36c-5.2 0-9.6-3.1-11.3-7.6l-6.5 5C9.6 39.6 16.3 44 24 44z" />
@@ -89,22 +87,16 @@ function GoogleIcon() {
 
 export function LoginPage(opts: { next: string; error?: string; path: string }) {
   return (
-    <Layout title="Log in | Wildock" description="Log in to Wildock to submit a new dock, pier or marina." path={opts.path}>
+    <Layout hero noindex title="Log in | Wildock" description="Log in to Wildock to submit a new dock, pier or marina." path={opts.path}>
       <style>{raw(PAGE_CSS)}</style>
       <section class="hero auth-hero">
         <div class="auth-card">
           <div class="auth-icon">
-            <svg viewBox="0 0 24 34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12,4 C16,4 17,10 15,15 C14,19 13,23 12,29 C11,23 10,19 9,15 C7,10 8,4 12,4 Z" />
-              <path d="M8.5,12.5 L15.5,12.5" />
-              <path d="M8,18.5 L16,18.5" />
-              <circle cx="12" cy="2.5" r="1.3" fill="currentColor" stroke="none" />
-              <path d="M4,31 Q8,28.5 12,31 Q16,33.5 20,31" stroke-width="1.2" opacity="0.6" />
-            </svg>
+            <DockIcon />
           </div>
           <h1>Welcome back</h1>
           <p class="intro">Log in to submit a new dock, pier or marina to the catalogue.</p>
-          {opts.error && <div class="error">{opts.error}</div>}
+          {opts.error && <div class="error" role="alert">{opts.error}</div>}
           <a class="btn-google" href={`/login/google?next=${encodeURIComponent(opts.next)}`}>
             <GoogleIcon />
             Continue with Google
@@ -136,27 +128,21 @@ export function LoginPage(opts: { next: string; error?: string; path: string }) 
 
 export function SignupPage(opts: { next: string; error?: string; path: string }) {
   return (
-    <Layout title="Create an account | Wildock" description="Create a Wildock account to submit docks, piers and marinas." path={opts.path}>
+    <Layout hero noindex title="Create an account | Wildock" description="Create a Wildock account to submit docks, piers and marinas." path={opts.path}>
       <style>{raw(PAGE_CSS)}</style>
       <section class="hero auth-hero">
         <div class="auth-card">
           <div class="auth-icon">
-            <svg viewBox="0 0 24 34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12,4 C16,4 17,10 15,15 C14,19 13,23 12,29 C11,23 10,19 9,15 C7,10 8,4 12,4 Z" />
-              <path d="M8.5,12.5 L15.5,12.5" />
-              <path d="M8,18.5 L16,18.5" />
-              <circle cx="12" cy="2.5" r="1.3" fill="currentColor" stroke="none" />
-              <path d="M4,31 Q8,28.5 12,31 Q16,33.5 20,31" stroke-width="1.2" opacity="0.6" />
-            </svg>
+            <DockIcon />
           </div>
           <h1>Create your account</h1>
           <p class="intro">Sign up to submit a new dock, pier or marina to the catalogue.</p>
-          {opts.error && <div class="error">{opts.error}</div>}
+          {opts.error && <div class="error" role="alert">{opts.error}</div>}
           <form method="post" action="/signup">
             <input type="hidden" name="next" value={opts.next} />
             <div>
               <label for="username">Display name</label>
-              <input id="username" name="username" type="text" required autocomplete="nickname" maxlength={60} />
+              <input id="username" name="username" type="text" required autocomplete="nickname" minlength={3} maxlength={30} pattern="[A-Za-z0-9_.\-]+" title="3 to 30 letters, numbers, dots, dashes or underscores" />
             </div>
             <div>
               <label for="email">Email</label>
@@ -185,18 +171,12 @@ export function SignupPage(opts: { next: string; error?: string; path: string })
 
 export function ForgotPasswordPage(opts: { path: string }) {
   return (
-    <Layout title="Forgot password | Wildock" description="Reset your Wildock password." path={opts.path}>
+    <Layout hero noindex title="Forgot password | Wildock" description="Reset your Wildock password." path={opts.path}>
       <style>{raw(PAGE_CSS)}</style>
       <section class="hero auth-hero">
         <div class="auth-card">
           <div class="auth-icon">
-            <svg viewBox="0 0 24 34" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12,4 C16,4 17,10 15,15 C14,19 13,23 12,29 C11,23 10,19 9,15 C7,10 8,4 12,4 Z" />
-              <path d="M8.5,12.5 L15.5,12.5" />
-              <path d="M8,18.5 L16,18.5" />
-              <circle cx="12" cy="2.5" r="1.3" fill="currentColor" stroke="none" />
-              <path d="M4,31 Q8,28.5 12,31 Q16,33.5 20,31" stroke-width="1.2" opacity="0.6" />
-            </svg>
+            <DockIcon />
           </div>
           <h1>Reset password</h1>
           <p class="body">

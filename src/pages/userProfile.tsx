@@ -2,21 +2,12 @@ import { Layout } from "../layout";
 import { raw } from "hono/html";
 import type { PublicSubmission } from "../lib/db";
 import type { Dock } from "../data";
+import { initials, placeLabel } from "./shared";
 
 const PAGE_CSS = `
   .user-profile-page { padding: 56px 0 100px; max-width: 640px; }
-  .profile-head { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; }
-  .profile-avatar {
-    width: 64px; height: 64px; border-radius: 50%; flex: none; object-fit: cover;
-    background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-    color: #fff; display: flex; align-items: center; justify-content: center;
-    font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.5rem;
-  }
   .profile-head h1 { font-size: 1.7rem; margin: 0; }
-  .user-profile-page .kicker {
-    color: var(--accent-dark); font-weight: 600; font-size: 0.8rem; text-transform: uppercase;
-    letter-spacing: 0.06em; margin-top: 8px;
-  }
+  .user-profile-page .kicker { margin-top: 8px; }
   .user-profile-page section { margin-top: 36px; }
   .user-profile-page h2 { font-size: 1.2rem; margin: 4px 0 16px; }
   .list-row {
@@ -31,12 +22,8 @@ const PAGE_CSS = `
     width: 52px; height: 52px; border-radius: 8px; object-fit: cover; flex: none;
     background: var(--border);
   }
-  .user-profile-page .empty { padding: 20px; border: 1px dashed var(--border); border-radius: 12px; color: var(--ink-soft); font-size: 0.9rem; }
+  .user-profile-page .empty { padding: 20px; }
 `;
-
-function initials(name: string) {
-  return name.trim().split(/\s+/).map((p) => p[0]?.toUpperCase()).slice(0, 2).join("");
-}
 
 export function UserProfilePage(opts: {
   username: string;
@@ -75,10 +62,10 @@ export function UserProfilePage(opts: {
             <div>
               {opts.submissions.map((s) => (
                 <a class="list-row" href={`/docks/${s.slug}`}>
-                  {s.image_url && <img class="thumb" src={s.image_url} alt="" />}
+                  {s.image_url && <img class="thumb" src={s.image_url} alt="" width={52} height={52} loading="lazy" decoding="async" />}
                   <div>
                     <div class="name">{s.name}</div>
-                    <div class="place">{s.settlement}, {s.country}</div>
+                    <div class="place">{placeLabel(s.settlement, s.country)}</div>
                   </div>
                 </a>
               ))}
@@ -95,10 +82,10 @@ export function UserProfilePage(opts: {
             <div>
               {opts.favorites.map((d) => (
                 <a class="list-row" href={`/docks/${d.slug}`}>
-                  {d.imageUrl && <img class="thumb" src={d.imageUrl} alt="" />}
+                  {d.imageUrl && <img class="thumb" src={d.imageUrl} alt="" width={52} height={52} loading="lazy" decoding="async" />}
                   <div>
                     <div class="name">{d.name}</div>
-                    <div class="place">{d.settlement}, {d.country}</div>
+                    <div class="place">{placeLabel(d.settlement, d.country)}</div>
                   </div>
                 </a>
               ))}

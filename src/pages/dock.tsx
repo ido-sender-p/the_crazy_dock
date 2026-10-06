@@ -1,10 +1,44 @@
 import { Layout } from "../layout";
-import type { Dock } from "../data";
+import { slugify, type Dock } from "../data";
 import { raw } from "hono/html";
 import { safeJsonForScript } from "../lib/html";
 import type { DockPhoto } from "../lib/gallery";
+import { parsePhotoCredit, WIKIPEDIA_LICENSE } from "../lib/credits";
+import { placeLabel } from "./shared";
 
 const GALLERY_PREVIEW_LIMIT = 6;
+
+// Credits are stored as "text" or "text|url"; with a url the text links out
+// (Commons file page, Wikipedia article) as the CC licences require. Only
+// http(s) urls become links, anything else renders as plain text.
+function Credit({ value, prefix = "" }: { value: string; prefix?: string }) {
+  const [text, url] = value.split("|");
+  if (!url || !/^https?:\/\//i.test(url.trim())) return <>{prefix}{text}</>;
+  return <>{prefix}<a href={url.trim()} target="_blank" rel="noopener noreferrer">{text}</a></>;
+}
+
+// Photo credit with a link to the licence and a note that the image was resized and cropped
+// (the CC licences ask for both). Credits that don't parse (e.g. user photos) stay plain text.
+function PhotoCreditLine({ value }: { value: string }) {
+  const c = parsePhotoCredit(value);
+  if (!c) return <Credit value={value} />;
+  return (
+    <>
+      Photo: {c.author},{" "}
+      {c.licenseUrl ? <a href={c.licenseUrl} target="_blank" rel="noopener noreferrer license">{c.license}</a> : c.license}, via{" "}
+      {c.sourceUrl ? <a href={c.sourceUrl} target="_blank" rel="noopener noreferrer">Wikimedia Commons</a> : "Wikimedia Commons"}. Resized and
+      cropped.
+    </>
+  );
+}
+
+function TextCreditLine({ value }: { value: string }) {
+  return (
+    <>
+      <Credit value={value} prefix="Text from " /> (<a href={WIKIPEDIA_LICENSE.url} target="_blank" rel="noopener noreferrer license">{WIKIPEDIA_LICENSE.name}</a>), shortened.
+    </>
+  );
+}
 
 const PAGE_CSS = `
   .dock-page { padding: 40px 0 80px; }
@@ -32,6 +66,8 @@ const PAGE_CSS = `
   }
   .hero-lightbox .lb-close:hover { background: rgba(255,255,255,0.24); }
   .hero-lightbox .lb-close svg { width: 20px; height: 20px; }
+  .dock-page .desc-source { font-size: 0.75rem; color: var(--ink-soft); margin-top: -8px; }
+  .dock-page .desc-source a, .dock-page figcaption a, .hero-credit a { color: inherit; text-decoration: underline; }
   .dock-page figcaption { font-size: 0.75rem; color: var(--ink-soft); margin-top: 6px; }
 
   .no-photo-yet {
@@ -64,8 +100,8 @@ const PAGE_CSS = `
   }
   .favorite-btn:hover { border-color: var(--accent); }
   .favorite-btn svg { width: 15px; height: 15px; }
-  .favorite-btn.active { color: #c98a2b; border-color: #c98a2b; }
-  .favorite-btn.active svg { fill: #c98a2b; }
+  .favorite-btn.active { color: #8a5a12; border-color: #8a5a12; }
+  .favorite-btn.active svg { fill: #8a5a12; }
   .facts {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 16px; margin: 28px 0; padding: 20px; background: var(--surface);
@@ -100,7 +136,7 @@ const PAGE_CSS = `
     font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.3rem;
   }
   .gallery-tile .leader-badge {
-    position: absolute; top: 6px; right: 6px; background: rgba(201,138,43,0.92); color: #fff;
+    position: absolute; top: 6px; right: 6px; background: #8a5a12; color: #fff;
     font-size: 0.68rem; font-weight: 600; padding: 3px 8px; border-radius: 999px;
     display: flex; align-items: center; gap: 3px;
   }
@@ -109,6 +145,7 @@ const PAGE_CSS = `
   .gallery-lightbox {
     position: fixed; inset: 0; z-index: 50; background: rgba(6,14,26,0.92);
     display: none; align-items: center; justify-content: center; padding: 40px 20px;
+    overflow-y: auto;
   }
   .gallery-lightbox.open { display: flex; }
   .gallery-lightbox figure { margin: 0; max-width: 900px; width: 100%; text-align: center; }
@@ -134,7 +171,8 @@ const PAGE_CSS = `
   }
   .lb-vote .leader-tag.show { display: inline-flex; }
   .lb-vote .leader-tag svg { width: 15px; height: 15px; }
-  .lb-vote .feedback { color: var(--accent); font-size: 0.82rem; margin-bottom: 10px; min-height: 1.2em; }
+  .lb-vote .feedback { color: var(--accent); font-size: 0.82rem; margin: 0 0 10px; min-height: 1.2em; }
+  .lb-vote .feedback.bad { color: #ffb4a8; }
   .rating-row { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
   .rating-row button {
     width: 30px; height: 30px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.35);
@@ -142,7 +180,7 @@ const PAGE_CSS = `
     cursor: pointer; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   }
   .rating-row button:hover { background: rgba(255,255,255,0.2); }
-  .rating-row button.selected { background: var(--accent); border-color: var(--accent); color: #06121f; }
+  .rating-row button.selected { background: #fff; border-color: #fff; color: var(--ink); }
   .lb-vote a { color: #eef4f8; font-size: 0.85rem; text-decoration: underline; }
 
   .lb-comments { margin-top: 22px; text-align: left; max-width: 480px; margin-left: auto; margin-right: auto; }
@@ -157,7 +195,7 @@ const PAGE_CSS = `
     background: rgba(255,255,255,0.08); color: #fff; padding: 8px 10px; font-family: inherit; font-size: 0.85rem;
   }
   .lb-comment-form button {
-    border: none; border-radius: 8px; padding: 0 16px; background: var(--accent); color: #06121f;
+    border: none; border-radius: 8px; padding: 0 16px; background: #fff; color: var(--ink);
     font-weight: 600; cursor: pointer; font-size: 0.85rem;
   }
 
@@ -175,7 +213,37 @@ const settlementPathPrefix: Record<Dock["settlementType"], string> = {
   village: "villages",
 };
 
-function galleryScript(photos: (DockPhoto & { yourRating: number | null; isTop: boolean })[], dockSlug: string) {
+// Shared by both lightboxes: keep Tab inside the open dialog.
+const FOCUS_TRAP_JS = `
+  function focusables(box) {
+    return Array.prototype.slice.call(
+      box.querySelectorAll('button, a[href], textarea, input, select, [tabindex]:not([tabindex="-1"])'),
+    ).filter(function (el) { return !el.disabled && el.getClientRects().length > 0; });
+  }
+  function trapTab(box, e) {
+    if (e.key !== 'Tab') return;
+    var f = focusables(box);
+    if (!f.length) return;
+    var first = f[0];
+    var last = f[f.length - 1];
+    var outside = !box.contains(document.activeElement);
+    if (e.shiftKey && (document.activeElement === first || outside)) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && (document.activeElement === last || outside)) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+`;
+
+// Only these fields ever reach the page: votes and averages stay server-side.
+type ClientPhoto = Pick<DockPhoto, "id" | "image_url" | "title" | "caption"> & {
+  yourRating: number | null;
+  isTop: boolean;
+};
+
+function galleryScript(photos: ClientPhoto[], dockSlug: string) {
   return `
     (function () {
       var photos = ${safeJsonForScript(photos)};
@@ -190,8 +258,32 @@ function galleryScript(photos: (DockPhoto & { yourRating: number | null; isTop: 
       var commentsList = document.getElementById('lb-comments-list');
       var commentInput = document.getElementById('lb-comment-input');
       var commentSubmit = document.getElementById('lb-comment-submit');
-      if (!box || !img || !caption || !photos.length) return;
+      var closeBtn = document.getElementById('lb-close');
+      if (!box || !img || !caption || !closeBtn || !photos.length) return;
       var index = 0;
+      var opener = null;
+      ${FOCUS_TRAP_JS}
+      function say(msg, bad) {
+        if (!feedback) return;
+        feedback.textContent = msg;
+        feedback.classList.toggle('bad', !!bad);
+      }
+      function isTyping(t) {
+        return !!t && (/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable);
+      }
+      // Rejects with a message that is safe to show the visitor.
+      function api(url, opts) {
+        return fetch(url, opts).then(
+          function (r) {
+            if (r.status === 401) throw new Error('Please log in again');
+            if (r.status === 429) throw new Error('Slow down a little, you have reached a limit. Try again later.');
+            if (r.status === 404) throw new Error('This photo is no longer available.');
+            if (!r.ok) throw new Error('Something went wrong. Please try again.');
+            return r.json();
+          },
+          function () { throw new Error('Network problem. Check your connection and try again.'); },
+        );
+      }
 
       function renderComments(comments) {
         if (!commentsList) return;
@@ -218,9 +310,14 @@ function galleryScript(photos: (DockPhoto & { yourRating: number | null; isTop: 
 
       function loadComments() {
         var p = photos[index];
-        fetch('/docks/' + dockSlug + '/photos/' + p.id + '/comments')
-          .then(function (r) { return r.json(); })
-          .then(function (data) { renderComments(data.comments || []); });
+        api('/docks/' + dockSlug + '/photos/' + p.id + '/comments')
+          .then(function (data) {
+            if (photos[index] === p) renderComments(data.comments || []);
+          })
+          .catch(function () {
+            if (photos[index] !== p || !commentsList) return;
+            commentsList.textContent = 'Could not load comments.';
+          });
       }
 
       if (commentSubmit && commentInput) {
@@ -228,29 +325,35 @@ function galleryScript(photos: (DockPhoto & { yourRating: number | null; isTop: 
           var text = commentInput.value.trim();
           if (!text) return;
           var p = photos[index];
-          fetch('/docks/' + dockSlug + '/photos/' + p.id + '/comments', {
+          api('/docks/' + dockSlug + '/photos/' + p.id + '/comments', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ body: text }),
           })
-            .then(function (r) { return r.json(); })
             .then(function (data) {
-              if (!data.comment) return;
+              if (!data.comment) { say('Could not post your comment.', true); return; }
               commentInput.value = '';
-              loadComments();
-            });
+              say('');
+              if (photos[index] === p) loadComments();
+            })
+            .catch(function (err) { say(err.message, true); });
         });
       }
-      // No counts or scores are ever shown — only whether this photo is the
+      // No counts or scores are ever shown. Only whether this photo is the
       // current #1 (isTop, decided server-side), and which number, if any,
       // the viewer themselves already picked.
+      function markSelected(value) {
+        ratingButtons.forEach(function (btn) {
+          var on = Number(btn.dataset.value) === value;
+          btn.classList.toggle('selected', on);
+          btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+      }
       function updateRatingUI() {
         var p = photos[index];
         if (leaderTag) leaderTag.classList.toggle('show', !!p.isTop);
-        if (feedback) feedback.textContent = '';
-        ratingButtons.forEach(function (btn) {
-          btn.classList.toggle('selected', Number(btn.dataset.value) === p.yourRating);
-        });
+        say('');
+        markSelected(p.yourRating);
       }
       function show(i) {
         index = (i + photos.length) % photos.length;
@@ -261,18 +364,29 @@ function galleryScript(photos: (DockPhoto & { yourRating: number | null; isTop: 
         updateRatingUI();
         loadComments();
       }
-      function open(i) { show(i); box.classList.add('open'); }
-      function close() { box.classList.remove('open'); }
+      function open(i) {
+        opener = document.activeElement;
+        show(i);
+        box.classList.add('open');
+        closeBtn.focus();
+      }
+      function close() {
+        box.classList.remove('open');
+        if (opener && opener.focus) opener.focus();
+        opener = null;
+      }
       document.querySelectorAll('.gallery-tile').forEach(function (tile) {
         tile.addEventListener('click', function () { open(Number(tile.dataset.index)); });
       });
-      document.getElementById('lb-close').addEventListener('click', close);
+      closeBtn.addEventListener('click', close);
       document.getElementById('lb-prev').addEventListener('click', function () { show(index - 1); });
       document.getElementById('lb-next').addEventListener('click', function () { show(index + 1); });
       box.addEventListener('click', function (e) { if (e.target === box) close(); });
       document.addEventListener('keydown', function (e) {
         if (!box.classList.contains('open')) return;
-        if (e.key === 'Escape') close();
+        if (e.key === 'Escape') { close(); return; }
+        trapTab(box, e);
+        if (isTyping(e.target)) return;
         if (e.key === 'ArrowLeft') show(index - 1);
         if (e.key === 'ArrowRight') show(index + 1);
       });
@@ -280,42 +394,75 @@ function galleryScript(photos: (DockPhoto & { yourRating: number | null; isTop: 
         btn.addEventListener('click', function () {
           var p = photos[index];
           var rating = Number(btn.dataset.value);
-          fetch('/docks/' + dockSlug + '/photos/' + p.id + '/vote', {
+          api('/docks/' + dockSlug + '/photos/' + p.id + '/vote', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ rating: rating }),
           })
-            .then(function (r) { return r.json(); })
-            .then(function (data) {
-              if (typeof data.avgRating !== 'number') return;
+            .then(function () {
               p.yourRating = rating;
-              ratingButtons.forEach(function (b) {
-                b.classList.toggle('selected', Number(b.dataset.value) === rating);
-              });
-              if (feedback) feedback.textContent = 'Thanks for rating!';
-            });
+              if (photos[index] !== p) return;
+              markSelected(rating);
+              say('Thanks for rating!');
+            })
+            .catch(function (err) { say(err.message, true); });
         });
       });
     })();
   `;
 }
 
+const HERO_LIGHTBOX_JS = `
+  (function () {
+    var openBtn = document.getElementById('hero-open');
+    var box = document.getElementById('hero-lightbox');
+    var closeBtn = document.getElementById('hero-close');
+    if (!openBtn || !box || !closeBtn) return;
+    var opener = null;
+    ${FOCUS_TRAP_JS}
+    function open() {
+      opener = document.activeElement;
+      box.classList.add('open');
+      closeBtn.focus();
+    }
+    function close() {
+      box.classList.remove('open');
+      if (opener && opener.focus) opener.focus();
+      opener = null;
+    }
+    openBtn.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    box.addEventListener('click', function (e) { if (e.target === box) close(); });
+    document.addEventListener('keydown', function (e) {
+      if (!box.classList.contains('open')) return;
+      if (e.key === 'Escape') close();
+      else trapTab(box, e);
+    });
+  })();
+`;
+
 export function DockPage(
   d: Dock & { photos?: DockPhoto[]; isLoggedIn?: boolean; yourRatings?: Record<number, number>; isFavorited?: boolean },
 ) {
+  // Catalogue docks can lack a state or settlement, so every tier is optional.
+  const hasState = !!(d.stateProvince && d.stateProvinceSlug);
+  const hasSettlement = !!(d.settlement && d.settlementSlug);
+  const place = placeLabel(d.settlement, d.stateProvince, d.country);
+  const titlePlace = placeLabel(d.settlement, d.country);
+  const typeLabel = d.dockType.replaceAll("_", " ");
+
+  const address: Record<string, string> = { "@type": "PostalAddress" };
+  if (d.settlement) address.addressLocality = d.settlement;
+  if (d.stateProvince) address.addressRegion = d.stateProvince;
+  if (d.country) address.addressCountry = d.country;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "TouristAttraction",
     name: d.name,
     description: d.description,
-    image: d.imageUrl,
+    ...(d.imageUrl ? { image: d.imageUrl } : {}),
     geo: { "@type": "GeoCoordinates", latitude: d.lat, longitude: d.lon },
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: d.settlement,
-      addressRegion: d.stateProvince,
-      addressCountry: d.country,
-    },
+    address,
   };
 
   // The only ranking signal shown to visitors: whichever photo currently has
@@ -327,39 +474,57 @@ export function DockPage(
     : null;
 
   const yourRatings = d.yourRatings ?? {};
-  const photos = rawPhotos.map((p) => ({
-    ...p,
+  const photos: ClientPhoto[] = rawPhotos.map((p) => ({
+    id: p.id,
+    image_url: p.image_url,
+    title: p.title,
+    caption: p.caption,
     yourRating: yourRatings[p.id] ?? null,
     isTop: p.id === topPhotoId,
   }));
 
+  const loginHref = `/login?next=${encodeURIComponent(`/docks/${d.slug}`)}`;
+
   return (
     <Layout
-      title={`${d.name} · ${d.settlement}, ${d.country} | Wildock`}
+      title={`${d.name}${titlePlace ? ` · ${titlePlace}` : ""} | Wildock`}
       description={d.description.slice(0, 155)}
       jsonLd={jsonLd}
       path={`/docks/${d.slug}`}
     >
       <style>{raw(PAGE_CSS)}</style>
       <div class="wrap dock-page">
-        <nav class="breadcrumb">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
           <a href="/">Wildock</a> / <a href={`/continents/${d.continentSlug}`}>{d.continent}</a> /{" "}
-          <a href={`/countries/${d.countryCode}`}>{d.country}</a> /{" "}
-          <a href={`/regions/${d.stateProvinceSlug}`}>{d.stateProvince}</a> /{" "}
-          <a href={`/${settlementPathPrefix[d.settlementType]}/${d.settlementSlug}`}>{d.settlement}</a> / {d.name}
+          <a href={`/countries/${d.countryCode || slugify(d.country)}`}>{d.country}</a> /{" "}
+          {hasState && (
+            <>
+              <a href={`/regions/${d.stateProvinceSlug}`}>{d.stateProvince}</a> /{" "}
+            </>
+          )}
+          {hasSettlement && (
+            <>
+              <a href={`/${settlementPathPrefix[d.settlementType]}/${d.settlementSlug}`}>{d.settlement}</a> /{" "}
+            </>
+          )}
+          {d.name}
         </nav>
         <div class="title-row">
           <h1>{d.name}</h1>
           <form method="post" action={`/docks/${d.slug}/favorite`}>
-            <button class={`favorite-btn${d.isFavorited ? " active" : ""}`} type="submit">
-              <svg viewBox="0 0 24 24" fill={d.isFavorited ? "currentColor" : "none"} stroke="currentColor" stroke-width="2">
+            <button
+              class={`favorite-btn${d.isFavorited ? " active" : ""}`}
+              type="submit"
+              aria-pressed={d.isFavorited ? "true" : "false"}
+            >
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill={d.isFavorited ? "currentColor" : "none"} stroke="currentColor" stroke-width="2">
                 <path d="M12 4l2.47 5.77 6.28.55-4.75 4.13 1.42 6.13L12 17.27l-5.42 3.31 1.42-6.13-4.75-4.13 6.28-.55L12 4z" />
               </svg>
               {d.isFavorited ? "Favorited" : "Save"}
             </button>
           </form>
         </div>
-        <p class="meta">{d.settlement}, {d.stateProvince}, {d.country} · {d.dockType.replace("_", " ")}</p>
+        <p class="meta">{place ? `${place} · ${typeLabel}` : typeLabel}</p>
         {!d.imageUrl ? (
           <div class="no-photo-yet">
             <p>No photo yet. Be the first to add one.</p>
@@ -368,28 +533,30 @@ export function DockPage(
         ) : d.imageOrientation === "portrait" ? (
           <div class="hero-split">
             <button class="hero-frame-split" type="button" id="hero-open" aria-label={`View larger photo of ${d.name}`}>
-              <img class="hero-img-split" src={d.imageUrl} alt={d.name} />
+              <img class="hero-img-split" src={d.imageUrl} alt={d.name} decoding="async" />
             </button>
             <div class="hero-split-text">
               {d.description && <p class="desc">{d.description}</p>}
-              <span class="hero-credit">{d.imageAttribution}</span>
+              {d.descriptionSource && <span class="hero-credit"><TextCreditLine value={d.descriptionSource} /></span>}
+              <span class="hero-credit"><PhotoCreditLine value={d.imageAttribution} /></span>
             </div>
           </div>
         ) : (
           <>
             <figure>
               <button class="hero-frame" type="button" id="hero-open" aria-label={`View larger photo of ${d.name}`}>
-                <img class="hero-img" src={d.imageUrl} alt={d.name} />
+                <img class="hero-img" src={d.imageUrl} alt={d.name} decoding="async" />
               </button>
-              <figcaption>{d.imageAttribution}</figcaption>
+              <figcaption><PhotoCreditLine value={d.imageAttribution} /></figcaption>
             </figure>
             {d.description && <p class="desc">{d.description}</p>}
+            {d.descriptionSource && <p class="desc-source"><TextCreditLine value={d.descriptionSource} /></p>}
           </>
         )}
         <dl class="facts">
-          <div><dt>Type</dt><dd>{d.dockType.replace("_", " ")}</dd></div>
-          <div><dt>Length</dt><dd>{d.lengthM} m</dd></div>
-          <div><dt>Built</dt><dd>{d.yearBuilt ?? "Unknown"}</dd></div>
+          <div><dt>Type</dt><dd>{typeLabel}</dd></div>
+          {d.lengthM > 0 && <div><dt>Length</dt><dd>{d.lengthM} m</dd></div>}
+          {d.yearBuilt != null && <div><dt>Built</dt><dd>{d.yearBuilt}</dd></div>}
           <div><dt>Coordinates</dt><dd>{d.lat.toFixed(4)}, {d.lon.toFixed(4)}</dd></div>
         </dl>
         {photos.length > 0 && (
@@ -401,14 +568,14 @@ export function DockPage(
                 const remaining = photos.length - GALLERY_PREVIEW_LIMIT;
                 return (
                   <button class="gallery-tile" data-index={i} type="button">
-                    <img src={p.image_url} alt={p.title} loading="lazy" />
+                    <img src={p.image_url} alt={p.title} width={300} height={225} loading="lazy" decoding="async" />
                     {isLastTile && remaining > 0 ? (
                       <span class="more-overlay">+{remaining} more</span>
                     ) : (
                       <>
                         {p.isTop && (
                           <span class="leader-badge">
-                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                            <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
                             #1
                           </span>
                         )}
@@ -431,58 +598,49 @@ export function DockPage(
         </div>
       </div>
 
-      <div class="hero-lightbox" id="hero-lightbox">
-        <button class="lb-close" id="hero-close" type="button" aria-label="Close">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
-        </button>
-        <img src={d.imageUrl} alt={d.name} />
-      </div>
-      <script>{raw(`
-        (function () {
-          var openBtn = document.getElementById('hero-open');
-          var box = document.getElementById('hero-lightbox');
-          var closeBtn = document.getElementById('hero-close');
-          if (!openBtn || !box || !closeBtn) return;
-          function open() { box.classList.add('open'); }
-          function close() { box.classList.remove('open'); }
-          openBtn.addEventListener('click', open);
-          closeBtn.addEventListener('click', close);
-          box.addEventListener('click', function (e) { if (e.target === box) close(); });
-          document.addEventListener('keydown', function (e) {
-            if (e.key === 'Escape' && box.classList.contains('open')) close();
-          });
-        })();
-      `)}</script>
+      {d.imageUrl && (
+        <>
+          <div class="hero-lightbox" id="hero-lightbox" role="dialog" aria-modal="true" aria-label={`Photo of ${d.name}`}>
+            <button class="lb-close" id="hero-close" type="button" aria-label="Close">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+            <img src={d.imageUrl} alt={d.name} />
+          </div>
+          <script>{raw(HERO_LIGHTBOX_JS)}</script>
+        </>
+      )}
 
       {photos.length > 0 && (
-        <div class="gallery-lightbox" id="gallery-lightbox">
+        <div class="gallery-lightbox" id="gallery-lightbox" role="dialog" aria-modal="true" aria-label={`Photo gallery for ${d.name}`}>
           <button class="lb-close" id="lb-close" type="button" aria-label="Close">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
           <button class="lb-prev" id="lb-prev" type="button" aria-label="Previous photo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
           </button>
           <button class="lb-next" id="lb-next" type="button" aria-label="Next photo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6" /></svg>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6" /></svg>
           </button>
           <figure>
-            <img id="lb-img" src="" alt="" />
+            <img id="lb-img" src={photos[0].image_url} alt={photos[0].title} loading="lazy" />
             <h3 id="lb-title"></h3>
             <figcaption id="lb-caption"></figcaption>
             <div class="lb-vote">
               <span class="leader-tag" id="lb-leader">
-                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
                 Currently #1
               </span>
-              <p class="feedback" id="lb-feedback"></p>
+              <p class="feedback" id="lb-feedback" role="status" aria-live="polite"></p>
               {d.isLoggedIn ? (
                 <div class="rating-row">
                   {Array.from({ length: 10 }).map((_, i) => (
-                    <button type="button" data-value={i + 1}>{i + 1}</button>
+                    <button type="button" data-value={i + 1} aria-label={`Rate ${i + 1} out of 10`} aria-pressed="false">
+                      {i + 1}
+                    </button>
                   ))}
                 </div>
               ) : (
-                <a href={`/login?next=${encodeURIComponent(`/docks/${d.slug}`)}`}>Log in to rate this photo</a>
+                <a href={loginHref}>Log in to rate this photo</a>
               )}
             </div>
             <div class="lb-comments">
@@ -490,11 +648,11 @@ export function DockPage(
               <div class="lb-comments-list" id="lb-comments-list"></div>
               {d.isLoggedIn ? (
                 <div class="lb-comment-form">
-                  <textarea id="lb-comment-input" rows={1} maxlength={500} placeholder="Add a comment…"></textarea>
+                  <textarea id="lb-comment-input" rows={1} maxlength={500} placeholder="Add a comment…" aria-label="Add a comment"></textarea>
                   <button type="button" id="lb-comment-submit">Post</button>
                 </div>
               ) : (
-                <a href={`/login?next=${encodeURIComponent(`/docks/${d.slug}`)}`}>Log in to comment</a>
+                <a href={loginHref}>Log in to comment</a>
               )}
             </div>
           </figure>
