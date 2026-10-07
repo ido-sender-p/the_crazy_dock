@@ -108,7 +108,10 @@ export async function deleteOtherSessions(db: D1Database, userId: number, keepTo
 
 // ---- Login / signup throttling ----
 
-const MAX_LOGIN_FAILURES_PER_EMAIL = 5;
+// Five misses lock one email for one client; the much higher global per-email cap stops a botnet guessing
+// one account, while still not letting a stranger lock the real owner out with five requests.
+const MAX_LOGIN_FAILURES_PER_EMAIL_AND_IP = 5;
+const MAX_LOGIN_FAILURES_PER_EMAIL = 40;
 const MAX_LOGIN_FAILURES_PER_IP = 20;
 const LOGIN_LOCKOUT_WINDOW_MINUTES = 15;
 const MAX_SIGNUPS_PER_IP = 5;
@@ -122,14 +125,22 @@ export async function checkLoginThrottle(db: D1Database, email: string, ip: stri
   const e = throttleEmail(email);
   const row = await db
     .prepare(
-      `SELECT COALESCE(SUM(email = ?), 0) AS by_email, COALESCE(SUM(ip = ?), 0) AS by_ip FROM login_failures
+      `SELECT COALESCE(SUM(email = ?), 0) AS by_email, COALESCE(SUM(email = ? AND ip = ?), 0) AS by_email_ip,
+              COALESCE(SUM(ip = ?), 0) AS by_ip FROM login_failures
        WHERE attempted_at > datetime('now', ?) AND (email = ? OR ip = ?)`,
     )
-    .bind(e, ip, `-${LOGIN_LOCKOUT_WINDOW_MINUTES} minutes`, e, ip)
-    .first<{ by_email: number; by_ip: number }>();
+    .bind(e, e, ip, ip, `-${LOGIN_LOCKOUT_WINDOW_MINUTES} minutes`, e, ip)
+    .first<{ by_email: number; by_email_ip: number; by_ip: number }>();
   const byEmail = row?.by_email ?? 0;
+  const byEmailIp = row?.by_email_ip ?? 0;
   const byIp = row?.by_ip ?? 0;
-  return { locked: byEmail >= MAX_LOGIN_FAILURES_PER_EMAIL || byIp >= MAX_LOGIN_FAILURES_PER_IP, emailFailures: byEmail };
+  return {
+    locked:
+      byEmailIp >= MAX_LOGIN_FAILURES_PER_EMAIL_AND_IP ||
+      byEmail >= MAX_LOGIN_FAILURES_PER_EMAIL ||
+      byIp >= MAX_LOGIN_FAILURES_PER_IP,
+    emailFailures: byEmail,
+  };
 }
 
 // Records the failure and purges rows older than the window in one round trip.

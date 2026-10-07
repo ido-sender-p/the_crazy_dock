@@ -27,5 +27,7 @@ export const securityHeaders = secureHeaders({
   // Hono defaults to "no-referrer", but OSM's tile servers reject requests with
   // no Referer (403). Origin-only on cross-origin keeps paths private.
   referrerPolicy: "strict-origin-when-cross-origin",
+  // The site never needs these browser features, so switch them off.
+  permissionsPolicy: { camera: [], microphone: [], geolocation: [], payment: [], usb: [] },
   crossOriginEmbedderPolicy: false, // would block the Leaflet/OSM tile and font resources above
 });

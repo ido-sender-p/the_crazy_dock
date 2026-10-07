@@ -4,6 +4,8 @@ const MIN_PASSWORD_LENGTH = 8;
 export const MAX_PASSWORD_LENGTH = 200;
 
 const USERNAME_RE = /^[A-Za-z0-9_.-]{3,30}$/;
+// Names that could pass for the site or its staff in messages and on profile pages.
+const RESERVED_NAMES = new Set(["admin", "administrator", "wildock", "support", "staff", "moderator", "mod", "root", "help", "security", "team", "official"]);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export type Checked<T> = { ok: true; value: T } | { ok: false; error: string };
@@ -13,6 +15,7 @@ export function checkUsername(raw: string): Checked<string> {
   if (!USERNAME_RE.test(value)) {
     return { ok: false, error: "Display names are 3 to 30 characters: letters, numbers, dot, dash or underscore." };
   }
+  if (RESERVED_NAMES.has(value.toLowerCase())) return { ok: false, error: "That display name is reserved. Please pick another." };
   return { ok: true, value };
 }
 
@@ -48,6 +51,7 @@ export function uniqueViolationField(err: unknown): "email" | "username" | "othe
 export function usernameFromName(name: string, email: string): string {
   let base = (name || email.split("@")[0]).replace(/\s+/g, "_").replace(/[^A-Za-z0-9_.-]/g, "").slice(0, 26);
   if (base.length < 3) base = (base + "user").slice(0, 26);
+  if (RESERVED_NAMES.has(base.toLowerCase())) base = `${base}_user`;
   return base;
 }
 

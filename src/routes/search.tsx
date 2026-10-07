@@ -25,5 +25,5 @@ search.get("/search", (c) => {
     const locations = searchable ? searchLocations(q) : [];
 
     return c.html(<SearchPage q={q} filter={filter} users={users} docks={docksResult} locations={locations} path="/search" />);
-  });
+  }, new URLSearchParams({ q, type: filter }).toString());
 });

@@ -45,7 +45,7 @@ meta.get("/accessibility", (c) => c.html(<AccessibilityPage path="/accessibility
 meta.get("/credits", (c) => edgeCached(c, SITEMAP_TTL, async () => c.html(<CreditsPage path="/credits" contactEmail={c.env.CONTACT_EMAIL} />)));
 
 meta.get("/robots.txt", (c) =>
-  c.text(["User-agent: *", "Allow: /", `Sitemap: ${siteOrigin(c)}/sitemap.xml`].join("\n"), 200, {
+  c.text(["User-agent: *", "Allow: /", "Disallow: /search", `Sitemap: ${siteOrigin(c)}/sitemap.xml`].join("\n"), 200, {
     "Cache-Control": "public, max-age=3600",
   }),
 );

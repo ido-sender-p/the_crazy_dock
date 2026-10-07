@@ -58,7 +58,7 @@ export function SearchPage(opts: {
   const filterHref = (f: SearchFilter) => `/search?q=${encodeURIComponent(opts.q)}&type=${f}`;
 
   return (
-    <Layout page="search" title="Search | Wildock" description="Search Wildock for profiles, locations and docks." path={opts.path}>
+    <Layout page="search" title="Search | Wildock" description="Search Wildock for profiles, locations and docks." path={opts.path} noindex>
       <div class="wrap search-page">
         <form class="search-form" method="get" action="/search">
           <input type="hidden" name="type" value={opts.filter} />

@@ -68,6 +68,13 @@ export function safeNextPath(raw: string | undefined | null, fallback = "/"): st
 
 // Cloudflare always sets this header at the edge. Under wrangler dev it's
 // absent, so everyone shares the 'unknown' bucket locally.
+// An IPv6 client usually controls a whole /64, so the bucket is its first four groups; otherwise one
+// machine could rotate through billions of addresses to dodge the per-IP limits.
 export function clientIp(c: Context<Env>): string {
-  return (c.req.header("CF-Connecting-IP") ?? "unknown").slice(0, 64);
+  const ip = (c.req.header("CF-Connecting-IP") ?? "unknown").slice(0, 64).toLowerCase();
+  if (!ip.includes(":")) return ip;
+  const [head, tail = ""] = ip.split("::");
+  const groups = head.split(":").filter(Boolean);
+  if (ip.includes("::")) groups.push(...Array(Math.max(0, 8 - groups.length - tail.split(":").filter(Boolean).length)).fill("0"));
+  return groups.slice(0, 4).join(":");
 }

@@ -29,7 +29,12 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function verifyPassword(password: string, stored: string): Promise<boolean> {
   const parts = stored.split("$");
-  if (parts.length !== 4 || parts[0] !== "pbkdf2") return false;
+  if (parts.length !== 4 || parts[0] !== "pbkdf2") {
+    // No password on file (Google-only account): burn the same PBKDF2 time so the response time
+    // doesn't reveal which emails have a password login.
+    await deriveBits(password, new Uint8Array(16), PBKDF2_ITERATIONS);
+    return false;
+  }
   const iterations = Number(parts[1]);
   const salt = fromHex(parts[2]);
   const expected = fromHex(parts[3]);
