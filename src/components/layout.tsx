@@ -3,7 +3,7 @@ import { raw } from "hono/html";
 import { safeJsonForScript } from "../lib/html";
 import { siteCssUrl, heroCssUrl, pageCssUrl, scriptUrl } from "../lib/assets";
 import { HERO_IMAGE_URL } from "../styles/hero";
-import { SITE_ORIGIN } from "../lib/site";
+import { SITE_ORIGIN, ANALYTICS_TOKEN } from "../lib/site";
 import type { PageName } from "../styles";
 import type { ClientScriptName } from "../client";
 
@@ -125,6 +125,7 @@ export const Layout: FC<
           </span>
         </div>
       </footer>
+      <script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon={JSON.stringify({ token: ANALYTICS_TOKEN })}></script>
     </body>
   </html>
 );

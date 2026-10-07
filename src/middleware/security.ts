@@ -22,8 +22,8 @@ export const securityHeaders = secureHeaders({
     imgSrc: ["'self'", "data:", "blob:", "https://upload.wikimedia.org", IMG_ORIGIN, "https://*.tile.openstreetmap.org"], // blob: for the avatar and photo previews
     fontSrc: ["'self'", "https://fonts.gstatic.com"],
     styleSrc: ["'self'", "https://fonts.googleapis.com", LEAFLET_CDN],
-    scriptSrc: ["'self'", LEAFLET_CDN],
-    connectSrc: ["'self'"],
+    scriptSrc: ["'self'", LEAFLET_CDN, "https://static.cloudflareinsights.com"], // static.cloudflareinsights.com: Cloudflare Web Analytics beacon
+    connectSrc: ["'self'", "https://cloudflareinsights.com"],
   },
   // Hono defaults to "no-referrer", but OSM's tile servers reject requests with
   // no Referer (403). Origin-only on cross-origin keeps paths private.
