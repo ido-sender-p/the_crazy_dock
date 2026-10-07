@@ -8,6 +8,11 @@ const USERNAME_RE = /^[A-Za-z0-9_.-]{3,30}$/;
 const RESERVED_NAMES = new Set(["admin", "administrator", "wildock", "support", "staff", "moderator", "mod", "root", "help", "security", "team", "official"]);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// A positive integer id from a URL segment, or null. Anything else (letters, 0, huge) is "not found".
+export function parseId(raw: string | undefined): number | null {
+  return raw !== undefined && /^\d{1,12}$/.test(raw) && Number(raw) > 0 ? Number(raw) : null;
+}
+
 export type Checked<T> = { ok: true; value: T } | { ok: false; error: string };
 
 export function checkUsername(raw: string): Checked<string> {

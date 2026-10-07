@@ -1,7 +1,8 @@
 import { Hono } from "hono";
 import type { Env } from "../env";
 import { docks, countries, continents, type Dock } from "../data";
-import { SETTLEMENT_ROUTE_PATHS } from "./catalog";
+import { SETTLEMENT_PATH } from "../lib/places";
+import { SITE_ORIGIN } from "../lib/site";
 import { AccessibilityPage } from "../pages/accessibility";
 import { CreditsPage } from "../pages/credits";
 import { findLiveSitemapRows } from "../lib/liveDocks";
@@ -12,10 +13,6 @@ export const meta = new Hono<Env>();
 
 const SITEMAP_TTL = 3600;
 
-const settlementPathPrefix = Object.fromEntries(SETTLEMENT_ROUTE_PATHS.map(({ path, type }) => [type, path])) as Record<
-  Dock["settlementType"],
-  string
->;
 
 // The static part of the sitemap never changes between deploys, so it's built
 // once. Docks with an empty settlement or region slug (the catalogue can have
@@ -28,13 +25,13 @@ const staticUrls: string[] = (() => {
   for (const ct of continents) if (continentSlugs.has(ct.slug)) urls.add(`/continents/${ct.slug}`);
   for (const d of docks) {
     if (d.stateProvinceSlug) urls.add(`/regions/${d.stateProvinceSlug}`);
-    if (d.settlementSlug) urls.add(`/${settlementPathPrefix[d.settlementType]}/${d.settlementSlug}`);
+    if (d.settlementSlug) urls.add(`/${SETTLEMENT_PATH[d.settlementType]}/${d.settlementSlug}`);
   }
   return [...urls];
 })();
 
 function siteOrigin(c: { env: Env["Bindings"] }) {
-  return (c.env.SITE_URL || "https://wildock.com").replace(/\/+$/, "");
+  return (c.env.SITE_URL || SITE_ORIGIN).replace(/\/+$/, "");
 }
 
 function xmlEscape(s: string) {
@@ -62,7 +59,7 @@ meta.get("/sitemap.xml", (c) =>
         if (row.state_province_slug) urls.add(`/regions/${row.state_province_slug}`);
         if (row.settlement_slug) {
           const type = (row.settlement_type ?? "city") as Dock["settlementType"];
-          urls.add(`/${settlementPathPrefix[type] ?? "cities"}/${row.settlement_slug}`);
+          urls.add(`/${SETTLEMENT_PATH[type] ?? "cities"}/${row.settlement_slug}`);
         }
       }
     }

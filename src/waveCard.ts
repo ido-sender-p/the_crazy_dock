@@ -48,23 +48,8 @@ const SEA_COLOR: Record<string, string> = {
   Australasia: "#c98a2b",
 };
 
-// Fallback family color, only used if a sea name isn't in SEA_COLOR yet.
-const WATER_COLOR: Record<Water, string> = {
-  pacific: "#2f6fb0",
-  atlantic: "#17a094",
-  indian: "#7c5fb0",
-  mediterranean: "#c98a2b",
-  caspian: "#8a4fa3",
-  lake: "#8c7a5b",
-  melanesia: "#17a094",
-  micronesia: "#2f6fb0",
-  polynesia: "#7c5fb0",
-  australasia: "#c98a2b",
-};
-
-export function seaColor(sea: string): string {
-  return SEA_COLOR[sea] ?? WATER_COLOR.atlantic;
-}
+// Colour for a sea we have no entry for in SEA_COLOR (the Atlantic one).
+const FALLBACK_SEA_COLOR = "#17a094";
 
 export function waveUrl(hex: string) {
   const fill = hex.replace("#", "%23");
@@ -73,12 +58,12 @@ export function waveUrl(hex: string) {
 
 // Colours are applied through generated classes (seaCss) rather than inline style attributes, so
 // the Content-Security-Policy can stay free of 'unsafe-inline'. A sea we have no colour for falls
-// back to the Atlantic one, like seaColor() does.
+// back to the Atlantic one.
 const seaKey = (sea: string) => (sea in SEA_COLOR ? sea.toLowerCase().replace(/[^a-z0-9]+/g, "-") : "fallback");
 export const seaClass = (sea: string) => `sea-${seaKey(sea)}`;
 
 // One .sea-dot rule (the legend dot) and one .wave rule (the wave under a card) per sea; included in
 // the continent and country page stylesheets.
-export const seaCss = [...Object.entries(SEA_COLOR), ["fallback", WATER_COLOR.atlantic]]
+export const seaCss = [...Object.entries(SEA_COLOR), ["fallback", FALLBACK_SEA_COLOR]]
   .map(([sea, hex]) => `.sea-dot.sea-${seaKey(sea)} { background: ${hex}; }\n.wave.sea-${seaKey(sea)} { background-image: ${waveUrl(hex)}; }`)
   .join("\n");

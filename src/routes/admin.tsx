@@ -12,7 +12,7 @@ import {
   slugExists,
 } from "../lib/db";
 import { currentUser, requireUser } from "../lib/session";
-import { isUniqueViolation } from "../lib/validation";
+import { isUniqueViolation, parseId } from "../lib/validation";
 import { staticBySlug, staticInSettlement } from "../lib/staticDocks";
 import { findPendingPhotos, approveDockPhoto, rejectDockPhoto } from "../lib/gallery";
 import { smallBody } from "../middleware/limits";
@@ -36,9 +36,8 @@ admin.get("/admin/submissions", async (c) => {
 async function adminAction(c: Context<Env>): Promise<{ id: number } | Response> {
   const user = await currentUser(c);
   if (!user || !user.is_admin) return c.notFound();
-  const raw = c.req.param("id") ?? "";
-  const id = /^\d{1,12}$/.test(raw) ? Number(raw) : NaN;
-  if (!Number.isInteger(id) || id < 1) return c.text("Invalid id.", 400);
+  const id = parseId(c.req.param("id"));
+  if (id === null) return c.text("Invalid id.", 400);
   return { id };
 }
 

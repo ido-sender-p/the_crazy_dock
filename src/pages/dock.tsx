@@ -5,6 +5,7 @@ import { safeJsonForScript } from "../lib/html";
 import type { DockPhoto } from "../lib/gallery";
 import { parsePhotoCredit, WIKIPEDIA_LICENSE } from "../lib/credits";
 import { vibe, count, type Nearby } from "../lib/nearby";
+import { SETTLEMENT_PATH } from "../lib/places";
 import { placeLabel } from "./shared";
 
 const GALLERY_PREVIEW_LIMIT = 6;
@@ -82,12 +83,6 @@ function AroundSection({ name, nearby, dockType }: { name: string; nearby: Nearb
   );
 }
 
-const settlementPathPrefix: Record<Dock["settlementType"], string> = {
-  city: "cities",
-  town: "towns",
-  village: "villages",
-};
-
 // Only these fields ever reach the page: votes and averages stay server-side.
 type ClientPhoto = Pick<DockPhoto, "id" | "image_url" | "title" | "caption"> & {
   yourRating: number | null;
@@ -158,7 +153,7 @@ export function DockPage(
           )}
           {hasSettlement && (
             <>
-              <a href={`/${settlementPathPrefix[d.settlementType]}/${d.settlementSlug}`}>{d.settlement}</a> /{" "}
+              <a href={`/${SETTLEMENT_PATH[d.settlementType]}/${d.settlementSlug}`}>{d.settlement}</a> /{" "}
             </>
           )}
           {d.name}

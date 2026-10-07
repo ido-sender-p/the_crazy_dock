@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import type { Env } from "../env";
-import { countries, continents, dedupeDocksBySlug, type Dock } from "../data";
+import { countries, continents, dedupeDocksBySlug } from "../data";
+import { SETTLEMENT_PATH, SETTLEMENT_ROUTE_PATHS } from "../lib/places";
 import { HomePage } from "../pages/home";
 import { DockPage } from "../pages/dock";
 import { CategoryPage } from "../pages/category";
@@ -15,7 +16,7 @@ import {
   findPublishedDocksByRegionSlug,
   resolveDock,
 } from "../lib/liveDocks";
-import { staticInContinent, staticInCountryCode, staticInCountryName, staticInRegion, staticInSettlement } from "../lib/staticDocks";
+import { staticInContinent, staticInCountryCode, staticInCountryName, staticInRegion, staticInSettlement, looksLikeLiveSlug } from "../lib/staticDocks";
 import { findPublishedPhotosForDock, findUserRatingsForDock, pickCoverPhoto } from "../lib/gallery";
 import { currentUser } from "../lib/session";
 import { isFavorited } from "../lib/favorites";
@@ -131,7 +132,7 @@ catalog.get("/continents/:slug", (c) => {
 catalog.get("/regions/:slug", (c) => {
   const slug = c.req.param("slug");
   // Nothing static and not a plausible live slug means nothing to look up.
-  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 200) return c.notFound();
+  if (!looksLikeLiveSlug(slug)) return c.notFound();
 
   return edgeCached(c, LISTING_TTL, async () => {
     const live = c.env.DB ? await findPublishedDocksByRegionSlug(c.env.DB, slug) : [];
@@ -149,21 +150,11 @@ catalog.get("/regions/:slug", (c) => {
   });
 });
 
-const SETTLEMENT_ROUTE_PATHS: { path: string; type: Dock["settlementType"] }[] = [
-  { path: "cities", type: "city" },
-  { path: "towns", type: "town" },
-  { path: "villages", type: "village" },
-];
-
-const settlementPathByType = Object.fromEntries(SETTLEMENT_ROUTE_PATHS.map(({ path, type }) => [type, path])) as Record<
-  Dock["settlementType"],
-  string
->;
 
 for (const { path, type } of SETTLEMENT_ROUTE_PATHS) {
   catalog.get(`/${path}/:slug`, (c) => {
     const slug = c.req.param("slug");
-    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) || slug.length > 200) return c.notFound();
+    if (!looksLikeLiveSlug(slug)) return c.notFound();
 
     return edgeCached(c, LISTING_TTL, async () => {
       const live = c.env.DB ? await findPublishedDocksBySettlementSlug(c.env.DB, slug) : [];
@@ -173,7 +164,7 @@ for (const { path, type } of SETTLEMENT_ROUTE_PATHS) {
       // A place lives under exactly one prefix (its settlementType). The other
       // two redirect there instead of serving the same page three times.
       if (first && first.settlementType !== type) {
-        return c.redirect(`/${settlementPathByType[first.settlementType]}/${slug}`, 301);
+        return c.redirect(`/${SETTLEMENT_PATH[first.settlementType]}/${slug}`, 301);
       }
       // No docks yet: only the illustrative city hierarchy has an empty page.
       const name = first?.settlement ?? (type === "city" ? cityNameForSlug(slug) : undefined);
@@ -190,4 +181,3 @@ for (const { path, type } of SETTLEMENT_ROUTE_PATHS) {
   });
 }
 
-export { SETTLEMENT_ROUTE_PATHS };

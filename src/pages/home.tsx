@@ -2,14 +2,15 @@ import { Layout } from "../layout";
 import { docks, continents } from "../data";
 import { WORLD_MAP_VIEWBOX, CONTINENT_SHAPES } from "../continents";
 import { markersUrl } from "../lib/assets";
-import { CardThumb, placeLabel } from "./shared";
+import { SITE_ORIGIN } from "../lib/site";
+import { placeLabel } from "./shared";
 
 export function HomePage() {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Wildock",
-    url: "https://wildock.com",
+    url: SITE_ORIGIN,
     description:
       "A growing global catalogue of docks, piers, marinas and floating structures, searchable by continent and type.",
   };

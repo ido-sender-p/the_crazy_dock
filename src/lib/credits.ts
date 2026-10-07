@@ -6,7 +6,7 @@ export type PhotoCredit = { author: string; license: string; licenseUrl: string 
 
 const CC_LICENSE = /^CC (BY|BY-SA) (\d\.\d)(?: ([a-z]{2,3}))?$/i;
 
-export function licenseUrl(name: string): string | null {
+function licenseUrl(name: string): string | null {
   if (/^CC0/i.test(name)) return "https://creativecommons.org/publicdomain/zero/1.0/";
   const m = CC_LICENSE.exec(name.trim());
   if (!m) return null;

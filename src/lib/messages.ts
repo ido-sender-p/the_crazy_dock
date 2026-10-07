@@ -4,18 +4,16 @@
 
 export const MAX_MESSAGES_PER_HOUR = 20;
 
-// List rows carry only a 120 char snippet, the full body is on the single
-// message view.
+// List rows carry no body text; the full body is on the single message view.
 export type MessageListItem = {
   id: number;
   subject: string;
-  snippet: string;
   read_at: string | null;
   created_at: string;
   other_username: string;
 };
 
-export type MessageDetail = Omit<MessageListItem, "snippet"> & {
+export type MessageDetail = MessageListItem & {
   body: string;
   sender_id: number;
   recipient_id: number;
@@ -42,7 +40,7 @@ export function sendMessage(db: D1Database, senderId: number, recipientId: numbe
 export async function findInbox(db: D1Database, userId: number): Promise<MessageListItem[]> {
   const result = await db
     .prepare(
-      `SELECT messages.id, messages.subject, substr(messages.body, 1, 120) AS snippet, messages.read_at,
+      `SELECT messages.id, messages.subject, messages.read_at,
               messages.created_at, users.username AS other_username
        FROM messages JOIN users ON users.id = messages.sender_id
        WHERE messages.recipient_id = ?
@@ -56,7 +54,7 @@ export async function findInbox(db: D1Database, userId: number): Promise<Message
 export async function findSent(db: D1Database, userId: number): Promise<MessageListItem[]> {
   const result = await db
     .prepare(
-      `SELECT messages.id, messages.subject, substr(messages.body, 1, 120) AS snippet, messages.read_at,
+      `SELECT messages.id, messages.subject, messages.read_at,
               messages.created_at, users.username AS other_username
        FROM messages JOIN users ON users.id = messages.recipient_id
        WHERE messages.sender_id = ?

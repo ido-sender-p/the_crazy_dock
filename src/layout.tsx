@@ -3,6 +3,7 @@ import { raw } from "hono/html";
 import { safeJsonForScript } from "./lib/html";
 import { siteCssUrl, heroCssUrl, pageCssUrl, scriptUrl } from "./lib/assets";
 import { HERO_IMAGE_URL } from "./styles/hero";
+import { SITE_ORIGIN } from "./lib/site";
 import type { PageName } from "./styles";
 import type { ClientScriptName } from "./client";
 
@@ -30,7 +31,7 @@ export const Layout: FC<
       {noindex ? (
         <meta name="robots" content="noindex,nofollow" />
       ) : (
-        <link rel="canonical" href={`https://wildock.com${path}`} />
+        <link rel="canonical" href={`${SITE_ORIGIN}${path}`} />
       )}
       {hero && <link rel="preconnect" href="https://upload.wikimedia.org" />}
       {hero && <link rel="preload" as="image" href={HERO_IMAGE_URL} fetchpriority="high" />}

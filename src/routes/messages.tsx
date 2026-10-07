@@ -3,6 +3,7 @@ import type { Env } from "../env";
 import { InboxPage, SentPage, ComposePage, MessageViewPage } from "../pages/messages";
 import { requireUser } from "../lib/session";
 import { findUserByUsername } from "../lib/db";
+import { parseId } from "../lib/validation";
 import {
   sendMessage,
   findInbox,
@@ -66,9 +67,8 @@ messages.get("/messages/:id", async (c) => {
   const user = await requireUser(c);
   if (user instanceof Response) return user;
 
-  const raw = c.req.param("id");
-  const id = /^\d{1,12}$/.test(raw) ? Number(raw) : NaN;
-  if (!Number.isInteger(id)) return c.notFound();
+  const id = parseId(c.req.param("id"));
+  if (id === null) return c.notFound();
 
   const message = await findMessageById(c.env.DB, id);
   if (!message) return c.notFound();

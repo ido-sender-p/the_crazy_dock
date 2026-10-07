@@ -12,14 +12,12 @@ import {
 } from "../lib/gallery";
 import { detectImageType, detectImageOrientation, MAX_PHOTO_BYTES } from "../lib/imageValidation";
 import { resolveDock } from "../lib/liveDocks";
+import { parseId } from "../lib/validation";
 import { smallBody, uploadBody } from "../middleware/limits";
 
 export const gallery = new Hono<Env>();
 
 // Positive integer from a path param, or null.
-function parseId(raw: string): number | null {
-  return /^\d{1,12}$/.test(raw) && Number(raw) > 0 ? Number(raw) : null;
-}
 
 gallery.get("/docks/:slug/add-photo", async (c) => {
   const slug = c.req.param("slug");
