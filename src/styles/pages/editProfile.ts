@@ -9,7 +9,7 @@ export const editProfileCss = `
   .edit-profile-page input[type="email"],
   .edit-profile-page input[type="date"],
   .edit-profile-page input[type="password"] {
-    width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px;
+    width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--radius-md);
     font-size: 0.95rem; font-family: inherit; color: var(--ink);
   }
   .edit-profile-page button.btn-cta { border: none; cursor: pointer; align-self: flex-start; }
@@ -21,13 +21,13 @@ export const editProfileCss = `
   }
   .avatar-preview.placeholder {
     display: flex; align-items: center; justify-content: center;
-    color: var(--on-accent); font-family: 'Fraunces', serif; font-weight: 600; font-size: 1.3rem;
+    color: var(--on-accent); font-family: var(--font-serif-bare); font-weight: 600; font-size: 1.3rem;
   }
   .avatar-picker {
     display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px;
-    border: 1px solid var(--border); border-radius: 999px; cursor: pointer;
+    border: 1px solid var(--border); border-radius: var(--radius-pill); cursor: pointer;
     font-size: 0.85rem; font-weight: 600; color: var(--ink); background: var(--surface);
-    transition: border-color 0.15s ease;
+    transition: border-color var(--ease);
   }
   .avatar-picker:hover { border-color: var(--accent); }
 

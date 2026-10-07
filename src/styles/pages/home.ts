@@ -1,40 +1,40 @@
 // Styles for the home page only. Served as /assets/page-home.<hash>.css and linked by Layout (page="home").
 export const homeCss = `
   .hero { min-height: clamp(32rem, 82svh, 52rem); }
-  .hero .wrap { max-width: 1320px; padding-top: 3.75rem; padding-bottom: 5.5rem; text-align: center; }
+  .hero .wrap { max-width: var(--page-max); padding-top: 3.75rem; padding-bottom: 5.5rem; text-align: center; }
   /* soft dark pool behind the text so the light, busy part of the photo never sits under it */
   .hero::before {
     content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
     background: radial-gradient(ellipse 75% 65% at 50% 52%, rgba(4,14,26,0.6) 0%, rgba(4,14,26,0.35) 45%, rgba(4,14,26,0) 80%);
   }
   .hero h1 {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: var(--font-serif);
     font-weight: 600;
     font-size: clamp(2.2rem, 5.2vw, 3.9rem);
     letter-spacing: -0.01em;
     line-height: 1.15;
     margin: 0;
     max-width: none;
-    color: #fff;
+    color: var(--white);
     text-shadow: 0 2px 24px rgba(0,0,0,0.45);
   }
   .hero p.tagline {
-    font-family: 'Fraunces', Georgia, serif;
+    font-family: var(--font-serif);
     font-weight: 400;
     font-size: clamp(1rem, 1.6vw, 1.2rem);
     font-weight: 500;
     line-height: 1.6;
     margin: 1.75rem auto 0;
     max-width: 38rem;
-    color: #fff;
+    color: var(--white);
     text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 2px 18px rgba(0,0,0,0.55);
   }
   .hero-actions { display: flex; gap: 0.9rem; flex-wrap: wrap; justify-content: center; margin-top: 2.75rem; }
   /* plain serif text link with an arrow, no button chrome */
   .hero .hero-link {
     display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0;
-    font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: clamp(1.05rem, 1.5vw, 1.25rem);
-    color: #fff; text-decoration: none; text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 2px 18px rgba(0,0,0,0.55);
+    font-family: var(--font-serif); font-weight: 500; font-size: clamp(1.05rem, 1.5vw, 1.25rem);
+    color: var(--white); text-decoration: none; text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 2px 18px rgba(0,0,0,0.55);
   }
   .hero .hero-link svg { width: 0.7em; height: 0.45em; position: relative; top: 0.14em; transition: transform 0.2s ease; }
   .hero .hero-link svg path { vector-effect: non-scaling-stroke; }
@@ -49,17 +49,17 @@ export const homeCss = `
   section.block { padding: clamp(3rem, 8vw, 6rem) 0; }
   section.block .kicker { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.2em; }
   section.block h2 {
-    font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: clamp(1.5rem, 2.6vw, 2rem);
+    font-family: var(--font-serif); font-weight: 500; font-size: clamp(1.5rem, 2.6vw, 2rem);
     letter-spacing: -0.005em; margin: 0.9rem 0 2.25rem;
   }
 
   .world-map { width: 100%; margin-top: 8px; }
   .world-map svg { width: 100%; height: auto; display: block; }
   .world-map a { text-decoration: none; }
-  .world-map .shape { fill: var(--accent-dark); fill-opacity: 0.24; transition: fill-opacity 0.15s ease; }
+  .world-map .shape { fill: var(--accent-dark); fill-opacity: 0.24; transition: fill-opacity var(--ease); }
   .world-map a:hover .shape { fill-opacity: 0.42; }
   .world-map .label {
-    font-family: 'Fraunces', serif; font-weight: 600; fill: var(--ink);
+    font-family: var(--font-serif-bare); font-weight: 600; fill: var(--ink);
     text-anchor: middle; pointer-events: none;
   }
 
@@ -71,16 +71,16 @@ export const homeCss = `
     border: 1px solid var(--border);
     background: var(--surface);
   }
-  #home-map { width: 100%; height: auto; aspect-ratio: 16 / 8; background: #0b2545; }
+  #home-map { width: 100%; height: auto; aspect-ratio: 16 / 8; background: var(--navy); }
   /* the button floats over the map corner; z-index keeps it above Leaflet's panes and controls */
-  .map-teaser-copy { position: absolute; top: 0.9rem; right: 0.9rem; z-index: 1000; display: flex; }
+  .map-teaser-copy { position: absolute; top: 0.9rem; right: 0.9rem; z-index: var(--z-above-map); display: flex; }
   .map-teaser-copy .btn-cta {
     display: inline-flex; align-items: center; gap: 9px; padding: 10px 20px; font-size: 0.85rem;
   }
   .map-teaser-copy .btn-cta svg { width: 16px; height: 16px; }
-  .map-teaser-copy .btn-cta { box-shadow: 0 4px 14px rgba(11,37,69,0.35); }
+  .map-teaser-copy .btn-cta { box-shadow: 0 4px 14px rgba(var(--navy-rgb), 0.35); }
   /* on dark panels the navy button would vanish, so it flips to white with navy text */
-  .submit-cta .btn-cta { background: #fff; color: var(--ink); box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
+  .submit-cta .btn-cta { background: var(--white); color: var(--ink); box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
 
   .featured-card {
     display: grid;
@@ -97,8 +97,8 @@ export const homeCss = `
   .featured-card .thumb-ph { background: var(--border); }
   .featured-card .copy { padding: clamp(1.5rem, 3.5vw, 2.75rem); display: flex; flex-direction: column; justify-content: center; }
   .featured-card .tag { font-size: 0.72rem; font-weight: 500; color: var(--accent-text); text-transform: uppercase; letter-spacing: 0.16em; }
-  .featured-card h3 { font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: clamp(1.3rem, 2vw, 1.6rem); margin: 0.6rem 0 0.9rem; }
-  .featured-card p { font-family: 'Fraunces', Georgia, serif; font-weight: 300; color: #24405c; font-size: 1rem; line-height: 1.8; }
+  .featured-card h3 { font-family: var(--font-serif); font-weight: 500; font-size: clamp(1.3rem, 2vw, 1.6rem); margin: 0.6rem 0 0.9rem; }
+  .featured-card p { font-family: var(--font-serif); font-weight: 300; color: var(--ink-prose); font-size: 1rem; line-height: 1.8; }
   @media (max-width: 640px) { .featured-card { grid-template-columns: 1fr; } .featured-card img, .featured-card .thumb-ph { aspect-ratio: 16 / 10; } .featured-card .copy { padding: 1.5rem 1.25rem; } }
 
   /* story block right after the hero: same serif, same navy, lots of air */
@@ -107,12 +107,12 @@ export const homeCss = `
   .log-num { width: 3.5rem; height: 3.5rem; }
   .log-entry > div { max-width: 38rem; }
   .log-entry h3 {
-    font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: clamp(1.25rem, 2vw, 1.55rem);
+    font-family: var(--font-serif); font-weight: 500; font-size: clamp(1.25rem, 2vw, 1.55rem);
     letter-spacing: -0.005em; color: var(--ink); margin: 0 0 1.75rem;
   }
   .log-entry p {
-    font-family: 'Fraunces', Georgia, serif; font-weight: 300; font-size: clamp(1.02rem, 1.4vw, 1.15rem);
-    line-height: 1.9; color: #24405c; margin: 0 auto;
+    font-family: var(--font-serif); font-weight: 300; font-size: clamp(1.02rem, 1.4vw, 1.15rem);
+    line-height: 1.9; color: var(--ink-prose); margin: 0 auto;
   }
   .log-entry p + p { margin-top: 1.75rem; }
   /* Get started: three steps, text first; the dashed route only links them in the gaps */
@@ -121,12 +121,12 @@ export const homeCss = `
   .step-icon { width: 3.1rem; height: 3.1rem; margin-bottom: 1.4rem; color: var(--accent); }
   .step-icon svg { width: 100%; height: 100%; display: block; }
   .step h3 {
-    font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: clamp(1.4rem, 2vw, 1.625rem);
+    font-family: var(--font-serif); font-weight: 500; font-size: clamp(1.4rem, 2vw, 1.625rem);
     line-height: 1.25; letter-spacing: -0.005em; color: var(--ink); margin: 0 0 1rem;
   }
   .step p {
-    font-family: 'Fraunces', Georgia, serif; font-weight: 400; font-size: clamp(1.05rem, 1.4vw, 1.125rem);
-    line-height: 1.62; color: #1d3a56; max-width: 40rem; margin: 0;
+    font-family: var(--font-serif); font-weight: 400; font-size: clamp(1.05rem, 1.4vw, 1.125rem);
+    line-height: 1.62; color: var(--ink-prose-strong); max-width: 40rem; margin: 0;
   }
   .route { width: 1.4rem; height: 4.5rem; margin: 2.5rem 0; color: var(--accent); opacity: 0.75; }
   .route svg { width: 100%; height: 100%; display: block; }
@@ -134,8 +134,8 @@ export const homeCss = `
   .submit-cta {
     position: relative;
     overflow: hidden;
-    background: linear-gradient(180deg, #0b2545 0%, #0b2545 60%, #123a63 100%);
-    color: #fff;
+    background: linear-gradient(180deg, var(--navy) 0%, var(--navy) 60%, var(--navy-lift) 100%);
+    color: var(--white);
     border-radius: 20px;
     padding: clamp(2.25rem, 6vw, 4rem);
     text-align: center;
@@ -143,7 +143,7 @@ export const homeCss = `
   .submit-cta .dock-scene { position: absolute; right: 10px; bottom: 0; width: 260px; height: auto; opacity: 0.9; }
   .submit-cta .cast-line { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.9; pointer-events: none; }
   .submit-cta .birds { position: absolute; left: 24px; top: 18px; width: 120px; height: 50px; opacity: 0.85; pointer-events: none; }
-  .submit-cta h2 { color: #fff; font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: clamp(1.5rem, 2.6vw, 2rem); margin: 0 0 1.75rem; }
+  .submit-cta h2 { color: var(--white); font-family: var(--font-serif); font-weight: 500; font-size: clamp(1.5rem, 2.6vw, 2rem); margin: 0 0 1.75rem; }
 
   /* hero and sections are all centered */
   section.block, .map-teaser-copy, .featured-card .copy { text-align: center; }
@@ -153,7 +153,7 @@ export const homeCss = `
     .submit-cta { padding: 32px 20px; }
     .submit-cta .dock-scene, .submit-cta .cast-line, .submit-cta .birds { display: none; }
   }
-  .band-white { background: #ffffff; }
+  .band-white { background: var(--white); }
   section.block.flush-top { padding-top: 0; }
   section.block.featured-gap { padding-top: 160px; }
 `;

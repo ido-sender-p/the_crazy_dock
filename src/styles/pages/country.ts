@@ -24,7 +24,7 @@ export const countryCss = `
     background: var(--surface); border: 1px solid var(--border); border-bottom: none;
     border-radius: 10px 10px 0 0;
     padding: 16px 16px 20px; color: var(--ink); text-decoration: none;
-    transition: transform 0.15s ease, filter 0.15s ease;
+    transition: transform var(--ease), filter var(--ease);
   }
   a.wave-card:hover { transform: translateY(-2px); filter: brightness(1.02); }
   .wave-card .name { font-weight: 600; font-size: 0.9rem; }
@@ -35,9 +35,9 @@ export const countryCss = `
 
   .lake-card {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
-    text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg);
     padding: 14px 16px 12px; color: var(--ink); text-decoration: none;
-    transition: transform 0.15s ease, filter 0.15s ease;
+    transition: transform var(--ease), filter var(--ease);
   }
   a.lake-card:hover { transform: translateY(-2px); filter: brightness(1.02); }
   .lake-card svg { width: 42px; height: auto; }

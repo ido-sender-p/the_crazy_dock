@@ -1,6 +1,6 @@
 // The single place every stylesheet is assembled. Layout links /assets/site.<hash>.css on every
 // page, /assets/hero.<hash>.css when `hero` is set, and /assets/page-<name>.<hash>.css for `page`.
-import { tokensCss } from "./tokens";
+import { tokensCss, tokensContrastCss } from "./tokens";
 import { baseCss } from "./base";
 import { componentsCss } from "./components";
 import { chromeCss } from "./chrome";
@@ -45,5 +45,5 @@ export const PAGE_STYLES = {
 
 export type PageName = keyof typeof PAGE_STYLES;
 
-export const SITE_CSS = [tokensCss, baseCss, chromeCss, componentsCss].join("\n");
+export const SITE_CSS = [tokensCss, tokensContrastCss, baseCss, chromeCss, componentsCss].join("\n");
 export const HERO_CSS = heroCss;

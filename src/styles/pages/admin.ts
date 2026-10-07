@@ -10,12 +10,12 @@ export const adminCss = `
 
   .review-card {
     display: grid; grid-template-columns: 140px 1fr; gap: 18px;
-    border: 1px solid var(--border); border-radius: 14px; padding: 18px; background: var(--surface);
+    border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 18px; background: var(--surface);
     margin-bottom: 14px;
   }
-  .review-card img { width: 140px; height: 100px; object-fit: cover; border-radius: 10px; display: block; }
+  .review-card img { width: 140px; height: 100px; object-fit: cover; border-radius: var(--radius-md); display: block; }
   .review-card .no-photo {
-    width: 140px; height: 100px; border-radius: 10px; background: var(--bg);
+    width: 140px; height: 100px; border-radius: var(--radius-md); background: var(--bg);
     border: 1px dashed var(--border); display: flex; align-items: center; justify-content: center;
     color: var(--ink-soft); font-size: 0.78rem; text-align: center; padding: 8px;
   }
@@ -29,14 +29,14 @@ export const adminCss = `
   .review-card .meta { font-size: 0.78rem; color: var(--ink-soft); margin: 0 0 12px; }
   .review-card .block-reason {
     font-size: 0.82rem; color: #9c6b1f; background: #fdf3e2; border: 1px solid #f0d9a8;
-    border-radius: 8px; padding: 8px 12px; margin: 0 0 12px;
+    border-radius: var(--radius-sm); padding: 8px 12px; margin: 0 0 12px;
   }
   .review-card .actions { display: flex; gap: 10px; }
   .review-card form { display: inline; }
   .review-card button {
-    border: none; cursor: pointer; border-radius: 999px; padding: 8px 18px; font-size: 0.82rem; font-weight: 600;
+    border: none; cursor: pointer; border-radius: var(--radius-pill); padding: 8px 18px; font-size: 0.82rem; font-weight: 600;
   }
-  .btn-approve { background: var(--ink); color: #fff; }
+  .btn-approve { background: var(--ink); color: var(--white); }
   .btn-reject { background: #fdecea; color: #9c2c1f; }
 
   .admin-page .empty { padding: 20px; }

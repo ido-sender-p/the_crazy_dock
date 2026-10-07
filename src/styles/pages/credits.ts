@@ -5,7 +5,7 @@ export const creditsCss = `
   .credits-page p { font-size: 0.95rem; }
   .credits-page .notice {
     background: #fdf3e2; border: 1px solid #e9c17a; color: #7a5108;
-    padding: 14px 18px; border-radius: 10px; font-size: 0.88rem;
+    padding: 14px 18px; border-radius: var(--radius-md); font-size: 0.88rem;
   }
   .credits-page .table-wrap { overflow-x: auto; margin-top: 12px; }
   .credits-page table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }

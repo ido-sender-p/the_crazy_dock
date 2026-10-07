@@ -11,7 +11,7 @@ export const messagesCss = `
   .message-list { display: flex; flex-direction: column; gap: 10px; }
   .message-row {
     display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
-    padding: 14px 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);
+    padding: 14px 18px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface);
     text-decoration: none; color: inherit;
   }
   .message-row.unread { border-color: var(--accent); background: #f2fbfa; }
@@ -19,20 +19,20 @@ export const messagesCss = `
   .message-row .subject { color: var(--ink-soft); font-size: 0.85rem; }
   .message-row .when { color: var(--ink-soft); font-size: 0.78rem; white-space: nowrap; }
   .unread-badge {
-    display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: 999px; vertical-align: middle;
-    background: var(--ink); color: #fff; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+    display: inline-block; margin-left: 8px; padding: 1px 8px; border-radius: var(--radius-pill); vertical-align: middle;
+    background: var(--ink); color: var(--white); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
   }
 
   .compose-form { display: flex; flex-direction: column; gap: 16px; max-width: 520px; }
   .compose-form label { font-size: 0.85rem; font-weight: 600; color: var(--ink); display: block; margin-bottom: 6px; }
   .compose-form input, .compose-form textarea {
-    width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px;
+    width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--radius-md);
     font-size: 0.95rem; font-family: inherit; color: var(--ink);
   }
   .compose-form textarea { resize: vertical; min-height: 140px; }
   .compose-form button { border: none; cursor: pointer; align-self: flex-start; }
 
-  .message-detail { border: 1px solid var(--border); border-radius: 14px; padding: 24px; background: var(--surface); }
+  .message-detail { border: 1px solid var(--border); border-radius: var(--radius-xl); padding: 24px; background: var(--surface); }
   .message-detail .meta { color: var(--ink-soft); font-size: 0.85rem; margin-bottom: 18px; }
   .message-detail .subject { font-size: 1.2rem; font-weight: 600; margin-bottom: 4px; }
   .message-detail .body { white-space: pre-wrap; font-size: 0.95rem; }

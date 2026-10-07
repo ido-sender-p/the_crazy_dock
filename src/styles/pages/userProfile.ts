@@ -7,14 +7,14 @@ export const userProfileCss = `
   .user-profile-page h2 { font-size: 1.2rem; margin: 4px 0 16px; }
   .list-row {
     display: flex; align-items: center; gap: 14px;
-    padding: 10px 18px 10px 10px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface);
+    padding: 10px 18px 10px 10px; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface);
     text-decoration: none; color: inherit;
   }
   .list-row + .list-row { margin-top: 12px; }
   .list-row .name { font-weight: 600; font-size: 0.95rem; }
   .list-row .place { color: var(--ink-soft); font-size: 0.85rem; }
   .list-row .thumb {
-    width: 52px; height: 52px; border-radius: 8px; object-fit: cover; flex: none;
+    width: 52px; height: 52px; border-radius: var(--radius-sm); object-fit: cover; flex: none;
     background: var(--border);
   }
   .user-profile-page .empty { padding: 20px; }

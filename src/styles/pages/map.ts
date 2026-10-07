@@ -11,7 +11,7 @@ export const mapCss = `
     border: 1px solid var(--border);
     overflow: hidden;
   }
-  #wildock-map { height: 460px; width: 100%; background: #0b2545; }
+  #wildock-map { height: 460px; width: 100%; background: var(--navy); }
   .list-title { font-size: 1.2rem; margin: 8px 0 0; }
   .pin-list { columns: 240px; column-gap: 20px; margin-top: 12px; padding: 0; list-style: none; font-size: 0.88rem; }
   .pin-list li { break-inside: avoid; padding: 4px 0; }

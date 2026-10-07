@@ -6,7 +6,7 @@ export const addPhotoCss = `
   .add-photo-page form { display: flex; flex-direction: column; gap: 16px; }
   .add-photo-page label { font-size: 0.85rem; font-weight: 600; color: var(--ink); display: block; margin-bottom: 6px; }
   .add-photo-page input, .add-photo-page textarea {
-    width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px;
+    width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--radius-md);
     font-size: 0.95rem; font-family: inherit; color: var(--ink);
   }
   .add-photo-page textarea { resize: vertical; min-height: 70px; }
@@ -14,15 +14,15 @@ export const addPhotoCss = `
 
   .add-photo-page label.photo-dropzone {
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-    border: 1.5px dashed var(--border); border-radius: 14px; padding: 32px 16px;
+    border: 1.5px dashed var(--border); border-radius: var(--radius-xl); padding: 32px 16px;
     cursor: pointer; text-align: center; color: var(--ink-soft); font-size: 0.9rem;
-    transition: border-color 0.15s ease, background 0.15s ease;
+    transition: border-color var(--ease), background var(--ease);
   }
-  .photo-dropzone:hover, .photo-dropzone.drag { border-color: var(--accent); background: rgba(201,162,77,0.08); }
+  .photo-dropzone:hover, .photo-dropzone.drag { border-color: var(--accent); background: rgba(var(--gold-rgb), 0.08); }
   .photo-dropzone svg { width: 30px; height: 30px; color: var(--accent-text); }
   .photo-dropzone .filename { font-weight: 600; color: var(--ink); }
 
   .add-photo-page button.btn-cta { border: none; cursor: pointer; margin-top: 6px; align-self: flex-start; }
-  .add-photo-page .success { padding: 18px 20px; border-radius: 12px; font-size: 0.95rem; }
+  .add-photo-page .success { padding: 18px 20px; border-radius: var(--radius-lg); font-size: 0.95rem; }
   .add-photo-page form .error { margin-bottom: 0; }
 `;
