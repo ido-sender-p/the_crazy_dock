@@ -5,6 +5,7 @@ import { slugify } from "../lib/slug";
 import { CardThumb } from "../components/card";
 import { placeLabel, FAMILY_ORDER } from "../lib/places";
 import { LakeIcon } from "../components/icons";
+import { PlaceGrid, ListNote, featuredFirst, LIST_LIMIT, type Place } from "../components/places";
 
 type Entry = { name: string; sea: string; family: Water };
 
@@ -55,8 +56,13 @@ export function CountryPage(opts: {
   cities: Entry[];
   states?: Entry[];
   matches?: Dock[];
+  places?: { title: string; items: Place[]; sea: string }; // data-driven regions or places, for countries with too many docks to list
   path: string;
 }) {
+  const all = opts.matches ?? [];
+  const crowded = all.length > LIST_LIMIT;
+  const shown = crowded ? featuredFirst(all) : all;
+  const gridPlaces = crowded && !(opts.states && opts.states.length > 0) ? opts.places : undefined;
   return (
     <Layout page="country" title={`${opts.name}: Docks & Cities | Wildock`} description={`Docks, piers and marinas documented in ${opts.name}.`} path={opts.path}>
       <div class="wrap country-page">
@@ -65,7 +71,9 @@ export function CountryPage(opts: {
         </nav>
         <h1>{opts.name}</h1>
 
-        {opts.states && opts.states.length > 0 ? (
+        {gridPlaces && gridPlaces.items.length > 0 ? (
+          <PlaceGrid title={gridPlaces.title} places={gridPlaces.items} sea={gridPlaces.sea} />
+        ) : opts.states && opts.states.length > 0 ? (
           <EntryGroup kicker="States" entries={opts.states} linkBase="/regions" />
         ) : opts.cities.length > 0 ? (
           <EntryGroup kicker="Cities" entries={opts.cities} linkBase="/cities" />
@@ -73,9 +81,10 @@ export function CountryPage(opts: {
           <div class="empty">No cities documented here yet. The catalogue is growing daily.</div>
         )}
 
-        {opts.matches && opts.matches.length > 0 && (
+        {shown.length > 0 && (
+          <>
           <div class="list">
-            {opts.matches.map((d) => (
+            {shown.map((d) => (
               <a href={`/docks/${d.slug}`}>
                 <CardThumb src={d.imageUrl} />
                 <div class="copy">
@@ -85,6 +94,8 @@ export function CountryPage(opts: {
               </a>
             ))}
           </div>
+          <ListNote shown={shown.length} total={all.length} hint={gridPlaces && gridPlaces.items.length > 0 ? "Pick a place above to see them all." : "Pick a state above to see them all."} />
+          </>
         )}
       </div>
     </Layout>

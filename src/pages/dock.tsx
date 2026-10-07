@@ -4,7 +4,7 @@ import { slugify } from "../lib/slug";
 import { raw } from "hono/html";
 import { safeJsonForScript } from "../lib/html";
 import type { DockPhoto } from "../lib/gallery";
-import { parsePhotoCredit, WIKIPEDIA_LICENSE } from "../lib/credits";
+import { parsePhotoCredit, WIKIPEDIA_LICENSE, ODBL_URL } from "../lib/credits";
 import { vibe, count, type Nearby } from "../lib/nearby";
 import { SETTLEMENT_PATH } from "../lib/places";
 import { placeLabel } from "../lib/places";
@@ -37,6 +37,13 @@ function PhotoCreditLine({ value }: { value: string }) {
 }
 
 function TextCreditLine({ value }: { value: string }) {
+  if (value.startsWith("OpenStreetMap|")) {
+    return (
+      <>
+        Details from <Credit value={value} /> contributors (<a href={ODBL_URL} target="_blank" rel="noopener noreferrer license">ODbL</a>).
+      </>
+    );
+  }
   return (
     <>
       <Credit value={value} prefix="Text from " /> (<a href={WIKIPEDIA_LICENSE.url} target="_blank" rel="noopener noreferrer license">{WIKIPEDIA_LICENSE.name}</a>), shortened.

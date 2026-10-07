@@ -8,7 +8,8 @@ import { CategoryPage } from "../pages/category";
 import { ContinentPage } from "../pages/continent";
 import { CountryPage } from "../pages/country";
 import { MapPage } from "../pages/map";
-import { citiesByCountry, usStates, usStateSea, cityNameForSlug, countryInfoForSlug } from "../continents";
+import { citiesByCountry, usStates, usStateSea, oceanByCountry, cityNameForSlug, countryInfoForSlug } from "../continents";
+import { placesIn } from "../components/places";
 import { findPublishedDocksByContinent,
   findPublishedDocksByCountryName,
   findPublishedDocksBySettlementSlug,
@@ -90,6 +91,12 @@ catalog.get("/countries/:code", (c) => {
   return edgeCached(c, LISTING_TTL, async () => {
     const continent = continents.find((ct) => ct.slug === info.continentSlug);
     const live = c.env.DB ? await findPublishedDocksByCountryName(c.env.DB, info.name) : [];
+    const matches = dedupeDocksBySlug([...staticInCountryName(info.name), ...live]);
+    // Countries with hundreds of docks browse by region (or by place when they have no regions) instead of one long list.
+    const regions = placesIn(matches, "region");
+    const places = regions.length >= 2
+      ? { title: "Regions", items: regions }
+      : { title: "Places", items: placesIn(matches, "settlement") };
     return c.html(
       <CountryPage
         name={info.name}
@@ -101,7 +108,8 @@ catalog.get("/countries/:code", (c) => {
             ? usStates.flatMap((s) => (usStateSea[s] ?? []).map((e) => ({ name: s, sea: e.sea, family: e.family })))
             : undefined
         }
-        matches={dedupeDocksBySlug([...staticInCountryName(info.name), ...live])}
+        matches={matches}
+        places={{ ...places, sea: oceanByCountry[info.name]?.[0]?.sea ?? "Atlantic Ocean" }}
         path={`/countries/${code}`}
       />,
     );
@@ -143,6 +151,11 @@ catalog.get("/regions/:slug", (c) => {
         intro={`Docks, piers and marinas documented in ${name}.`}
         path={`/regions/${slug}`}
         matches={matches}
+        places={{
+          title: "Places",
+          items: placesIn(matches, "settlement"),
+          sea: (usStateSea[name] ?? oceanByCountry[matches[0].country])?.[0]?.sea ?? "Atlantic Ocean",
+        }}
       />,
     );
   });

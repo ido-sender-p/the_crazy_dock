@@ -94,4 +94,6 @@ export const componentsCss = `
   }
   .country-card:hover, a.wave-card:hover { transform: translateY(-2px); filter: brightness(1.02); }
   .country-card .name, .wave-card .name { font-weight: 600; font-size: 0.9rem; }
+  .wave-card .count { color: var(--ink-soft); font-weight: 400; }
+  .list-note { color: var(--ink-soft); font-size: 0.9rem; margin: 14px 0 0; text-align: center; }
 `;

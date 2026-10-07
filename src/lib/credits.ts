@@ -25,4 +25,6 @@ export function parsePhotoCredit(value: string): PhotoCredit | null {
   };
 }
 
+export const ODBL_URL = "https://opendatacommons.org/licenses/odbl/1-0/";
+
 export const WIKIPEDIA_LICENSE = { name: "CC BY-SA 4.0", url: "https://creativecommons.org/licenses/by-sa/4.0/" };

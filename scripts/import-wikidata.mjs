@@ -251,4 +251,4 @@ async function main() {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   main().catch((e) => { console.error(e); process.exit(1); });
 }
-export { sparql, fetchRetry };
+export { sparql, fetchRetry, getJson, wikiSummary, download, stripHtml };

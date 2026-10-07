@@ -12,6 +12,8 @@ const CONTINENTS = ["europe", "asia", "africa", "north-america", "south-america"
 const DOCK_TYPES = ["pier", "marina", "floating_dock", "industrial"];
 const ORIENTATIONS = ["portrait", "landscape"];
 const MIN_DESC = 250;
+const MIN_DESC_OSM = 60; // descriptions written from OpenStreetMap tags are short and factual
+const OSM = "https://www.openstreetmap.org/";
 const MAX_PORT_SHARE = 0.6;
 const WIKI = "https://en.wikipedia.org/wiki/";
 const COMMONS = "https://commons.wikimedia.org/wiki/";
@@ -24,19 +26,26 @@ const images = await imagePathsBySlug();
 const dropped = { description: 0, author: 0, image: 0 };
 const clean = [];
 for (const d of all) {
-  const description = cleanDescription(d.description, { min: MIN_DESC });
+  const fromOsm = d.descriptionSource.startsWith("OpenStreetMap|");
+  const description = cleanDescription(d.description, { min: fromOsm ? MIN_DESC_OSM : MIN_DESC });
   if (!description) { dropped.description++; continue; }
-  const m = /^Photo: (.*), ([^,]+), via Wikimedia Commons\|(.*)$/.exec(d.imageAttribution);
-  if (!m) { dropped.author++; continue; }
-  const author = cleanAuthor(m[1].replace(/(unknown author)+/gi, "Unknown author"));
-  if (!authorUsable(author, m[2])) { dropped.author++; continue; }
-  if (!existsSync(images.get(d.slug) ?? "")) { dropped.image++; continue; }
+  let imageAttribution = "";
+  // OpenStreetMap-sourced docks may have no photo yet (shown with a "submit a photo" prompt); Wikipedia docks always need one.
+  if (d.imageAttribution || !fromOsm) {
+    const m = /^Photo: (.*), ([^,]+), via Wikimedia Commons\|(.*)$/.exec(d.imageAttribution);
+    if (!m) { dropped.author++; continue; }
+    const author = cleanAuthor(m[1].replace(/(unknown author)+/gi, "Unknown author"));
+    if (!authorUsable(author, m[2])) { dropped.author++; continue; }
+    if (!existsSync(images.get(d.slug) ?? "")) { dropped.image++; continue; }
+    imageAttribution = `Photo: ${author}, ${m[2]}, via Wikimedia Commons|${m[3]}`;
+  }
   clean.push({
     ...d,
+    name: d.name.replace(/\s*[—–]\s*/g, " - "),
     description,
     stateProvince: cleanPlace(d.stateProvince, d.country),
     settlement: cleanPlace(d.settlement, d.country, { strict: true }),
-    imageAttribution: `Photo: ${author}, ${m[2]}, via Wikimedia Commons|${m[3]}`,
+    imageAttribution,
   });
 }
 
@@ -59,8 +68,9 @@ for (let round = 0; ports.size < Math.min(portLimit, portsAll.length); round++) 
 const picked = clean.filter((d) => d.dockType !== "industrial" || ports.has(d.slug));
 
 const out = picked.map((d) => {
-  if (!d.descriptionSource.startsWith(`Wikipedia|${WIKI}`)) throw new Error(`unexpected descriptionSource for ${d.slug}`);
-  if (!d.imageAttribution.includes(`|${COMMONS}`)) throw new Error(`unexpected imageAttribution url for ${d.slug}`);
+  const wikiSource = d.descriptionSource.startsWith(`Wikipedia|${WIKI}`);
+  if (!wikiSource && !d.descriptionSource.startsWith(`OpenStreetMap|${OSM}`)) throw new Error(`unexpected descriptionSource for ${d.slug}`);
+  if (d.imageAttribution && !d.imageAttribution.includes(`|${COMMONS}`)) throw new Error(`unexpected imageAttribution url for ${d.slug}`);
   const row = {
     slug: d.slug,
     name: d.name,
@@ -72,7 +82,7 @@ const out = picked.map((d) => {
     lat: d.lat,
     lon: d.lon,
     description: d.description,
-    wiki: d.descriptionSource.slice(`Wikipedia|${WIKI}`.length),
+    ...(wikiSource ? { wiki: d.descriptionSource.slice(`Wikipedia|${WIKI}`.length) } : { osm: d.descriptionSource.slice(`OpenStreetMap|${OSM}`.length) }),
     imageAttribution: d.imageAttribution.replace(`|${COMMONS}`, "|"),
     imageOrientation: d.imageOrientation,
   };
@@ -100,8 +110,8 @@ function validate(rows) {
     if (!r.description) fail(r, "empty description");
     if (/[—–]/.test(r.description + r.imageAttribution)) fail(r, "dash in text");
     if (!/[.!?]["”’)]?$/.test(r.description)) fail(r, "description does not end with punctuation");
-    if (!r.imageAttribution.startsWith("Photo: ")) fail(r, "bad imageAttribution");
-    if (!r.wiki) fail(r, "empty wiki");
+    if (r.imageAttribution && !r.imageAttribution.startsWith("Photo: ")) fail(r, "bad imageAttribution");
+    if (!r.wiki && !/^(node|way|relation)\/\d+$/.test(r.osm ?? "")) fail(r, "no description source");
     if (!DOCK_TYPES.includes(r.dockType)) fail(r, "bad dockType");
     if (!ORIENTATIONS.includes(r.imageOrientation)) fail(r, "bad imageOrientation");
     if (!CONTINENTS.includes(r.continentSlug)) fail(r, "bad continentSlug");
@@ -112,7 +122,7 @@ validate(out);
 
 const target = new URL("../src/catalogue.json", import.meta.url);
 await writeFile(target, JSON.stringify(out));
-const listed = await writeUploadList(out.map((r) => r.slug));
+const listed = await writeUploadList(out.filter((r) => r.imageAttribution).map((r) => r.slug));
 const counts = {};
 for (const r of out) counts[r.dockType] = (counts[r.dockType] ?? 0) + 1;
 console.log(out.length, "docks ->", fileURLToPath(target));

@@ -29,7 +29,7 @@ export function CreditsPage(opts: { path: string; contactEmail?: string }) {
           <a href="https://www.wikipedia.org/" target="_blank" rel="noopener noreferrer">Wikipedia</a> articles, which are available
           under{" "}
           <a href={WIKIPEDIA_LICENSE.url} target="_blank" rel="noopener noreferrer license">{WIKIPEDIA_LICENSE.name}</a>. Counts of nearby restaurants, shops, hotels and sights come from{" "}
-          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> data (&copy; OpenStreetMap contributors, ODbL). Photos
+          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> data (&copy; OpenStreetMap contributors, ODbL). Where no Wikipedia article exists, the short description is written only from OpenStreetMap data (type, place, berths, operator, facilities). Photos
           uploaded by Wildock members belong to the members who took them.
         </p>
 

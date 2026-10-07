@@ -107,8 +107,9 @@ type CatalogueRow = {
   lat: number;
   lon: number;
   description: string;
-  wiki: string; // Wikipedia article path
-  imageAttribution: string; // "Photo: ..., via Wikimedia Commons|File:Name.jpg"
+  wiki?: string; // Wikipedia article path (the description source)
+  osm?: string; // OpenStreetMap element, e.g. "node/123" (the description source when there is no Wikipedia article)
+  imageAttribution: string; // "Photo: ..., via Wikimedia Commons|File:Name.jpg"; "" when the dock has no photo yet
   imageOrientation: Dock["imageOrientation"];
   lengthM?: number;
   yearBuilt?: number;
@@ -139,9 +140,9 @@ function toDock(r: CatalogueRow): Dock {
     lat: r.lat,
     lon: r.lon,
     description: r.description,
-    imageUrl: `/uploads/dock-${r.slug}`,
+    imageUrl: r.imageAttribution ? `/uploads/dock-${r.slug}` : "",
     imageAttribution: r.imageAttribution.replace("|File:", "|https://commons.wikimedia.org/wiki/File:"),
-    descriptionSource: `Wikipedia|https://en.wikipedia.org/wiki/${r.wiki}`,
+    descriptionSource: r.wiki ? `Wikipedia|https://en.wikipedia.org/wiki/${r.wiki}` : `OpenStreetMap|https://www.openstreetmap.org/${r.osm}`,
     imageOrientation: r.imageOrientation,
     lengthM: r.lengthM ?? 0,
     yearBuilt: r.yearBuilt ?? null,
@@ -156,5 +157,27 @@ function toDock(r: CatalogueRow): Dock {
 // Static catalogue built from Wikidata/Wikipedia/Commons by scripts/build-catalogue.mjs.
 // Legacy entries come first so the homepage featured dock stays the same.
 export const docks: Dock[] = [...legacyDocks, ...(rows as CatalogueRow[]).map(toDock)];
+
+// Place pages are keyed by slug alone, so two places that share a name (Georgetown in Guyana and the Cayman Islands,
+// Hamilton in Ontario and Bermuda) would merge into one page. The largest group keeps the plain slug; the others get
+// their country (or, for settlements inside a state, the state) appended. Deterministic: same catalogue, same slugs.
+function disambiguate(key: "settlementSlug" | "stateProvinceSlug", context: (d: Dock) => string) {
+  const groups = new Map<string, Map<string, Dock[]>>();
+  for (const d of docks) {
+    const slug = d[key];
+    if (!slug) continue;
+    const ctx = context(d);
+    const byCtx = groups.get(slug) ?? new Map<string, Dock[]>();
+    byCtx.set(ctx, [...(byCtx.get(ctx) ?? []), d]);
+    groups.set(slug, byCtx);
+  }
+  for (const [slug, byCtx] of groups) {
+    if (byCtx.size < 2) continue;
+    const ordered = [...byCtx.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0]));
+    for (const [ctx, list] of ordered.slice(1)) for (const d of list) d[key] = `${slug}-${slugify(ctx)}`;
+  }
+}
+disambiguate("stateProvinceSlug", (d) => d.country);
+disambiguate("settlementSlug", (d) => d.stateProvince ? `${d.country}/${d.stateProvince}` : d.country);
 
 export const countries: { code: Dock["countryCode"]; name: string }[] = [{ code: "it", name: "Italy" }];

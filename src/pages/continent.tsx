@@ -6,6 +6,7 @@ import { seaClass, type Water } from "../styles/sea";
 import { CardThumb } from "../components/card";
 import { placeLabel, FAMILY_ORDER } from "../lib/places";
 import { LakeIcon } from "../components/icons";
+import { ListNote, featuredFirst, LIST_LIMIT } from "../components/places";
 
 function Wave({ seas }: { seas: string[] }) {
   return (
@@ -19,6 +20,7 @@ function Wave({ seas }: { seas: string[] }) {
 
 export function ContinentPage(opts: { name: string; slug: string; intro: string; path: string; matches: Dock[] }) {
   const countries = countriesByContinent[opts.slug] ?? [];
+  const shown = opts.matches.length > LIST_LIMIT ? featuredFirst(opts.matches) : opts.matches;
 
   const bySea = new Map<string, { family: Water; names: string[] }>();
   for (const name of countries) {
@@ -65,9 +67,10 @@ export function ContinentPage(opts: { name: string; slug: string; intro: string;
           </>
         ))}
 
-        {opts.matches.length > 0 && (
+        {shown.length > 0 && (
+          <>
           <div class="list">
-            {opts.matches.map((d) => (
+            {shown.map((d) => (
               <a href={`/docks/${d.slug}`}>
                 <CardThumb src={d.imageUrl} />
                 <div class="copy">
@@ -77,6 +80,8 @@ export function ContinentPage(opts: { name: string; slug: string; intro: string;
               </a>
             ))}
           </div>
+          <ListNote shown={shown.length} total={opts.matches.length} hint="Pick a country above to see them all." />
+          </>
         )}
       </div>
     </Layout>
