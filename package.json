@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit",
     "catalogue:import": "node scripts/import-wikidata.mjs",
     "catalogue:build": "node scripts/build-catalogue.mjs",
-    "catalogue:images": "node scripts/load-images.mjs"
+    "catalogue:images": "node scripts/load-images.mjs",
+    "catalogue:nearby": "node scripts/enrich-nearby.mjs"
   },
   "license": "ISC",
   "dependencies": {

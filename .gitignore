@@ -6,3 +6,5 @@ wrangler-dev.log
 scripts/data/
 .dev.vars
 .env.*
+.dev.vars.*
+*.log
