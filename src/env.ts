@@ -7,6 +7,7 @@ export type Bindings = {
   CONTACT_EMAIL?: string; // public address for takedown/credit requests, shown on /credits
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
+  CF_VERSION_METADATA?: { id: string }; // id of the deployed Worker version (wrangler.toml [version_metadata])
 };
 
 // `user` memoizes currentUser() for the request (null = checked, logged out).

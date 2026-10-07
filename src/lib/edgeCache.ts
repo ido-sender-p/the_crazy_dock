@@ -13,6 +13,11 @@ import { assetVersion } from "./assets";
 const SESSION_TOKEN_RE = /^[0-9a-f-]{36}$/;
 const NOT_FOUND_TTL = 60;
 
+// Without the version binding (local dev) each isolate gets its own id, so a code reload never serves HTML cached
+// by the previous one. Created on first use: Workers forbid random values in the global scope.
+let bootId: string | undefined;
+const isolateId = () => (bootId ??= crypto.randomUUID());
+
 // `keyQuery` is the only part of the query string that may vary the response (already normalised by
 // the caller, e.g. "q=port&type=all"). Everything else is dropped from the key, so ?x=1, ?x=2 ...
 // all share one entry instead of each missing the cache and hitting D1.
@@ -26,10 +31,11 @@ export async function edgeCached(
   const session = getCookie(c, SESSION_COOKIE);
   if (!cache || c.req.method !== "GET" || (session && SESSION_TOKEN_RE.test(session))) return render();
 
-  // Keyed by path plus the asset version (see lib/assets.ts), so a deploy never serves stale HTML.
+  // Keyed by path, the deployed Worker version and the asset version: after a deploy neither old HTML nor HTML linking to
+  // removed assets is served (lib/assets.ts).
   const keyUrl = new URL(c.req.url);
   keyUrl.search = keyQuery;
-  keyUrl.searchParams.set("__v", assetVersion);
+  keyUrl.searchParams.set("__v", `${c.env.CF_VERSION_METADATA?.id ?? isolateId()}.${assetVersion}`);
   const key = new Request(keyUrl.toString(), { method: "GET" });
   try {
     const hit = await cache.match(key);
