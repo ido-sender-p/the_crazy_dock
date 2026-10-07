@@ -28,7 +28,7 @@ export const adminCss = `
   .review-card .desc { font-size: 0.85rem; color: var(--ink); margin: 0 0 10px; line-height: 1.5; }
   .review-card .meta { font-size: 0.78rem; color: var(--ink-soft); margin: 0 0 12px; }
   .review-card .block-reason {
-    font-size: 0.82rem; color: #9c6b1f; background: #fdf3e2; border: 1px solid #f0d9a8;
+    font-size: 0.82rem; color: #9c6b1f; background: var(--notice-bg); border: 1px solid #f0d9a8;
     border-radius: var(--radius-sm); padding: 8px 12px; margin: 0 0 12px;
   }
   .review-card .actions { display: flex; gap: 10px; }
@@ -37,7 +37,7 @@ export const adminCss = `
     border: none; cursor: pointer; border-radius: var(--radius-pill); padding: 8px 18px; font-size: 0.82rem; font-weight: 600;
   }
   .btn-approve { background: var(--ink); color: var(--white); }
-  .btn-reject { background: #fdecea; color: #9c2c1f; }
+  .btn-reject { background: var(--danger-bg); color: var(--danger-text); }
 
   .admin-page .empty { padding: 20px; }
 `;

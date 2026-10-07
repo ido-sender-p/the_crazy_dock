@@ -17,9 +17,9 @@ export const submitCss = `
     outline: 2px solid var(--accent); outline-offset: 1px;
   }
   .submit-page .photo-note { font-size: 0.8rem; color: var(--ink-soft); margin: 0; }
-  .submit-page button.btn-cta { border: none; cursor: pointer; margin-top: 6px; align-self: flex-start; }
+  /* the generic .logout-form (components.ts) loses to .submit-page form above, so restate it here */
+  .submit-page .logout-form { display: inline; }
+  .submit-page button.btn-cta { margin-top: 6px; align-self: flex-start; }
   .submit-page .success { padding: 18px 20px; border-radius: var(--radius-lg); font-size: 0.95rem; }
   .submit-page form .error { margin-bottom: 0; }
-  .submit-page .logout-form { display: inline; }
-  .submit-page .logout-btn { border: none; background: none; padding: 0; font: inherit; color: var(--accent-text); cursor: pointer; }
 `;

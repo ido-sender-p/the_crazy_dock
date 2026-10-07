@@ -26,6 +26,17 @@ export const tokensCss = `
     --on-accent: #06121f; /* text on accent fills, 5.8:1 or better */
     --border: #e7e2d6;
 
+    /* status: notice, error, success */
+    --notice-bg: #fdf3e2;
+    --notice-border: #e9c17a;
+    --notice-text: #7a5108;
+    --danger-bg: #fdecea;
+    --danger-border: #f3b4ab;
+    --danger-text: #9c2c1f;
+    --success-bg: #eafaf3;
+    --success-border: #9fe0c0;
+    --success-text: #146b43;
+
     /* prose and warm accents */
     --ink-prose: #24405c;
     --ink-prose-strong: #1d3a56;

@@ -25,11 +25,11 @@ export const componentsCss = `
     padding: 24px; border: 1px dashed var(--border); border-radius: var(--radius-lg); color: var(--ink-soft); font-size: 0.9rem;
   }
   .error {
-    background: #fdecea; border: 1px solid #f3b4ab; color: #9c2c1f;
+    background: var(--danger-bg); border: 1px solid var(--danger-border); color: var(--danger-text);
     padding: 10px 14px; border-radius: var(--radius-md); font-size: 0.88rem; margin-bottom: 16px;
   }
   .success {
-    background: #eafaf3; border: 1px solid #9fe0c0; color: #146b43;
+    background: var(--success-bg); border: 1px solid var(--success-border); color: var(--success-text);
     padding: 10px 14px; border-radius: var(--radius-md); font-size: 0.88rem; margin-bottom: 16px;
   }
   .back-link { display: inline-block; margin-top: 18px; font-size: 0.85rem; color: var(--ink-soft); text-decoration: none; }
@@ -56,4 +56,17 @@ export const componentsCss = `
   .list .copy { padding: 14px; }
   .list h3 { font-size: 1rem; margin: 0 0 4px; }
   .list p { margin: 0; font-size: 0.85rem; color: var(--ink-soft); }
+
+  /* notice box: neutral heads-up inside a page */
+  .notice {
+    background: var(--notice-bg); border: 1px solid var(--notice-border); color: var(--notice-text);
+    padding: 14px 18px; border-radius: var(--radius-md); font-size: 0.88rem;
+  }
+
+  /* "Log out" is a POST form that looks like a link */
+  .logout-form { display: inline; }
+  .logout-btn { border: none; background: none; padding: 0; font: inherit; color: var(--accent-text); cursor: pointer; }
+
+  /* a submit <button> styled as .btn-cta: drop the native border, keep the pointer */
+  button.btn-cta { border: none; cursor: pointer; }
 `;

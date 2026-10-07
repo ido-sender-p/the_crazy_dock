@@ -43,7 +43,7 @@ export const loginCss = `
   }
   .auth-card .error { font-size: 0.85rem; text-align: center; }
   .auth-card button.btn-cta {
-    border: none; cursor: pointer; margin-top: 6px; width: 100%; text-align: center;
+    margin-top: 6px; width: 100%; text-align: center;
     font-size: 0.95rem; padding: 13px 22px;
   }
   .auth-card .forgot {

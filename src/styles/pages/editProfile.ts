@@ -12,7 +12,7 @@ export const editProfileCss = `
     width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--radius-md);
     font-size: 0.95rem; font-family: inherit; color: var(--ink);
   }
-  .edit-profile-page button.btn-cta { border: none; cursor: pointer; align-self: flex-start; }
+  .edit-profile-page button.btn-cta { align-self: flex-start; }
 
   .avatar-row { display: flex; align-items: center; gap: 16px; }
   .avatar-preview {

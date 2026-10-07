@@ -22,7 +22,7 @@ export const addPhotoCss = `
   .photo-dropzone svg { width: 30px; height: 30px; color: var(--accent-text); }
   .photo-dropzone .filename { font-weight: 600; color: var(--ink); }
 
-  .add-photo-page button.btn-cta { border: none; cursor: pointer; margin-top: 6px; align-self: flex-start; }
+  .add-photo-page button.btn-cta { margin-top: 6px; align-self: flex-start; }
   .add-photo-page .success { padding: 18px 20px; border-radius: var(--radius-lg); font-size: 0.95rem; }
   .add-photo-page form .error { margin-bottom: 0; }
 `;

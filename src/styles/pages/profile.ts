@@ -2,10 +2,6 @@
 export const profileCss = `
   .profile-page { padding: 56px 0 100px; max-width: 640px; }
   .profile-page .profile-head { margin-bottom: 36px; }
-  .profile-head .logout-form { display: inline; }
-  .profile-head .logout-btn {
-    border: none; background: none; padding: 0; font: inherit; color: var(--accent-text); cursor: pointer;
-  }
   .profile-head h1 { margin: 0 0 4px; }
   .profile-head .links { margin: 0; color: var(--ink-soft); font-size: 0.9rem; }
   .profile-head .links a { color: var(--accent-text); text-decoration: none; }
@@ -46,7 +42,7 @@ export const profileCss = `
   .status {
     font-size: 0.75rem; font-weight: 600; padding: 5px 12px; border-radius: var(--radius-pill); white-space: nowrap;
   }
-  .status.pending { background: #fdf3e2; color: #7a5108; }
-  .status.published { background: #eafaf3; color: #146b43; }
+  .status.pending { background: var(--notice-bg); color: var(--notice-text); }
+  .status.published { background: var(--success-bg); color: var(--success-text); }
 
 `;
