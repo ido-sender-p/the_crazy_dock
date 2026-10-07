@@ -112,7 +112,7 @@ export function DockPage(
     "@type": "TouristAttraction",
     name: d.name,
     description: d.description,
-    ...(d.imageUrl ? { image: d.imageUrl } : {}),
+    ...(d.imageUrl ? { image: photoVariant(d.imageUrl, "full") } : {}),
     geo: { "@type": "GeoCoordinates", latitude: d.lat, longitude: d.lon },
     address,
   };
@@ -256,7 +256,7 @@ export function DockPage(
             <button class="lb-close" id="hero-close" type="button" aria-label="Close">
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
             </button>
-            <img src={d.imageUrl} alt={d.name} loading="lazy" />
+            <img src={photoVariant(d.imageUrl, "full")} alt={d.name} loading="lazy" />
           </div>
         </>
       )}

@@ -1,4 +1,5 @@
 import { secureHeaders } from "hono/secure-headers";
+import { IMG_ORIGIN } from "../lib/site";
 
 // Every external host the site actually loads a resource from. Kept as an
 // explicit allowlist rather than left open, so a future accidental (or
@@ -18,7 +19,7 @@ export const securityHeaders = secureHeaders({
     formAction: ["'self'"],
     frameAncestors: ["'none'"],
     objectSrc: ["'none'"],
-    imgSrc: ["'self'", "data:", "blob:", "https://upload.wikimedia.org", "https://*.tile.openstreetmap.org"], // blob: for the avatar and photo previews
+    imgSrc: ["'self'", "data:", "blob:", "https://upload.wikimedia.org", IMG_ORIGIN, "https://*.tile.openstreetmap.org"], // blob: for the avatar and photo previews
     fontSrc: ["'self'", "https://fonts.gstatic.com"],
     styleSrc: ["'self'", "https://fonts.googleapis.com", LEAFLET_CDN],
     scriptSrc: ["'self'", LEAFLET_CDN],
