@@ -69,4 +69,28 @@ export const componentsCss = `
 
   /* a submit <button> styled as .btn-cta: drop the native border, keep the pointer */
   button.btn-cta { border: none; cursor: pointer; }
+
+  /* sea headings and wave cards (continent and country pages) */
+  .sea-head {
+    display: flex; align-items: center; gap: 8px;
+    color: var(--ink); font-weight: 600; font-size: 0.9rem;
+    margin-top: 32px; padding-bottom: 8px; border-bottom: 1px solid var(--border);
+  }
+  .sea-head.first { margin-top: 24px; }
+  .sea-head i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
+  .sea-head .count { color: var(--ink-soft); font-weight: 400; }
+  .card-grid, .country-grid {
+    display: grid; gap: 18px 14px; margin: 18px 0 0;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  }
+  .country-card, .wave-card {
+    position: relative;
+    display: flex; align-items: center; justify-content: center; text-align: center;
+    background: var(--surface); border: 1px solid var(--border); border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    padding: 16px 16px 20px; color: var(--ink); text-decoration: none;
+    transition: transform var(--ease), filter var(--ease);
+  }
+  .country-card:hover, a.wave-card:hover { transform: translateY(-2px); filter: brightness(1.02); }
+  .country-card .name, .wave-card .name { font-weight: 600; font-size: 0.9rem; }
 `;
