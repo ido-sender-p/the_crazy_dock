@@ -1,4 +1,6 @@
 // Styles for the home page only. Served as /assets/page-home.<hash>.css and linked by Layout (page="home").
+import { featuredCss } from "../featured";
+
 export const homeCss = `
   .hero { min-height: clamp(32rem, 82svh, 52rem); }
   .hero .wrap { max-width: var(--page-max); padding-top: 3.75rem; padding-bottom: 5.5rem; text-align: center; }
@@ -83,24 +85,7 @@ export const homeCss = `
   /* on dark panels the navy button would vanish, so it flips to white with navy text */
   .submit-cta .btn-cta { background: var(--white); color: var(--ink); box-shadow: 0 4px 14px rgba(0,0,0,0.25); }
 
-  .featured-card {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    background: var(--surface);
-    text-decoration: none;
-    color: var(--ink);
-  }
-  .featured-card img, .featured-card .thumb-ph { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; object-position: center 40%; display: block; }
-  .featured-card .thumb-ph { background: var(--border); }
-  .featured-card .copy { padding: clamp(1.5rem, 3.5vw, 2.75rem); display: flex; flex-direction: column; justify-content: center; }
-  .featured-card .tag { font-size: 0.72rem; font-weight: 500; color: var(--accent-text); text-transform: uppercase; letter-spacing: 0.16em; }
-  .featured-card h3 { font-family: var(--font-serif); font-weight: 500; font-size: clamp(1.3rem, 2vw, 1.6rem); margin: 0.6rem 0 0.9rem; }
-  .featured-card p { font-family: var(--font-serif); font-weight: 300; color: var(--ink-prose); font-size: 1rem; line-height: 1.8; }
-  @media (max-width: 640px) { .featured-card { grid-template-columns: 1fr; } .featured-card img, .featured-card .thumb-ph { aspect-ratio: 16 / 10; } .featured-card .copy { padding: 1.5rem 1.25rem; } }
+${featuredCss}
 
   /* story block right after the hero: same serif, same navy, lots of air */
   .log { margin-top: 0; }

@@ -1,5 +1,5 @@
 import { Layout } from "../components/layout";
-import { docks } from "../data";
+import { FeaturedCard, featuredDock } from "../components/featured";
 import { markersUrl } from "../lib/assets";
 
 export function MapPage() {
@@ -22,19 +22,13 @@ export function MapPage() {
           <div id="wildock-map" data-leaflet data-markers={markersUrl} data-radius="7" role="region" aria-label="Map of all docks" />
         </div>
 
-        <h2 class="list-title">All docks</h2>
-        <ul class="pin-list">
-          {docks.map((d) => (
-            <li>
-              <a href={`/docks/${d.slug}`}>
-                <span class="pin-dot" aria-hidden="true" />
-                <span>
-                  {d.name} <span class="coords">{[d.settlement, d.country].filter(Boolean).join(", ")}</span>
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
+        {featuredDock && (
+          <section class="map-featured">
+            <div class="kicker">Featured</div>
+            <h2>Pick of the week</h2>
+            <FeaturedCard />
+          </section>
+        )}
       </div>
     </Layout>
   );

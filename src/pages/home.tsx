@@ -1,10 +1,9 @@
 import { Layout } from "../components/layout";
-import { docks, continents } from "../data";
+import { continents } from "../data";
 import { WORLD_MAP_VIEWBOX, CONTINENT_SHAPES } from "../continents";
 import { markersUrl } from "../lib/assets";
 import { SITE_ORIGIN } from "../lib/site";
-import { placeLabel } from "../lib/places";
-import { photoVariant } from "../lib/imageVariants";
+import { FeaturedCard, featuredDock } from "../components/featured";
 
 export function HomePage() {
   const jsonLd = {
@@ -16,12 +15,6 @@ export function HomePage() {
       "A growing global catalogue of docks, piers, marinas and floating structures, searchable by continent and type.",
   };
 
-  const featured = docks[0];
-  const featuredDesc = featured
-    ? featured.description.length > 160
-      ? `${featured.description.slice(0, 160)}…`
-      : featured.description
-    : "";
 
   return (
     <Layout page="home" scripts={["map"]}
@@ -107,22 +100,11 @@ export function HomePage() {
       </div>
 
 
-      {featured && (
+      {featuredDock && (
         <section class="block wrap featured-gap">
           <div class="kicker">Featured</div>
           <h2>Pick of the week</h2>
-          <a class="featured-card" href={`/docks/${featured.slug}`}>
-            {featured.imageUrl ? (
-              <img src={photoVariant(featured.imageUrl, "w1280")} alt="" width={640} height={420} loading="lazy" decoding="async" />
-            ) : (
-              <div class="thumb-ph" aria-hidden="true" />
-            )}
-            <div class="copy">
-              <span class="tag">{placeLabel(featured.settlement, featured.country)}</span>
-              <h3>{featured.name}</h3>
-              <p>{featuredDesc}</p>
-            </div>
-          </a>
+          <FeaturedCard />
         </section>
       )}
 
