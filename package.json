@@ -17,6 +17,7 @@
     "catalogue:import": "node scripts/import-wikidata.mjs",
     "catalogue:build": "node scripts/build-catalogue.mjs",
     "catalogue:images": "node scripts/load-images.mjs",
+    "catalogue:variants": "node scripts/make-variants.mjs",
     "catalogue:nearby": "node scripts/enrich-nearby.mjs"
   },
   "license": "ISC",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260826.1",
+    "sharp": "^0.35.5",
     "typescript": "^7.0.2",
     "wrangler": "^4.127.1"
   }

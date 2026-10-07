@@ -2,6 +2,7 @@ import { Layout } from "../components/layout";
 import type { PublicSubmission } from "../lib/db";
 import type { Dock } from "../data";
 import { initials, placeLabel } from "../lib/places";
+import { photoVariant } from "../lib/imageVariants";
 
 export function UserProfilePage(opts: {
   username: string;
@@ -59,7 +60,7 @@ export function UserProfilePage(opts: {
             <div>
               {opts.favorites.map((d) => (
                 <a class="list-row" href={`/docks/${d.slug}`}>
-                  {d.imageUrl && <img class="thumb" src={d.imageUrl} alt="" width={52} height={52} loading="lazy" decoding="async" />}
+                  {d.imageUrl && <img class="thumb" src={photoVariant(d.imageUrl, "w640")} alt="" width={52} height={52} loading="lazy" decoding="async" />}
                   <div>
                     <div class="name">{d.name}</div>
                     <div class="place">{placeLabel(d.settlement, d.country)}</div>

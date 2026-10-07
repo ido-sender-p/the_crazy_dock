@@ -1,3 +1,5 @@
+import { photoVariant } from "../lib/imageVariants";
+
 // Card thumbnail for the shared .list grid: the name sits in the adjacent heading, so the image is decorative; a neutral
 // block stands in when a dock has no photo.
 
@@ -5,7 +7,7 @@
 // first, since they are the likely largest contentful paint. Everything else stays lazy.
 export function CardThumb({ src, priority = false }: { src: string; priority?: boolean }) {
   return src ? (
-    <img src={src} alt="" width={400} height={140} loading={priority ? "eager" : "lazy"} fetchpriority={priority ? "high" : undefined} decoding="async" />
+    <img src={photoVariant(src, "w640")} alt="" width={400} height={140} loading={priority ? "eager" : "lazy"} fetchpriority={priority ? "high" : undefined} decoding="async" />
   ) : (
     <div class="thumb-ph" aria-hidden="true" />
   );

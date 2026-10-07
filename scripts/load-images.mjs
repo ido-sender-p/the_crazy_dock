@@ -26,4 +26,17 @@ for (const d of docks) {
   if (++n % 50 === 0) console.log(`${n}/${docks.length}`);
 }
 console.log(`local R2: ${n} photos`);
+
+// Resized copies from `npm run catalogue:variants` (keys dock-<slug>.w640 / .w1280), when generated.
+const variantsDir = new URL("data/variants/", import.meta.url);
+let v = 0;
+for (const d of docks) {
+  for (const size of ["w640", "w1280"]) {
+    const file = new URL(`${d.slug}.${size}.jpg`, variantsDir);
+    if (!existsSync(file)) continue;
+    await env.PHOTOS.put(`dock-${d.slug}.${size}`, await readFile(file), { httpMetadata: { contentType: "image/jpeg" } });
+    v++;
+  }
+}
+console.log(`local R2: ${v} variants`);
 await dispose();

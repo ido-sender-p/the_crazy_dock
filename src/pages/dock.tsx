@@ -8,6 +8,7 @@ import { parsePhotoCredit, WIKIPEDIA_LICENSE } from "../lib/credits";
 import { vibe, count, type Nearby } from "../lib/nearby";
 import { SETTLEMENT_PATH } from "../lib/places";
 import { placeLabel } from "../lib/places";
+import { photoVariant } from "../lib/imageVariants";
 
 const GALLERY_PREVIEW_LIMIT = 6;
 
@@ -183,7 +184,7 @@ export function DockPage(
         ) : d.imageOrientation === "portrait" ? (
           <div class="hero-split">
             <button class="hero-frame-split" type="button" id="hero-open" aria-label={`View larger photo of ${d.name}`}>
-              <img class="hero-img-split" src={d.imageUrl} alt={d.name} decoding="async" fetchpriority="high" />
+              <img class="hero-img-split" src={photoVariant(d.imageUrl, "w1280")} alt={d.name} decoding="async" fetchpriority="high" />
             </button>
             <div class="hero-split-text">
               {d.description && <p class="desc">{d.description}</p>}
@@ -195,7 +196,7 @@ export function DockPage(
           <>
             <figure>
               <button class="hero-frame" type="button" id="hero-open" aria-label={`View larger photo of ${d.name}`}>
-                <img class="hero-img" src={d.imageUrl} alt={d.name} decoding="async" fetchpriority="high" />
+                <img class="hero-img" src={photoVariant(d.imageUrl, "w1280")} alt={d.name} decoding="async" fetchpriority="high" />
               </button>
               <figcaption><PhotoCreditLine value={d.imageAttribution} /></figcaption>
             </figure>

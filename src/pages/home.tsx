@@ -4,6 +4,7 @@ import { WORLD_MAP_VIEWBOX, CONTINENT_SHAPES } from "../continents";
 import { markersUrl } from "../lib/assets";
 import { SITE_ORIGIN } from "../lib/site";
 import { placeLabel } from "../lib/places";
+import { photoVariant } from "../lib/imageVariants";
 
 export function HomePage() {
   const jsonLd = {
@@ -112,7 +113,7 @@ export function HomePage() {
           <h2>Pick of the week</h2>
           <a class="featured-card" href={`/docks/${featured.slug}`}>
             {featured.imageUrl ? (
-              <img src={featured.imageUrl} alt="" width={640} height={420} loading="lazy" decoding="async" />
+              <img src={photoVariant(featured.imageUrl, "w1280")} alt="" width={640} height={420} loading="lazy" decoding="async" />
             ) : (
               <div class="thumb-ph" aria-hidden="true" />
             )}
