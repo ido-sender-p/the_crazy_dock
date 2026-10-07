@@ -1,34 +1,6 @@
 import { Layout } from "../layout";
 import { raw } from "hono/html";
 
-const PAGE_CSS = `
-  .add-photo-page { padding: 56px 0 100px; max-width: 560px; }
-
-  .add-photo-page p.intro { color: var(--ink-soft); margin-bottom: 28px; }
-  .add-photo-page form { display: flex; flex-direction: column; gap: 16px; }
-  .add-photo-page label { font-size: 0.85rem; font-weight: 600; color: var(--ink); display: block; margin-bottom: 6px; }
-  .add-photo-page input, .add-photo-page textarea {
-    width: 100%; padding: 11px 14px; border: 1px solid var(--border); border-radius: 10px;
-    font-size: 0.95rem; font-family: inherit; color: var(--ink);
-  }
-  .add-photo-page textarea { resize: vertical; min-height: 70px; }
-  .add-photo-page .hint { font-size: 0.78rem; color: var(--ink-soft); margin-top: 6px; }
-
-  .add-photo-page label.photo-dropzone {
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-    border: 1.5px dashed var(--border); border-radius: 14px; padding: 32px 16px;
-    cursor: pointer; text-align: center; color: var(--ink-soft); font-size: 0.9rem;
-    transition: border-color 0.15s ease, background 0.15s ease;
-  }
-  .photo-dropzone:hover, .photo-dropzone.drag { border-color: var(--accent); background: rgba(201,162,77,0.08); }
-  .photo-dropzone svg { width: 30px; height: 30px; color: var(--accent-text); }
-  .photo-dropzone .filename { font-weight: 600; color: var(--ink); }
-
-  .add-photo-page button.btn-cta { border: none; cursor: pointer; margin-top: 6px; align-self: flex-start; }
-  .add-photo-page .success { padding: 18px 20px; border-radius: 12px; font-size: 0.95rem; }
-  .add-photo-page form .error { margin-bottom: 0; }
-`;
-
 export function AddPhotoPage(opts: {
   dockName: string;
   dockSlug: string;
@@ -37,8 +9,7 @@ export function AddPhotoPage(opts: {
   error?: string;
 }) {
   return (
-    <Layout title={`Add a photo of ${opts.dockName} | Wildock`} description={`Submit a photo of ${opts.dockName}.`} path={opts.path} noindex>
-      <style>{raw(PAGE_CSS)}</style>
+    <Layout page="addPhoto" title={`Add a photo of ${opts.dockName} | Wildock`} description={`Submit a photo of ${opts.dockName}.`} path={opts.path} noindex>
       <div class="wrap add-photo-page">
         <h1>Add a photo of {opts.dockName}</h1>
         <p class="intro">Name your photo, upload it, and tell its story. We'll review it before it joins the gallery.</p>

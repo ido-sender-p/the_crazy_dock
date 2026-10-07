@@ -1,16 +1,6 @@
 import { Layout } from "../layout";
 import type { Dock } from "../data";
-import { raw } from "hono/html";
 import { CardThumb, placeLabel } from "./shared";
-
-const PAGE_CSS = `
-  .cat-page { padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(4rem, 9vw, 7rem); }
-  .cat-page .breadcrumb, .cat-page h1, .cat-page p.intro { text-align: center; }
-  .cat-page p.intro { margin-inline: auto; }
-
-  .cat-page p.intro { color: var(--ink-soft); max-width: 40rem; }
-  .cat-page .empty { margin-top: 28px; padding: 28px; font-size: 1rem; }
-`;
 
 export function CategoryPage(opts: {
   title: string;
@@ -19,8 +9,7 @@ export function CategoryPage(opts: {
   matches: Dock[];
 }) {
   return (
-    <Layout title={`${opts.title} | Wildock`} description={opts.intro} path={opts.path}>
-      <style>{raw(PAGE_CSS)}</style>
+    <Layout page="category" title={`${opts.title} | Wildock`} description={opts.intro} path={opts.path}>
       <div class="wrap cat-page">
         <nav class="breadcrumb">
           <a href="/">Wildock</a> / {opts.title}

@@ -1,21 +1,6 @@
 import { Layout } from "../layout";
-import { raw } from "hono/html";
 import { docks } from "../data";
 import { parsePhotoCredit, WIKIPEDIA_LICENSE } from "../lib/credits";
-
-const PAGE_CSS = `
-  .credits-page { padding: 56px 0 100px; max-width: 980px; }
-  .credits-page h2 { font-size: 1.15rem; margin-top: 32px; }
-  .credits-page p { font-size: 0.95rem; }
-  .credits-page .notice {
-    background: #fdf3e2; border: 1px solid #e9c17a; color: #7a5108;
-    padding: 14px 18px; border-radius: 10px; font-size: 0.88rem;
-  }
-  .credits-page .table-wrap { overflow-x: auto; margin-top: 12px; }
-  .credits-page table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-  .credits-page th, .credits-page td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
-  .credits-page th { color: var(--ink-soft); font-weight: 600; }
-`;
 
 // Every catalogue dock whose photo credit parses (Wikimedia Commons), sorted by dock name.
 // Built once: the catalogue only changes between deploys.
@@ -29,12 +14,11 @@ const rows = docks
 export function CreditsPage(opts: { path: string; contactEmail?: string }) {
   const email = opts.contactEmail?.trim();
   return (
-    <Layout
+    <Layout page="credits"
       title="Photo and text credits | Wildock"
       description="Authors, licences and sources of the photos and descriptions shown on Wildock."
       path={opts.path}
     >
-      <style>{raw(PAGE_CSS)}</style>
       <div class="wrap credits-page">
         <h1>Photo and text credits</h1>
         <p>
