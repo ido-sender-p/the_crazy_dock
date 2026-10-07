@@ -1,4 +1,6 @@
 import type { Water } from "./styles/sea";
+// ".ts" on purpose: scripts/import-wikidata.mjs loads this file under plain Node, which needs the extension.
+import { slugify } from "./lib/slug.ts";
 
 // Shared continent map data , the same loose, illustrative shapes power both
 // the homepage "By continent" world map and each continent's own zoomed page.
@@ -986,13 +988,10 @@ export const citiesByCountry: Record<string, CityEntry[]> = {
 // Reverse lookup so a city card can always resolve to a real page, even
 // before any dock has been documented there yet, since a city browsed here
 // via continent -> country -> city must stay clickable regardless.
-function slugifyLocal(s: string) {
-  return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-}
 const CITY_SLUG_TO_NAME: Record<string, string> = {};
 for (const cities of Object.values(citiesByCountry)) {
   for (const city of cities) {
-    CITY_SLUG_TO_NAME[slugifyLocal(city.name)] = city.name;
+    CITY_SLUG_TO_NAME[slugify(city.name)] = city.name;
   }
 }
 export function cityNameForSlug(slug: string): string | undefined {
@@ -1006,7 +1005,7 @@ export type CountryInfo = { name: string; continentSlug: string };
 const COUNTRY_SLUG_TO_INFO: Record<string, CountryInfo> = {};
 for (const [continentSlug, names] of Object.entries(countriesByContinent)) {
   for (const name of names) {
-    COUNTRY_SLUG_TO_INFO[slugifyLocal(name)] = { name, continentSlug };
+    COUNTRY_SLUG_TO_INFO[slugify(name)] = { name, continentSlug };
   }
 }
 export function countryInfoForSlug(slug: string): CountryInfo | undefined {
