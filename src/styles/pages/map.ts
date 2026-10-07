@@ -1,6 +1,6 @@
 // Styles for the map page only. Served as /assets/page-map.<hash>.css and linked by Layout (page="map").
 export const mapCss = `
-  .map-page { padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(4rem, 9vw, 7rem); }
+  .map-page { padding-block: clamp(2.5rem, 6vw, 4.5rem) clamp(4rem, 9vw, 7rem); max-width: calc(var(--page-max) + 2 * var(--gutter)); }
   .map-page h1, .map-page p.intro { text-align: center; }
   .map-page p.intro { margin-inline: auto; }
 

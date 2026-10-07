@@ -21,5 +21,5 @@ export const baseCss = `
   main h2, main h3 { font-weight: 500; letter-spacing: -0.005em; }
   main p, main figcaption, main dd { font-family: var(--font-serif); line-height: 1.7; }
   a { color: inherit; }
-  .wrap { max-width: var(--page-max); margin: 0 auto; padding: 0 24px; }
+  .wrap { max-width: var(--page-max); margin: 0 auto; padding: 0 var(--gutter); }
 `;

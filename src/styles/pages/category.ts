@@ -1,6 +1,6 @@
 // Styles for the category page only. Served as /assets/page-category.<hash>.css and linked by Layout (page="category").
 export const categoryCss = `
-  .cat-page { padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(4rem, 9vw, 7rem); }
+  .cat-page { padding-block: clamp(2.5rem, 6vw, 4.5rem) clamp(4rem, 9vw, 7rem); max-width: calc(var(--page-max) + 2 * var(--gutter)); }
   .cat-page .breadcrumb, .cat-page h1, .cat-page p.intro { text-align: center; }
   .cat-page p.intro { margin-inline: auto; }
 

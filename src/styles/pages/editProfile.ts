@@ -1,6 +1,6 @@
 // Styles for the editProfile page only. Served as /assets/page-editProfile.<hash>.css and linked by Layout (page="editProfile").
 export const editProfileCss = `
-  .edit-profile-page { padding: 56px 0 100px; max-width: 480px; }
+  .edit-profile-page { padding-block: 56px 100px; max-width: calc(480px + 2 * var(--gutter)); }
 
   .edit-profile-page p.intro { color: var(--ink-soft); margin-bottom: 28px; }
   .edit-profile-page form { display: flex; flex-direction: column; gap: 20px; }

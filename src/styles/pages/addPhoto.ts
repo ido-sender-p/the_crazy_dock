@@ -1,6 +1,6 @@
 // Styles for the addPhoto page only. Served as /assets/page-addPhoto.<hash>.css and linked by Layout (page="addPhoto").
 export const addPhotoCss = `
-  .add-photo-page { padding: 56px 0 100px; max-width: 560px; }
+  .add-photo-page { padding-block: 56px 100px; max-width: calc(560px + 2 * var(--gutter)); }
 
   .add-photo-page p.intro { color: var(--ink-soft); margin-bottom: 28px; }
   .add-photo-page form { display: flex; flex-direction: column; gap: 16px; }

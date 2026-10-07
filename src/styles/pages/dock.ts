@@ -11,7 +11,7 @@ export const dockCss = `
   .around-extras { margin: 16px 0 0; padding-inline-start: 1.1rem; font-size: 0.92rem; display: flex; flex-direction: column; gap: 4px; }
   .around-src { margin: 14px 0 0; font-size: 0.75rem; color: var(--ink-soft); }
   .around-src a { color: inherit; text-decoration: underline; }
-  .dock-page { padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(4rem, 9vw, 7rem); }
+  .dock-page { padding-block: clamp(2.5rem, 6vw, 4.5rem) clamp(4rem, 9vw, 7rem); max-width: calc(var(--page-max) + 2 * var(--gutter)); }
   .dock-page figure { margin: 0; text-align: center; }
   .dock-page .hero-frame {
     display: inline-flex; max-width: 100%; background: var(--surface);

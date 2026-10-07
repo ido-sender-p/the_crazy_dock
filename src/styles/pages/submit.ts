@@ -1,6 +1,6 @@
 // Styles for the submit page only. Served as /assets/page-submit.<hash>.css and linked by Layout (page="submit").
 export const submitCss = `
-  .submit-page { padding: 60px 0 100px; max-width: 620px; }
+  .submit-page { padding-block: 60px 100px; max-width: calc(620px + 2 * var(--gutter)); }
 
   .submit-page p.intro { color: var(--ink-soft); margin-bottom: 8px; }
   .submit-page div.who { color: var(--ink-soft); font-size: 0.85rem; margin-bottom: 28px; }

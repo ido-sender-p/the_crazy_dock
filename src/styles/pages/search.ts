@@ -1,10 +1,10 @@
 // Styles for the search page only. Served as /assets/page-search.<hash>.css and linked by Layout (page="search").
 export const searchCss = `
-  .search-page { padding: 56px 0 100px; max-width: 680px; }
+  .search-page { padding-block: 56px 100px; max-width: calc(680px + 2 * var(--gutter)); }
 
   .search-form { display: flex; gap: 10px; margin: 20px 0 18px; }
   .search-form input {
-    flex: 1; padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-pill);
+    flex: 1; min-width: 0; /* lets the field shrink on very narrow phones instead of pushing the button off-screen */ padding: 12px 16px; border: 1px solid var(--border); border-radius: var(--radius-pill);
     font-size: 0.95rem; font-family: inherit; color: var(--ink);
   }
   .search-form input:focus-visible { border-color: var(--accent-dark); }

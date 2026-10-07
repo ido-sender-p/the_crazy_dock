@@ -1,6 +1,6 @@
 // Styles for the admin page only. Served as /assets/page-admin.<hash>.css and linked by Layout (page="admin").
 export const adminCss = `
-  .admin-page { padding: 56px 0 100px; max-width: 760px; }
+  .admin-page { padding-block: 56px 100px; max-width: calc(760px + 2 * var(--gutter)); }
 
   .admin-page p.intro { color: var(--ink-soft); margin-bottom: 32px; }
 

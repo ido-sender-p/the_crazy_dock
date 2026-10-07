@@ -46,7 +46,8 @@ export const homeCss = `
   }
 
   /* one literary voice for every section: Fraunces, deep sea navy, plenty of air */
-  section.block { padding: clamp(3rem, 8vw, 6rem) 0; }
+  section.block { padding-block: clamp(3rem, 8vw, 6rem); }
+  section.block.wrap { max-width: calc(var(--page-max) + 2 * var(--gutter)); }
   section.block .kicker { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.2em; }
   section.block h2 {
     font-family: var(--font-serif); font-weight: 500; font-size: clamp(1.5rem, 2.6vw, 2rem);

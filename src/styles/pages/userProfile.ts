@@ -1,6 +1,6 @@
 // Styles for the userProfile page only. Served as /assets/page-userProfile.<hash>.css and linked by Layout (page="userProfile").
 export const userProfileCss = `
-  .user-profile-page { padding: 56px 0 100px; max-width: 640px; }
+  .user-profile-page { padding-block: 56px 100px; max-width: calc(640px + 2 * var(--gutter)); }
   .profile-head h1 { margin: 0; }
   .user-profile-page .kicker { margin-top: 8px; }
   .user-profile-page section { margin-top: 36px; }

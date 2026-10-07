@@ -2,7 +2,7 @@
 import { seaCss } from "../sea";
 
 export const continentCss = `
-  .continent-page { padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(4rem, 9vw, 7rem); }
+  .continent-page { padding-block: clamp(2.5rem, 6vw, 4.5rem) clamp(4rem, 9vw, 7rem); max-width: calc(var(--page-max) + 2 * var(--gutter)); }
   .continent-page .breadcrumb, .continent-page .kicker, .continent-page h1 { text-align: center; }
   .continent-page h1 { margin-top: 6px; }
 

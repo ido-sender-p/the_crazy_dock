@@ -1,6 +1,6 @@
 // Styles for the credits page only. Served as /assets/page-credits.<hash>.css and linked by Layout (page="credits").
 export const creditsCss = `
-  .credits-page { padding: 56px 0 100px; max-width: 980px; }
+  .credits-page { padding-block: 56px 100px; max-width: calc(980px + 2 * var(--gutter)); }
   .credits-page h2 { font-size: 1.15rem; margin-top: 32px; }
   .credits-page p { font-size: 0.95rem; }
   .credits-page .table-wrap { overflow-x: auto; margin-top: 12px; }

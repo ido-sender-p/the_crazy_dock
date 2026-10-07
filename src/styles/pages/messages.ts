@@ -1,6 +1,6 @@
 // Styles for the messages page only. Served as /assets/page-messages.<hash>.css and linked by Layout (page="messages").
 export const messagesCss = `
-  .messages-page { padding: 56px 0 100px; max-width: 680px; }
+  .messages-page { padding-block: 56px 100px; max-width: calc(680px + 2 * var(--gutter)); }
 
   .messages-tabs { display: flex; gap: 18px; margin: 18px 0 28px; border-bottom: 1px solid var(--border); }
   .messages-tabs a {

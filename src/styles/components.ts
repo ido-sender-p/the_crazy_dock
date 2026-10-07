@@ -79,9 +79,10 @@ export const componentsCss = `
   .sea-head.first { margin-top: 24px; }
   .sea-head i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex: none; }
   .sea-head .count { color: var(--ink-soft); font-weight: 400; }
+  /* min(): on a phone, with the page gutters, 170px columns no longer fit two across, so shrink to half the row */
   .card-grid, .country-grid {
     display: grid; gap: 18px 14px; margin: 18px 0 0;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(170px, calc(50% - 7px)), 1fr));
   }
   .country-card, .wave-card {
     position: relative;
