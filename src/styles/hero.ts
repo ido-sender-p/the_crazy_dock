@@ -1,4 +1,7 @@
 // Full-bleed hero used by the home and auth pages (Layout hero prop).
+// One constant for the CSS background and the preload hint in Layout, so the two URLs can never drift apart.
+export const HERO_IMAGE_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Lighthouse_in_Chania._Crete%2C_Greece.jpg/1280px-Lighthouse_in_Chania._Crete%2C_Greece.jpg";
+
 export const heroCss = `
   .hero {
     position: relative;
@@ -6,7 +9,7 @@ export const heroCss = `
     align-items: center;
     color: #fff;
     overflow: hidden;
-    background-image: linear-gradient(rgba(5,32,48,0.38), rgba(5,32,48,0.38)), linear-gradient(180deg, rgba(6,20,36,0.15) 0%, rgba(6,20,36,0.3) 60%, rgba(6,20,36,0.75) 100%), url('https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/Lighthouse_in_Chania._Crete%2C_Greece.jpg/1280px-Lighthouse_in_Chania._Crete%2C_Greece.jpg');
+    background-image: linear-gradient(rgba(5,32,48,0.38), rgba(5,32,48,0.38)), linear-gradient(180deg, rgba(6,20,36,0.15) 0%, rgba(6,20,36,0.3) 60%, rgba(6,20,36,0.75) 100%), url('${HERO_IMAGE_URL}');
     background-size: cover;
     background-position: center 65%;
   }

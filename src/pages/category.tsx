@@ -18,9 +18,9 @@ export function CategoryPage(opts: {
         <p class="intro">{opts.intro}</p>
         {opts.matches.length > 0 ? (
           <div class="list">
-            {opts.matches.map((d) => (
+            {opts.matches.map((d, i) => (
               <a href={`/docks/${d.slug}`}>
-                <CardThumb src={d.imageUrl} />
+                <CardThumb src={d.imageUrl} priority={i < 4} />
                 <div class="copy">
                   <h3>{d.name}</h3>
                   <p>{placeLabel(d.settlement, d.country)}</p>

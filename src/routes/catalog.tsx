@@ -19,6 +19,7 @@ import { staticInContinent, staticInCountryCode, staticInCountryName, staticInRe
 import { findPublishedPhotosForDock, findUserRatingsForDock, pickCoverPhoto } from "../lib/gallery";
 import { currentUser } from "../lib/session";
 import { isFavorited } from "../lib/favorites";
+import { memoPage } from "../lib/pageMemo";
 import { edgeCached } from "../lib/edgeCache";
 
 export const catalog = new Hono<Env>();
@@ -26,9 +27,9 @@ export const catalog = new Hono<Env>();
 const LISTING_TTL = 300;
 const DOCK_PAGE_TTL = 60;
 
-catalog.get("/", (c) => c.html(<HomePage />));
+catalog.get("/", (c) => c.html(memoPage("/", () => <HomePage />)));
 
-catalog.get("/map", (c) => c.html(<MapPage />));
+catalog.get("/map", (c) => c.html(memoPage("/map", () => <MapPage />)));
 
 catalog.get("/docks/:slug", (c) => {
   const slug = c.req.param("slug");

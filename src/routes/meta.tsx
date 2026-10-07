@@ -5,6 +5,7 @@ import { SETTLEMENT_ROUTE_PATHS } from "./catalog";
 import { AccessibilityPage } from "../pages/accessibility";
 import { CreditsPage } from "../pages/credits";
 import { findLiveSitemapRows } from "../lib/liveDocks";
+import { memoPage } from "../lib/pageMemo";
 import { edgeCached } from "../lib/edgeCache";
 
 export const meta = new Hono<Env>();
@@ -40,9 +41,11 @@ function xmlEscape(s: string) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 }
 
-meta.get("/accessibility", (c) => c.html(<AccessibilityPage path="/accessibility" />));
+meta.get("/accessibility", (c) => c.html(memoPage("/accessibility", () => <AccessibilityPage path="/accessibility" />)));
 
-meta.get("/credits", (c) => edgeCached(c, SITEMAP_TTL, async () => c.html(<CreditsPage path="/credits" contactEmail={c.env.CONTACT_EMAIL} />)));
+meta.get("/credits", (c) => edgeCached(c, SITEMAP_TTL, async () =>
+    c.html(memoPage(`/credits:${c.env.CONTACT_EMAIL ?? ""}`, () => <CreditsPage path="/credits" contactEmail={c.env.CONTACT_EMAIL} />)),
+  ));
 
 meta.get("/robots.txt", (c) =>
   c.text(["User-agent: *", "Allow: /", "Disallow: /search", `Sitemap: ${siteOrigin(c)}/sitemap.xml`].join("\n"), 200, {

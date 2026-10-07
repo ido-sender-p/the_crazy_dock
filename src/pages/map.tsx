@@ -1,6 +1,6 @@
 import { Layout } from "../layout";
 import { docks } from "../data";
-import { LeafletCss, LeafletMap } from "./leaflet";
+import { markersUrl } from "../lib/assets";
 
 export function MapPage() {
   return (
@@ -9,7 +9,6 @@ export function MapPage() {
       description="Every documented dock, pier and marina plotted on an interactive map."
       path="/map"
     >
-      <LeafletCss />
       <div class="wrap map-page">
         <nav class="breadcrumb">
           <a href="/">Wildock</a> / Map
@@ -20,9 +19,8 @@ export function MapPage() {
         </p>
 
         <div class="map-canvas">
-          <div id="wildock-map" data-leaflet data-radius="7" role="region" aria-label="Map of all docks" />
+          <div id="wildock-map" data-leaflet data-markers={markersUrl} data-radius="7" role="region" aria-label="Map of all docks" />
         </div>
-        <LeafletMap />
 
         <h2 class="list-title">All docks</h2>
         <ul class="pin-list">

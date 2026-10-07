@@ -1,7 +1,7 @@
 import { Layout } from "../layout";
 import { docks, continents } from "../data";
 import { WORLD_MAP_VIEWBOX, CONTINENT_SHAPES } from "../continents";
-import { LeafletCss, LeafletMap } from "./leaflet";
+import { markersUrl } from "../lib/assets";
 import { CardThumb, placeLabel } from "./shared";
 
 export function HomePage() {
@@ -146,7 +146,7 @@ export function HomePage() {
         <div class="kicker">Browse</div>
         <h2>By map</h2>
         <div class="map-teaser">
-          <div id="home-map" data-leaflet data-radius="6" data-zoom-control="false" role="region" aria-label="Map of docks" />
+          <div id="home-map" data-leaflet data-markers={markersUrl} data-radius="6" data-zoom-control="false" role="region" aria-label="Map of docks" />
           <span class="map-teaser-copy">
             <a class="btn-cta" href="/map">
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -158,8 +158,6 @@ export function HomePage() {
             </a>
           </span>
         </div>
-        <LeafletCss />
-        <LeafletMap />
       </section>
 
       <section class="block wrap">

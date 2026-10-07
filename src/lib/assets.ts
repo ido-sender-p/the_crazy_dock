@@ -2,6 +2,7 @@
 // with a one-year immutable cache, so the HTML stays small and repeat views fetch nothing.
 import { SITE_CSS, HERO_CSS, PAGE_STYLES, type PageName } from "../styles";
 import { CLIENT_SCRIPTS, type ClientScriptName } from "../client";
+import { markersJson } from "./markers";
 
 // FNV-1a: a fast, dependency-free cache-busting hash (not for security).
 function hash(s: string): string {
@@ -16,15 +17,18 @@ function hash(s: string): string {
 type Asset = { body: string; type: string; etag: string };
 const files = new Map<string, Asset>();
 
-function register(name: string, ext: "css" | "js", body: string): string {
+const TYPES = { css: "text/css; charset=utf-8", js: "text/javascript; charset=utf-8", json: "application/json; charset=utf-8" } as const;
+
+function register(name: string, ext: keyof typeof TYPES, body: string): string {
   const etag = hash(body);
   const file = `${name}.${etag}.${ext}`;
-  files.set(file, { body, type: ext === "css" ? "text/css; charset=utf-8" : "text/javascript; charset=utf-8", etag });
+  files.set(file, { body, type: TYPES[ext], etag });
   return `/assets/${file}`;
 }
 
 export const siteCssUrl = register("site", "css", SITE_CSS);
 export const heroCssUrl = register("hero", "css", HERO_CSS);
+export const markersUrl = register("markers", "json", markersJson);
 const pageCssUrls = Object.fromEntries(
   Object.entries(PAGE_STYLES).map(([n, css]) => [n, register(`page-${n}`, "css", css)]),
 ) as Record<PageName, string>;

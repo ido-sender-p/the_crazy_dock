@@ -2,6 +2,7 @@ import type { FC, PropsWithChildren } from "hono/jsx";
 import { raw } from "hono/html";
 import { safeJsonForScript } from "./lib/html";
 import { siteCssUrl, heroCssUrl, pageCssUrl, scriptUrl } from "./lib/assets";
+import { HERO_IMAGE_URL } from "./styles/hero";
 import type { PageName } from "./styles";
 import type { ClientScriptName } from "./client";
 
@@ -31,6 +32,8 @@ export const Layout: FC<
       ) : (
         <link rel="canonical" href={`https://wildock.com${path}`} />
       )}
+      {hero && <link rel="preconnect" href="https://upload.wikimedia.org" />}
+      {hero && <link rel="preload" as="image" href={HERO_IMAGE_URL} fetchpriority="high" />}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
       <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
       <link
