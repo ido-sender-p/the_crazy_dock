@@ -18,7 +18,9 @@ await mkdir(OUT, { recursive: true });
 const catalogue = JSON.parse(await readFile(new URL("../src/catalogue.json", import.meta.url), "utf8"));
 const paths = await imagePathsBySlug();
 let n = 0, srcBytes = 0, outBytes = { w640: 0, w1280: 0 };
-for (const { slug } of catalogue) {
+for (const { slug, imageAttribution } of catalogue) {
+  if (!imageAttribution) continue; // dock without a photo yet
+  if (SIZES.every(({ name }) => existsSync(new URL(`${slug}.${name}.jpg`, OUT)))) continue; // already made
   const src = paths.get(slug);
   if (!src || !existsSync(src)) { console.log("missing source", slug); continue; }
   srcBytes += (await stat(src)).size;

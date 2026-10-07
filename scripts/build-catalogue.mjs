@@ -12,8 +12,11 @@ const CONTINENTS = ["europe", "asia", "africa", "north-america", "south-america"
 const DOCK_TYPES = ["pier", "marina", "floating_dock", "industrial"];
 const ORIENTATIONS = ["portrait", "landscape"];
 const MIN_DESC = 250;
-const MIN_DESC_OSM = 60; // descriptions written from OpenStreetMap tags are short and factual
+const MIN_DESC_OSM = 30; // descriptions written from OpenStreetMap tags are short and factual
 const OSM = "https://www.openstreetmap.org/";
+// An OpenStreetMap dock needs a photo or at least this many real details (berths, operator, facilities, website...) to be
+// published; a page that only says "X is a marina in Y" adds nothing. The rest stay in docks.json for later.
+const MIN_OSM_FACTS = 1;
 const MAX_PORT_SHARE = 0.6;
 const WIKI = "https://en.wikipedia.org/wiki/";
 const COMMONS = "https://commons.wikimedia.org/wiki/";
@@ -23,10 +26,11 @@ const all = JSON.parse(await readFile(new URL("./data/docks.json", import.meta.u
 const nearby = await readFile(new URL("./data/nearby.json", import.meta.url), "utf8").then(JSON.parse, () => ({}));
 const images = await imagePathsBySlug();
 
-const dropped = { description: 0, author: 0, image: 0 };
+const dropped = { description: 0, author: 0, image: 0, thin: 0 };
 const clean = [];
 for (const d of all) {
   const fromOsm = d.descriptionSource.startsWith("OpenStreetMap|");
+  if (fromOsm && !d.imageAttribution && (d.facts ?? 0) < MIN_OSM_FACTS) { dropped.thin++; continue; }
   const description = cleanDescription(d.description, { min: fromOsm ? MIN_DESC_OSM : MIN_DESC });
   if (!description) { dropped.description++; continue; }
   let imageAttribution = "";
@@ -94,6 +98,7 @@ const out = picked.map((d) => {
   }
   if (d.lengthM) row.lengthM = d.lengthM;
   if (d.yearBuilt != null) row.yearBuilt = d.yearBuilt;
+  if (d.web) row.web = d.web;
   return row;
 });
 
@@ -112,6 +117,7 @@ function validate(rows) {
     if (!/[.!?]["”’)]?$/.test(r.description)) fail(r, "description does not end with punctuation");
     if (r.imageAttribution && !r.imageAttribution.startsWith("Photo: ")) fail(r, "bad imageAttribution");
     if (!r.wiki && !/^(node|way|relation)\/\d+$/.test(r.osm ?? "")) fail(r, "no description source");
+    if (r.web !== undefined && !/^https?:\/\/[^\s"<>]+$/.test(r.web)) fail(r, "bad web url");
     if (!DOCK_TYPES.includes(r.dockType)) fail(r, "bad dockType");
     if (!ORIENTATIONS.includes(r.imageOrientation)) fail(r, "bad imageOrientation");
     if (!CONTINENTS.includes(r.continentSlug)) fail(r, "bad continentSlug");

@@ -211,11 +211,14 @@ export function DockPage(
             {d.descriptionSource && <p class="desc-source"><TextCreditLine value={d.descriptionSource} /></p>}
           </>
         )}
+        {!d.imageUrl && d.description && <p class="desc">{d.description}</p>}
+        {!d.imageUrl && d.descriptionSource && <p class="desc-source"><TextCreditLine value={d.descriptionSource} /></p>}
         <dl class="facts">
           <div><dt>Type</dt><dd>{typeLabel}</dd></div>
           {d.lengthM > 0 && <div><dt>Length</dt><dd>{d.lengthM} m</dd></div>}
           {d.yearBuilt != null && <div><dt>Built</dt><dd>{d.yearBuilt}</dd></div>}
           <div><dt>Coordinates</dt><dd>{d.lat.toFixed(4)}, {d.lon.toFixed(4)}</dd></div>
+          {d.website && <div><dt>Website</dt><dd><a href={d.website} target="_blank" rel="nofollow noopener noreferrer">{new URL(d.website).hostname.replace(/^www\./, "")}</a></dd></div>}
         </dl>
         {d.nearby && <AroundSection name={d.name} nearby={d.nearby} dockType={d.dockType} />}
         {photos.length > 0 && (

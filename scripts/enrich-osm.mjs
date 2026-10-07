@@ -16,7 +16,7 @@ import { getJson, wikiSummary, download, licenseOk, stripHtml } from "./import-w
 
 const UA = "WildockBot/0.1 (https://wildock.com; idosender1@gmail.com)";
 const DATA = new URL("./data/", import.meta.url);
-const IMG_DIR = new URL("./data/images/", DATA);
+const IMG_DIR = new URL("./images/", DATA);
 // Country names as the site spells them (src/continents.ts). "US-FL" is Florida: country United States, state Florida.
 const COUNTRY = {
   GR: "Greece", CY: "Cyprus", "US-FL": "United States",
@@ -50,6 +50,10 @@ const isLatin = (s) => /^[\p{Script=Latin}\d\s'’.,&()\-/]+$/u.test(s);
 const NOT_A_DOCK = /\b(charter|boat hire|boat rental|rent(als?)?|camps?|camping|office|restaurant|taverna|cafe|hotel|resort|apartments?|villas?|shop|store|school|diving|dive|boatyard|shipyard|chandlers?|holidays|travel|tours?|sales|supermarket|bar)\b|\byachts?\b(?!.*\b(club|harbou?r|port|marina|mooring)\b)/i;
 const GENERIC_NAME = /^(port|harbou?r|marina|pier|jetty|quay|ferry terminal|ferry|limani|lim[ae]ni|small harbou?r|fishing harbou?r|yacht harbou?r)$/i;
 
+// A bare place name ("Kos", "Milos") is not recognisable as a dock: add what it is.
+const HAS_KIND = /(port|marina|marine|harbou?r|pier|quay|jetty|limani|limenas|limenisko|dock|mole|wharf|terminal|yacht|nautical|club|katafygio|skala)/i;
+export const withKind = (name, type, label) => (HAS_KIND.test(name) ? name : `${name} ${label === "marina" ? "Marina" : label === "ferry terminal" ? "Ferry Terminal" : type === "industrial" ? "Port" : label === "pier" ? "Pier" : "Harbour"}`);
+
 function pickName(tags) {
   const en = tags["name:en"] || tags.int_name;
   if (en && isLatin(en)) return { name: en.trim(), translit: false };
@@ -81,7 +85,8 @@ function candidatesFor(iso, rows) {
     if (t.disused || t.abandoned || t["disused:leisure"] || t.access === "private" || t.access === "no") continue;
     const picked = pickName(t);
     if (!picked || picked.name.length < 3 || GENERIC_NAME.test(picked.name) || NOT_A_DOCK.test(picked.name) || /disused|\bold\b.*\(|\bproposed\b/i.test(picked.name)) continue;
-    out.push({ ...r, iso, ...picked, kind: kindOf(t) });
+    const kind = kindOf(t);
+    out.push({ ...r, iso, ...picked, name: withKind(picked.name, kind.type, kind.label), kind });
   }
   out.sort((a, b) => b.kind.rank - a.kind.rank || a.id.localeCompare(b.id));
   const kept = [];
