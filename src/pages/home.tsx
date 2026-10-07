@@ -22,7 +22,7 @@ export function HomePage() {
     : "";
 
   return (
-    <Layout page="home"
+    <Layout page="home" scripts={["map"]}
       hero
       title="Wildock: A Global Catalogue of Docks, Piers & Marinas"
       description="Explore thousands of docks, piers, marinas and floating structures from around the world, each documented with photos, history and precise location."
@@ -146,7 +146,7 @@ export function HomePage() {
         <div class="kicker">Browse</div>
         <h2>By map</h2>
         <div class="map-teaser">
-          <div id="home-map" role="region" aria-label="Map of docks" />
+          <div id="home-map" data-leaflet data-radius="6" data-zoom-control="false" role="region" aria-label="Map of docks" />
           <span class="map-teaser-copy">
             <a class="btn-cta" href="/map">
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -159,7 +159,7 @@ export function HomePage() {
           </span>
         </div>
         <LeafletCss />
-        <LeafletMap elementId="home-map" radius={6} zoomControl={false} />
+        <LeafletMap />
       </section>
 
       <section class="block wrap">

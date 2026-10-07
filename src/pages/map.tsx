@@ -4,7 +4,7 @@ import { LeafletCss, LeafletMap } from "./leaflet";
 
 export function MapPage() {
   return (
-    <Layout page="map"
+    <Layout page="map" scripts={["map"]}
       title="Map | Wildock"
       description="Every documented dock, pier and marina plotted on an interactive map."
       path="/map"
@@ -20,9 +20,9 @@ export function MapPage() {
         </p>
 
         <div class="map-canvas">
-          <div id="wildock-map" role="region" aria-label="Map of all docks" />
+          <div id="wildock-map" data-leaflet data-radius="7" role="region" aria-label="Map of all docks" />
         </div>
-        <LeafletMap elementId="wildock-map" radius={7} />
+        <LeafletMap />
 
         <h2 class="list-title">All docks</h2>
         <ul class="pin-list">

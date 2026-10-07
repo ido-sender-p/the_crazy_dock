@@ -24,46 +24,17 @@ export function LeafletCss() {
   );
 }
 
-// Loads Leaflet, then runs the shared marker init against the given element.
-export function LeafletMap(opts: { elementId: string; radius: number; zoomControl?: boolean }) {
-  const init = `
-    (function () {
-      var docks = ${safeJsonForScript(MARKERS)};
-      var escapeHtml = function (s) {
-        return String(s).replace(/[&<>"']/g, function (ch) {
-          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];
-        });
-      };
-      var map = L.map(${safeJsonForScript(opts.elementId)}, { scrollWheelZoom: false, zoomControl: ${opts.zoomControl === false ? "false" : "true"} }).setView([20, 10], 2);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
-      }).addTo(map);
-      docks.forEach(function (d) {
-        // Dock names can come from user submissions once approved, so this must
-        // stay HTML-escaped: bindPopup renders its argument as raw HTML.
-        L.circleMarker([d.a, d.o], { radius: ${opts.radius}, color: '#0b2545', weight: 1.5, fillColor: '#c9a24d', fillOpacity: 0.9 })
-          .addTo(map)
-          .bindPopup('<strong>' + escapeHtml(d.n) + '</strong><br>' + escapeHtml(String(d.t).replace(/_/g, ' ')) + '<br><a href="/docks/' + encodeURIComponent(d.s) + '">View dock</a>');
-      });
-      // Open zoomed in on the hand-written entries (Capri), not on the whole world map the
-      // full catalogue would give; every dock is still on the map to pan to.
-      var focus = docks.filter(function (d) { return d.f; });
-      if (!focus.length) focus = docks;
-      if (focus.length) {
-        var bounds = L.latLngBounds(focus.map(function (d) { return [d.a, d.o]; }));
-        map.fitBounds(bounds.pad(0.5), { maxZoom: 6 });
-      }
-    })();
-  `;
+// Leaflet itself plus the markers as a JSON data block. The init lives in client/map.ts and finds the
+// map container by [data-leaflet] (with data-radius and data-zoom-control), so no inline JS is needed.
+export function LeafletMap() {
   return (
     <>
+      <script type="application/json" id="map-data">{raw(safeJsonForScript(MARKERS))}</script>
       <script
         src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
         crossorigin=""
       ></script>
-      <script>{raw(init)}</script>
     </>
   );
 }
