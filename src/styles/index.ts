@@ -45,5 +45,5 @@ export const PAGE_STYLES = {
 
 export type PageName = keyof typeof PAGE_STYLES;
 
-export const SITE_CSS = [tokensCss, baseCss, componentsCss, chromeCss].join("\n");
+export const SITE_CSS = [tokensCss, baseCss, chromeCss, componentsCss].join("\n");
 export const HERO_CSS = heroCss;
