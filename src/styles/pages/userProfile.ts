@@ -18,4 +18,5 @@ export const userProfileCss = `
     background: var(--border);
   }
   .user-profile-page .empty { padding: 20px; }
+  .btn-cta.message-btn { margin-top: 10px; display: inline-block; }
 `;

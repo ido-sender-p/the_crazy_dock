@@ -102,7 +102,7 @@ export const Layout: FC<
                 <button type="button" class="a11y-reset" id="a11y-reset">Reset</button>
               </div>
             </div>
-            <a class="icon-btn" href="/profile" aria-label="Profile" id="profile-link" style="display:none;">
+            <a class="icon-btn profile-link-hidden" href="/profile" aria-label="Profile" id="profile-link">
               <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="8" r="4" />
                 <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" />

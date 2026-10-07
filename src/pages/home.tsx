@@ -78,8 +78,8 @@ export function HomePage() {
       </section>
 
 
-      <div style="background: #ffffff;">
-      <section class="block wrap" style="padding-top: 0;">
+      <div class="band-white">
+      <section class="block wrap flush-top">
         <div class="kicker">Get started</div>
         <h2>Your voyage, from dock to dock</h2>
         <div class="journey">
@@ -106,7 +106,7 @@ export function HomePage() {
 
 
       {featured && (
-        <section class="block wrap" style="padding-top: 160px;">
+        <section class="block wrap featured-gap">
           <div class="kicker">Featured</div>
           <h2>Pick of the week</h2>
           <a class="featured-card" href={`/docks/${featured.slug}`}>

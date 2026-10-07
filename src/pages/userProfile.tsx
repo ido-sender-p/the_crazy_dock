@@ -23,7 +23,7 @@ export function UserProfilePage(opts: {
           <div>
             <h1>{opts.username}</h1>
             {opts.canMessage && (
-              <a class="btn-cta" href={`/messages/compose?to=${encodeURIComponent(opts.username)}`} style="margin-top:10px;display:inline-block;">
+              <a class="btn-cta message-btn" href={`/messages/compose?to=${encodeURIComponent(opts.username)}`}>
                 Send message
               </a>
             )}

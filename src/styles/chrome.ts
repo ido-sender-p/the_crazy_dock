@@ -22,6 +22,8 @@ export const chromeCss = `
   }
   .icon-btn:hover { border-color: var(--accent); color: var(--accent-text); }
   .icon-btn svg { width: 18px; height: 18px; }
+  /* hidden until client/site.ts shows it for logged-in visitors (it sets display inline) */
+  .icon-btn.profile-link-hidden { display: none; }
   .btn-login {
     display: inline-flex; align-items: center; text-decoration: none;
     border: 1px solid var(--border); border-radius: 999px;

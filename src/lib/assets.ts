@@ -35,3 +35,7 @@ const scriptUrls = Object.fromEntries(
 export const pageCssUrl = (name: PageName) => pageCssUrls[name];
 export const scriptUrl = (name: ClientScriptName) => scriptUrls[name];
 export const findAsset = (file: string) => files.get(file);
+
+// Changes whenever any stylesheet or script changes. Cached HTML links to hashed asset URLs, so the
+// edge cache keys on this: after a deploy, HTML cached against the old files is never served.
+export const assetVersion = hash([...files.keys()].sort().join());

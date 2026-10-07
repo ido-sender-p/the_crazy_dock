@@ -153,4 +153,7 @@ export const homeCss = `
     .submit-cta { padding: 32px 20px; }
     .submit-cta .dock-scene, .submit-cta .cast-line, .submit-cta .birds { display: none; }
   }
+  .band-white { background: #ffffff; }
+  section.block.flush-top { padding-top: 0; }
+  section.block.featured-gap { padding-top: 160px; }
 `;

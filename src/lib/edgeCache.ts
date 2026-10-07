@@ -2,6 +2,7 @@ import { getCookie } from "hono/cookie";
 import type { Context } from "hono";
 import type { Env } from "../env";
 import { SESSION_COOKIE } from "./session";
+import { assetVersion } from "./assets";
 
 // Workers don't cache dynamic responses on their own, so anonymous GET pages
 // that hit D1 go through the Cache API (per data centre, keyed by URL).
@@ -11,7 +12,10 @@ export async function edgeCached(c: Context<Env>, ttlSeconds: number, render: ()
   const cache = typeof caches !== "undefined" ? (caches as unknown as { default?: Cache }).default : undefined;
   if (!cache || c.req.method !== "GET" || getCookie(c, SESSION_COOKIE)) return render();
 
-  const key = new Request(c.req.url, { method: "GET" });
+  // Keyed by URL plus the asset version (see lib/assets.ts), so a deploy never serves stale HTML.
+  const keyUrl = new URL(c.req.url);
+  keyUrl.searchParams.set("__v", assetVersion);
+  const key = new Request(keyUrl.toString(), { method: "GET" });
   try {
     const hit = await cache.match(key);
     if (hit) return new Response(hit.body, hit); // copy: cached responses have immutable headers
