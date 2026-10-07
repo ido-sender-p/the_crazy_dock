@@ -1,4 +1,4 @@
-import type { Water } from "./waveCard";
+import type { Water } from "./styles/sea";
 
 // Shared continent map data , the same loose, illustrative shapes power both
 // the homepage "By continent" world map and each continent's own zoomed page.

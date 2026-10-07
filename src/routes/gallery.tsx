@@ -2,14 +2,12 @@ import { Hono } from "hono";
 import type { Env } from "../env";
 import { AddPhotoPage } from "../pages/addPhoto";
 import { currentUser, requireUser } from "../lib/session";
-import {
-  insertDockPhoto,
+import { insertDockPhoto,
   ratePhoto,
   findCommentsForPhoto,
   addComment,
   countPendingPhotos,
-  MAX_PENDING_PHOTOS,
-} from "../lib/gallery";
+  MAX_PENDING_PHOTOS, } from "../lib/gallery";
 import { detectImageType, detectImageOrientation, MAX_PHOTO_BYTES } from "../lib/imageValidation";
 import { resolveDock } from "../lib/liveDocks";
 import { parseId } from "../lib/validation";

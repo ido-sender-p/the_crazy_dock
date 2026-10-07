@@ -4,15 +4,13 @@ import { InboxPage, SentPage, ComposePage, MessageViewPage } from "../pages/mess
 import { requireUser } from "../lib/session";
 import { findUserByUsername } from "../lib/db";
 import { parseId } from "../lib/validation";
-import {
-  sendMessage,
+import { sendMessage,
   findInbox,
   findSent,
   findMessageById,
   markMessageRead,
   countRecentMessages,
-  MAX_MESSAGES_PER_HOUR,
-} from "../lib/messages";
+  MAX_MESSAGES_PER_HOUR, } from "../lib/messages";
 import { smallBody } from "../middleware/limits";
 
 export const messages = new Hono<Env>();

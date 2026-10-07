@@ -1,8 +1,8 @@
-import { Layout } from "../layout";
+import { Layout } from "../components/layout";
 import type { User, Submission } from "../lib/db";
 import type { Dock } from "../data";
 import type { RatingHistoryEntry } from "../lib/gallery";
-import { initials, placeLabel } from "./shared";
+import { initials, placeLabel } from "../lib/places";
 
 export function ProfilePage(opts: {
   user: User;

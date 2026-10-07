@@ -1,6 +1,7 @@
-import { Layout } from "../layout";
+import { Layout } from "../components/layout";
 import type { Dock } from "../data";
-import { CardThumb, placeLabel } from "./shared";
+import { CardThumb } from "../components/card";
+import { placeLabel } from "../lib/places";
 
 export function CategoryPage(opts: {
   title: string;

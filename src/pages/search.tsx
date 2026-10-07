@@ -1,5 +1,5 @@
-import { Layout } from "../layout";
-import { initials } from "./shared";
+import { Layout } from "../components/layout";
+import { initials } from "../lib/places";
 import { MIN_SEARCH_LENGTH, type UserSearchResult, type LocationSearchResult } from "../lib/search";
 
 export type SearchFilter = "all" | "profile" | "location" | "dock";

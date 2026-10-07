@@ -4,8 +4,7 @@ import type { Env } from "../env";
 import { LoginPage, SignupPage, ForgotPasswordPage } from "../pages/login";
 import { ProfilePage } from "../pages/profile";
 import { verifyPassword, hashPassword, newSessionToken, DUMMY_PASSWORD_HASH } from "../lib/auth";
-import {
-  findUserByEmail,
+import { findUserByEmail,
   findUserWithHashByEmail,
   findUserByGoogleId,
   linkGoogleToUser,
@@ -18,24 +17,20 @@ import {
   recordLoginFailure,
   clearLoginFailures,
   signupThrottled,
-  type User,
-} from "../lib/db";
-import {
-  currentUser,
+  type User, } from "../lib/db";
+import { currentUser,
   requireUser,
   clientIp,
   safeNextPath,
   setSessionCookies,
   sessionCookieOpts,
   SESSION_COOKIE,
-  UI_LOGGED_IN_COOKIE,
-} from "../lib/session";
+  UI_LOGGED_IN_COOKIE, } from "../lib/session";
 import { buildGoogleAuthUrl, exchangeGoogleCode, fetchGoogleProfile, isEmailVerified } from "../lib/googleAuth";
 import { findFavoriteSlugsForUser } from "../lib/favorites";
 import { resolveDocks } from "../lib/liveDocks";
 import { findRatingHistoryForUser } from "../lib/gallery";
-import {
-  MAX_PASSWORD_LENGTH,
+import { MAX_PASSWORD_LENGTH,
   checkUsername,
   checkEmail,
   checkNewPassword,
@@ -43,8 +38,7 @@ import {
   uniqueViolationField,
   usernameFromName,
   USERNAME_TAKEN_ERROR,
-  EMAIL_TAKEN_ERROR,
-} from "../lib/validation";
+  EMAIL_TAKEN_ERROR, } from "../lib/validation";
 import { smallBody } from "../middleware/limits";
 
 export const auth = new Hono<Env>();

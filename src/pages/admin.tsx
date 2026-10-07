@@ -1,4 +1,4 @@
-import { Layout } from "../layout";
+import { Layout } from "../components/layout";
 import type { ReviewSubmission } from "../lib/db";
 import type { PendingDockPhoto } from "../lib/gallery";
 

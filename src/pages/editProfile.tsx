@@ -1,6 +1,6 @@
-import { Layout } from "../layout";
+import { Layout } from "../components/layout";
 import type { User } from "../lib/db";
-import { initials } from "./shared";
+import { initials } from "../lib/places";
 
 export function EditProfilePage(opts: {
   user: User;

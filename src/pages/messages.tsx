@@ -1,4 +1,4 @@
-import { Layout } from "../layout";
+import { Layout } from "../components/layout";
 import type { MessageListItem, MessageDetail } from "../lib/messages";
 
 const TAB_LINKS = [

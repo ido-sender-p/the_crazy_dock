@@ -1,11 +1,11 @@
 import type { FC, PropsWithChildren } from "hono/jsx";
 import { raw } from "hono/html";
-import { safeJsonForScript } from "./lib/html";
-import { siteCssUrl, heroCssUrl, pageCssUrl, scriptUrl } from "./lib/assets";
-import { HERO_IMAGE_URL } from "./styles/hero";
-import { SITE_ORIGIN } from "./lib/site";
-import type { PageName } from "./styles";
-import type { ClientScriptName } from "./client";
+import { safeJsonForScript } from "../lib/html";
+import { siteCssUrl, heroCssUrl, pageCssUrl, scriptUrl } from "../lib/assets";
+import { HERO_IMAGE_URL } from "../styles/hero";
+import { SITE_ORIGIN } from "../lib/site";
+import type { PageName } from "../styles";
+import type { ClientScriptName } from "../client";
 
 
 // Only hero pages (home, auth) include this: the transparent header over the

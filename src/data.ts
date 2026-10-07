@@ -7,22 +7,6 @@
 
 export type SettlementType = "city" | "town" | "village";
 
-// Same logic as scripts/lib/slugify.mjs (the catalogue build); keep the two in sync.
-export function slugify(s: string) {
-  return s
-    .toLowerCase()
-    .replace(/ı/g, "i")
-    .replace(/ł/g, "l")
-    .replace(/ø/g, "o")
-    .replace(/đ/g, "d")
-    .replace(/ß/g, "ss")
-    .replace(/æ/g, "ae")
-    .replace(/œ/g, "oe")
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
 
 // Listing pages merge the hardcoded `docks` array with live D1 rows, and a
 // dock can legitimately exist in both (e.g. seeded into D1 so it shows on a
@@ -73,6 +57,7 @@ export type Dock = {
 
 import catalogue from "./catalogue.json";
 import type { Nearby } from "./lib/nearby";
+import { slugify } from "./lib/slug";
 
 const legacyDocks: Dock[] = [
   {

@@ -1,5 +1,5 @@
 // Styles for the continent page only. Served as /assets/page-continent.<hash>.css and linked by Layout (page="continent").
-import { seaCss } from "../../waveCard";
+import { seaCss } from "../sea";
 
 export const continentCss = `
   .continent-page { padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(4rem, 9vw, 7rem); }

@@ -1,4 +1,5 @@
-import { docks, continents, slugify, type Dock } from "../data";
+import { docks, continents, type Dock } from "../data";
+import { slugify } from "./slug";
 import { countriesByContinent, citiesByCountry } from "../continents";
 
 export const MIN_SEARCH_LENGTH = 3;

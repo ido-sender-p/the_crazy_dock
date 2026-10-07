@@ -1,12 +1,13 @@
-import { Layout } from "../layout";
-import { slugify, type Dock } from "../data";
+import { Layout } from "../components/layout";
+import { type Dock } from "../data";
+import { slugify } from "../lib/slug";
 import { raw } from "hono/html";
 import { safeJsonForScript } from "../lib/html";
 import type { DockPhoto } from "../lib/gallery";
 import { parsePhotoCredit, WIKIPEDIA_LICENSE } from "../lib/credits";
 import { vibe, count, type Nearby } from "../lib/nearby";
 import { SETTLEMENT_PATH } from "../lib/places";
-import { placeLabel } from "./shared";
+import { placeLabel } from "../lib/places";
 
 const GALLERY_PREVIEW_LIMIT = 6;
 

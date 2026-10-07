@@ -1,7 +1,7 @@
-import { Layout } from "../layout";
+import { Layout } from "../components/layout";
 import type { PublicSubmission } from "../lib/db";
 import type { Dock } from "../data";
-import { initials, placeLabel } from "./shared";
+import { initials, placeLabel } from "../lib/places";
 
 export function UserProfilePage(opts: {
   username: string;

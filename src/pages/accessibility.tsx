@@ -1,4 +1,4 @@
-import { Layout } from "../layout";
+import { Layout } from "../components/layout";
 
 // Israeli law (the Equal Rights for Persons with Disabilities Regulations
 // (Service Accessibility Adjustments), 2013) requires this statement to name

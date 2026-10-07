@@ -1,4 +1,4 @@
-import { Layout } from "../layout";
+import { Layout } from "../components/layout";
 import { docks } from "../data";
 import { markersUrl } from "../lib/assets";
 

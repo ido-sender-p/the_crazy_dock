@@ -1,7 +1,10 @@
-import { Layout } from "../layout";
-import { seaClass, type Water } from "../waveCard";
-import { slugify, type Dock } from "../data";
-import { CardThumb, placeLabel, FAMILY_ORDER, LakeIcon } from "./shared";
+import { Layout } from "../components/layout";
+import { seaClass, type Water } from "../styles/sea";
+import { type Dock } from "../data";
+import { slugify } from "../lib/slug";
+import { CardThumb } from "../components/card";
+import { placeLabel, FAMILY_ORDER } from "../lib/places";
+import { LakeIcon } from "../components/icons";
 
 type Entry = { name: string; sea: string; family: Water };
 

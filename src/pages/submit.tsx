@@ -1,4 +1,4 @@
-import { Layout } from "../layout";
+import { Layout } from "../components/layout";
 import type { User } from "../lib/db";
 
 export function SubmitPage(opts: { user: User; path: string; success?: boolean; error?: string }) {

@@ -6,15 +6,13 @@ import { requireUser, SESSION_COOKIE } from "../lib/session";
 import { updateProfile, findPasswordHash, changePassword, deleteOtherSessions } from "../lib/db";
 import { hashPassword, verifyPassword, hasRealPassword } from "../lib/auth";
 import { detectImageType, MAX_PHOTO_BYTES } from "../lib/imageValidation";
-import {
-  checkUsername,
+import { checkUsername,
   checkEmail,
   checkNewPassword,
   checkDateOfBirth,
   isUniqueViolation,
   uniqueViolationField,
-  USERNAME_TAKEN_ERROR,
-} from "../lib/validation";
+  USERNAME_TAKEN_ERROR, } from "../lib/validation";
 import { uploadBody } from "../middleware/limits";
 
 export const account = new Hono<Env>();

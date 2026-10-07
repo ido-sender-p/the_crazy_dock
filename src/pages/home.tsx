@@ -1,9 +1,9 @@
-import { Layout } from "../layout";
+import { Layout } from "../components/layout";
 import { docks, continents } from "../data";
 import { WORLD_MAP_VIEWBOX, CONTINENT_SHAPES } from "../continents";
 import { markersUrl } from "../lib/assets";
 import { SITE_ORIGIN } from "../lib/site";
-import { placeLabel } from "./shared";
+import { placeLabel } from "../lib/places";
 
 export function HomePage() {
   const jsonLd = {

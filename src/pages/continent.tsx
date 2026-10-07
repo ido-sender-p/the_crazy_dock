@@ -1,9 +1,11 @@
-import { Layout } from "../layout";
+import { Layout } from "../components/layout";
 import type { Dock } from "../data";
 import { countriesByContinent, oceanByCountry } from "../continents";
-import { slugify } from "../data";
-import { seaClass, type Water } from "../waveCard";
-import { CardThumb, placeLabel, FAMILY_ORDER, LakeIcon } from "./shared";
+import { slugify } from "../lib/slug";
+import { seaClass, type Water } from "../styles/sea";
+import { CardThumb } from "../components/card";
+import { placeLabel, FAMILY_ORDER } from "../lib/places";
+import { LakeIcon } from "../components/icons";
 
 function Wave({ seas }: { seas: string[] }) {
   return (

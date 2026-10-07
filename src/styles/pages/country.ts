@@ -1,5 +1,5 @@
 // Styles for the country page only. Served as /assets/page-country.<hash>.css and linked by Layout (page="country").
-import { seaCss } from "../../waveCard";
+import { seaCss } from "../sea";
 
 export const countryCss = `
   .country-page { padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(4rem, 9vw, 7rem); }

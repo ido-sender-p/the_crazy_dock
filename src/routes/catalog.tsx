@@ -9,13 +9,11 @@ import { ContinentPage } from "../pages/continent";
 import { CountryPage } from "../pages/country";
 import { MapPage } from "../pages/map";
 import { citiesByCountry, usStates, usStateSea, cityNameForSlug, countryInfoForSlug } from "../continents";
-import {
-  findPublishedDocksByContinent,
+import { findPublishedDocksByContinent,
   findPublishedDocksByCountryName,
   findPublishedDocksBySettlementSlug,
   findPublishedDocksByRegionSlug,
-  resolveDock,
-} from "../lib/liveDocks";
+  resolveDock, } from "../lib/liveDocks";
 import { staticInContinent, staticInCountryCode, staticInCountryName, staticInRegion, staticInSettlement, looksLikeLiveSlug } from "../lib/staticDocks";
 import { findPublishedPhotosForDock, findUserRatingsForDock, pickCoverPhoto } from "../lib/gallery";
 import { currentUser } from "../lib/session";

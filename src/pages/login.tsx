@@ -1,5 +1,5 @@
-import { Layout } from "../layout";
-import { DockIcon } from "./shared";
+import { Layout } from "../components/layout";
+import { DockIcon } from "../components/icons";
 
 function GoogleIcon() {
   return (
