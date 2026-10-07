@@ -23,3 +23,12 @@ Postponed, in this order:
 6. Optional: `status.`, `usercontent.` (low value, the CSP sandbox already isolates uploads).
 
 On hold: Email Routing for `contact@wildock.com` (also resolves the empty `CONTACT_EMAIL`), then SPF and DMARC. HSTS once all subdomains serve HTTPS.
+
+## Before opening registration to the public
+
+Registration stays closed to the public for now. Before it opens:
+
+- Google sign-in returns 501 in production: set the `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` secrets (`npx wrangler secret put ...`, values from Google Cloud Console) and add `https://wildock.com/login/google/callback` (or the exact callback path) to the authorised redirect URIs.
+- Set `CONTACT_EMAIL` (`wrangler.toml`) to a real address for takedown and credit-correction requests on /credits; see Email Routing above.
+- Portrait or landscape detection for uploads reads the stored pixel size and ignores the EXIF orientation tag, so a phone photo stored sideways with an orientation flag is classed as landscape. Swap width and height when the orientation is 5-8 (the kept orientation tag is readable with `tiffOrientation` in `src/lib/imageMetadata.ts`).
+

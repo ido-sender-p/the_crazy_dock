@@ -6,6 +6,7 @@ import { requireUser, SESSION_COOKIE } from "../lib/session";
 import { updateProfile, findPasswordHash, changePassword, deleteOtherSessions } from "../lib/db";
 import { hashPassword, verifyPassword, hasRealPassword } from "../lib/auth";
 import { detectImageType, MAX_PHOTO_BYTES } from "../lib/imageValidation";
+import { stripImageMetadata } from "../lib/imageMetadata";
 import { checkUsername,
   checkEmail,
   checkNewPassword,
@@ -77,9 +78,12 @@ account.post("/profile/edit", uploadBody, async (c) => {
   let avatarType: string | null = null;
   if (avatar instanceof File && avatar.size > 0) {
     if (avatar.size > MAX_PHOTO_BYTES) return rejectWith("Photo is too large (8 MB max).");
-    avatarBytes = new Uint8Array(await avatar.arrayBuffer());
-    avatarType = detectImageType(avatarBytes);
+    const rawBytes = new Uint8Array(await avatar.arrayBuffer());
+    avatarType = detectImageType(rawBytes);
     if (!avatarType) return rejectWith("That file doesn't look like a supported image (JPEG, PNG, GIF or WEBP).");
+    // Strip location/camera metadata before storing; only the display orientation is kept.
+    avatarBytes = stripImageMetadata(rawBytes, avatarType);
+    if (!avatarBytes) return rejectWith("That image could not be processed. Please try another file.");
   }
 
   let avatarKey: string | null = null;

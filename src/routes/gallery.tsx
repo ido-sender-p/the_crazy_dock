@@ -9,6 +9,7 @@ import { insertDockPhoto,
   countPendingPhotos,
   MAX_PENDING_PHOTOS, } from "../lib/gallery";
 import { detectImageType, detectImageOrientation, MAX_PHOTO_BYTES } from "../lib/imageValidation";
+import { stripImageMetadata } from "../lib/imageMetadata";
 import { resolveDock } from "../lib/liveDocks";
 import { parseId } from "../lib/validation";
 import { smallBody, uploadBody } from "../middleware/limits";
@@ -47,9 +48,12 @@ gallery.post("/docks/:slug/add-photo", uploadBody, async (c) => {
   if (!(photo instanceof File) || photo.size === 0) return rejectWith("Please attach a photo.");
   if (photo.size > MAX_PHOTO_BYTES) return rejectWith("Photo is too large (8 MB max).");
 
-  const photoBytes = new Uint8Array(await photo.arrayBuffer());
-  const detectedType = detectImageType(photoBytes);
+  const rawBytes = new Uint8Array(await photo.arrayBuffer());
+  const detectedType = detectImageType(rawBytes);
   if (!detectedType) return rejectWith("That file doesn't look like a supported image (JPEG, PNG, GIF or WEBP).");
+  // Location, camera and other personal metadata never reach R2; only the display orientation is kept.
+  const photoBytes = stripImageMetadata(rawBytes, detectedType);
+  if (!photoBytes) return rejectWith("That image could not be processed. Please try another file.");
 
   const title = String(form.get("title") ?? "").trim().slice(0, 60);
   if (!title) return rejectWith("Please name the photo.");
