@@ -2,20 +2,16 @@ import { Layout } from "../layout";
 import type { Dock } from "../data";
 import { countriesByContinent, oceanByCountry } from "../continents";
 import { slugify } from "../data";
-import { seaColor, waveUrl, type Water } from "../waveCard";
+import { seaClass, type Water } from "../waveCard";
 import { CardThumb, placeLabel, FAMILY_ORDER, LakeIcon } from "./shared";
 
 function Wave({ seas }: { seas: string[] }) {
-  const n = seas.length;
   return (
-    <>
-      {seas.map((sea, i) => (
-        <span
-          class="wave"
-          style={`left:${(i / n) * 100}%; width:${100 / n}%; background-image:${waveUrl(seaColor(sea))};`}
-        />
+    <span class="wave-strip">
+      {seas.map((sea) => (
+        <span class={`wave ${seaClass(sea)}`} />
       ))}
-    </>
+    </span>
   );
 }
 
@@ -45,7 +41,7 @@ export function ContinentPage(opts: { name: string; slug: string; intro: string;
         {groups.map(({ sea, family, names }, gi) => (
           <>
             <div class={gi === 0 ? "sea-head first" : "sea-head"}>
-              <i style={`background:${seaColor(sea)}`} aria-hidden="true" />
+              <i class={`sea-dot ${seaClass(sea)}`} aria-hidden="true" />
               {sea} <span class="count">· {names.length}</span>
             </div>
             <div class="country-grid">

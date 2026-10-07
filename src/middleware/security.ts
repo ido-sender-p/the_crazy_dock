@@ -5,10 +5,10 @@ import { secureHeaders } from "hono/secure-headers";
 // injected) reference to some other third-party host gets blocked by the
 // browser instead of silently working.
 //
-// style-src/script-src still need 'unsafe-inline': the whole site is built
-// on inline <style>/<script> tags per page (no per-request nonce plumbing
-// exists), so this CSP's job is narrowing *which hosts* can load, not
-// eliminating inline code, which would need a larger templating change.
+// Strict: no 'unsafe-inline' for scripts or styles. Every stylesheet and script is an external,
+// content-hashed file served by this Worker (/assets, see lib/assets.ts), and pages pass data to
+// their scripts as <script type="application/json"> blocks, which the browser never executes.
+// So an injected <script>, inline handler or style attribute is blocked instead of running.
 const LEAFLET_CDN = "https://unpkg.com/leaflet@1.9.4/dist/";
 
 export const securityHeaders = secureHeaders({
@@ -20,8 +20,8 @@ export const securityHeaders = secureHeaders({
     objectSrc: ["'none'"],
     imgSrc: ["'self'", "data:", "blob:", "https://upload.wikimedia.org", "https://*.tile.openstreetmap.org"], // blob: for the avatar and photo previews
     fontSrc: ["'self'", "https://fonts.gstatic.com"],
-    styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", LEAFLET_CDN],
-    scriptSrc: ["'self'", "'unsafe-inline'", LEAFLET_CDN],
+    styleSrc: ["'self'", "https://fonts.googleapis.com", LEAFLET_CDN],
+    scriptSrc: ["'self'", LEAFLET_CDN],
     connectSrc: ["'self'"],
   },
   // Hono defaults to "no-referrer", but OSM's tile servers reject requests with

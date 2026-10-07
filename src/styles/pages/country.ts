@@ -1,4 +1,6 @@
 // Styles for the country page only. Served as /assets/page-country.<hash>.css and linked by Layout (page="country").
+import { seaCss } from "../../waveCard";
+
 export const countryCss = `
   .country-page { padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(4rem, 9vw, 7rem); }
   .country-page .breadcrumb, .country-page .kicker, .country-page h1 { text-align: center; }
@@ -43,4 +45,4 @@ export const countryCss = `
 
   .country-page .empty { margin-top: 28px; padding: 28px; font-size: 1rem; }
   .country-page .list { margin-top: 18px; }
-`;
+` + "\n" + seaCss;

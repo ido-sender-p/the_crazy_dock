@@ -70,3 +70,15 @@ export function waveUrl(hex: string) {
   const fill = hex.replace("#", "%23");
   return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 14'%3E%3Cpath d='M0,7 C5,1 15,13 20,7 C25,1 35,13 40,7 L40,14 L0,14 Z' fill='${fill}'/%3E%3C/svg%3E")`;
 }
+
+// Colours are applied through generated classes (seaCss) rather than inline style attributes, so
+// the Content-Security-Policy can stay free of 'unsafe-inline'. A sea we have no colour for falls
+// back to the Atlantic one, like seaColor() does.
+const seaKey = (sea: string) => (sea in SEA_COLOR ? sea.toLowerCase().replace(/[^a-z0-9]+/g, "-") : "fallback");
+export const seaClass = (sea: string) => `sea-${seaKey(sea)}`;
+
+// One .sea-dot rule (the legend dot) and one .wave rule (the wave under a card) per sea; included in
+// the continent and country page stylesheets.
+export const seaCss = [...Object.entries(SEA_COLOR), ["fallback", WATER_COLOR.atlantic]]
+  .map(([sea, hex]) => `.sea-dot.sea-${seaKey(sea)} { background: ${hex}; }\n.wave.sea-${seaKey(sea)} { background-image: ${waveUrl(hex)}; }`)
+  .join("\n");

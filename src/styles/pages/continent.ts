@@ -1,4 +1,6 @@
 // Styles for the continent page only. Served as /assets/page-continent.<hash>.css and linked by Layout (page="continent").
+import { seaCss } from "../../waveCard";
+
 export const continentCss = `
   .continent-page { padding: clamp(2.5rem, 6vw, 4.5rem) 0 clamp(4rem, 9vw, 7rem); }
   .continent-page .breadcrumb, .continent-page .kicker, .continent-page h1 { text-align: center; }
@@ -27,12 +29,10 @@ export const continentCss = `
   }
   .country-card:hover { transform: translateY(-2px); filter: brightness(1.02); }
   .country-card .name { font-weight: 600; font-size: 0.9rem; }
-  .country-card .wave {
-    position: absolute; bottom: -11px; height: 14px;
-    background-repeat: repeat-x; background-size: 40px 14px;
-  }
+  .country-card .wave-strip { position: absolute; left: 0; right: 0; bottom: -11px; height: 14px; display: flex; }
+  .country-card .wave-strip .wave { flex: 1 1 0; background-repeat: repeat-x; background-size: 40px 14px; }
 
   .country-card.lake { border-bottom: 1px solid var(--border); border-radius: 12px; padding-bottom: 14px; }
   .country-card.lake svg { width: 38px; height: auto; margin-bottom: 8px; }
 
-`;
+` + "\n" + seaCss;

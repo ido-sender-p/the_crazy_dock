@@ -1,5 +1,5 @@
 import { Layout } from "../layout";
-import { seaColor, waveUrl, type Water } from "../waveCard";
+import { seaClass, type Water } from "../waveCard";
 import { slugify, type Dock } from "../data";
 import { CardThumb, placeLabel, FAMILY_ORDER, LakeIcon } from "./shared";
 
@@ -21,7 +21,7 @@ function EntryGroup({ kicker, entries, linkBase }: { kicker: string; entries: En
       {groups.map(({ sea, family, items }, gi) => (
         <>
           <div class={gi === 0 ? "sea-head first" : "sea-head"}>
-            <i style={`background:${seaColor(sea)}`} aria-hidden="true" />
+            <i class={`sea-dot ${seaClass(sea)}`} aria-hidden="true" />
             {kicker} · {sea} <span class="count">· {items.length}</span>
           </div>
           <div class="card-grid">
@@ -34,7 +34,7 @@ function EntryGroup({ kicker, entries, linkBase }: { kicker: string; entries: En
               ) : (
                 <a class="wave-card" href={`${linkBase}/${slugify(e.name)}`}>
                   <span class="name">{e.name}</span>
-                  <span class="wave" style={`background-image:${waveUrl(seaColor(e.sea))}`} />
+                  <span class={`wave ${seaClass(e.sea)}`} />
                 </a>
               ),
             )}
