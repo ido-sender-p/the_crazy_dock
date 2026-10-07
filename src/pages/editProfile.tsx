@@ -1,5 +1,4 @@
 import { Layout } from "../layout";
-import { raw } from "hono/html";
 import type { User } from "../lib/db";
 import { initials } from "./shared";
 
@@ -11,7 +10,7 @@ export function EditProfilePage(opts: {
   success?: boolean;
 }) {
   return (
-    <Layout page="editProfile" title="Edit profile | Wildock" description="Update your Wildock profile." path={opts.path} noindex>
+    <Layout page="editProfile" scripts={["editProfile"]} title="Edit profile | Wildock" description="Update your Wildock profile." path={opts.path} noindex>
       <div class="wrap edit-profile-page">
         <h1>Edit profile</h1>
         <p class="intro">Update your details, or change your password.</p>
@@ -80,31 +79,6 @@ export function EditProfilePage(opts: {
         </form>
         <a class="back-link" href="/profile">← Back to profile</a>
       </div>
-      <script>{raw(`
-        (function () {
-          var input = document.getElementById('avatar');
-          if (!input) return;
-          input.addEventListener('change', function () {
-            var file = input.files && input.files[0];
-            if (!file) return;
-            var label = document.getElementById('avatar-picker-label');
-            if (label) label.textContent = file.name;
-            var prev = document.getElementById('avatar-preview');
-            if (!prev || !file.type || file.type.indexOf('image/') !== 0) return;
-            var url = URL.createObjectURL(file);
-            if (prev.tagName === 'IMG') {
-              prev.src = url;
-            } else {
-              var img = document.createElement('img');
-              img.className = 'avatar-preview';
-              img.id = 'avatar-preview';
-              img.alt = '';
-              img.src = url;
-              prev.replaceWith(img);
-            }
-          });
-        })();
-      `)}</script>
     </Layout>
   );
 }

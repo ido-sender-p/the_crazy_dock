@@ -18,7 +18,7 @@ export const securityHeaders = secureHeaders({
     formAction: ["'self'"],
     frameAncestors: ["'none'"],
     objectSrc: ["'none'"],
-    imgSrc: ["'self'", "data:", "https://upload.wikimedia.org", "https://*.tile.openstreetmap.org"],
+    imgSrc: ["'self'", "data:", "blob:", "https://upload.wikimedia.org", "https://*.tile.openstreetmap.org"], // blob: for the avatar and photo previews
     fontSrc: ["'self'", "https://fonts.gstatic.com"],
     styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", LEAFLET_CDN],
     scriptSrc: ["'self'", "'unsafe-inline'", LEAFLET_CDN],

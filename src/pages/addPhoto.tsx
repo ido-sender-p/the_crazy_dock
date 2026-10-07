@@ -1,5 +1,4 @@
 import { Layout } from "../layout";
-import { raw } from "hono/html";
 
 export function AddPhotoPage(opts: {
   dockName: string;
@@ -9,7 +8,7 @@ export function AddPhotoPage(opts: {
   error?: string;
 }) {
   return (
-    <Layout page="addPhoto" title={`Add a photo of ${opts.dockName} | Wildock`} description={`Submit a photo of ${opts.dockName}.`} path={opts.path} noindex>
+    <Layout page="addPhoto" scripts={["addPhoto"]} title={`Add a photo of ${opts.dockName} | Wildock`} description={`Submit a photo of ${opts.dockName}.`} path={opts.path} noindex>
       <div class="wrap add-photo-page">
         <h1>Add a photo of {opts.dockName}</h1>
         <p class="intro">Name your photo, upload it, and tell its story. We'll review it before it joins the gallery.</p>
@@ -47,31 +46,6 @@ export function AddPhotoPage(opts: {
           </form>
         )}
       </div>
-      <script>{raw(`
-        (function () {
-          var input = document.getElementById('photo');
-          var zone = document.getElementById('photo-dropzone');
-          var label = document.getElementById('photo-filename');
-          if (!input || !zone || !label) return;
-          input.addEventListener('change', function () {
-            label.textContent = input.files && input.files[0] ? input.files[0].name : 'Click to upload a photo';
-          });
-          ['dragover', 'dragenter'].forEach(function (evt) {
-            zone.addEventListener(evt, function (e) { e.preventDefault(); zone.classList.add('drag'); });
-          });
-          ['dragleave', 'drop'].forEach(function (evt) {
-            zone.addEventListener(evt, function (e) { e.preventDefault(); zone.classList.remove('drag'); });
-          });
-          zone.addEventListener('drop', function (e) {
-            var dropped = e.dataTransfer && e.dataTransfer.files;
-            if (!dropped || !dropped.length) return;
-            var dt = new DataTransfer();
-            dt.items.add(dropped[0]);
-            input.files = dt.files;
-            label.textContent = dropped[0].name;
-          });
-        })();
-      `)}</script>
     </Layout>
   );
 }
