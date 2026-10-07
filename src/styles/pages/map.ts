@@ -15,9 +15,14 @@ export const mapCss = `
   }
   #wildock-map { height: 460px; width: 100%; background: var(--navy); }
 
-  .map-featured { margin-top: 48px; text-align: center; }
-  .map-featured .kicker { margin-bottom: 4px; }
-  .map-featured .featured-card { text-align: left; margin-top: 20px; }
+  /* same look as the home page's Pick of the week: its heading scale and spacing, centred card text */
+  .map-featured { margin-top: 64px; text-align: center; }
+  .map-featured .kicker { font-size: 0.72rem; font-weight: 500; letter-spacing: 0.2em; }
+  .map-featured h2 {
+    font-family: var(--font-serif); font-weight: 500; font-size: clamp(1.5rem, 2.6vw, 2rem);
+    letter-spacing: -0.005em; margin: 0.9rem 0 2.25rem;
+  }
+  .map-featured .featured-card { text-align: left; }
   .map-featured .featured-card .copy { text-align: center; }
   ${featuredCss}
 `;
