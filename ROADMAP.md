@@ -9,15 +9,17 @@ Future features under consideration, not yet built.
 
 ## Domains and infrastructure
 
-Principle: infrastructure goes on subdomains, content stays on the apex (`wildock.com/he/`, `/guides`) so search authority is not split. The domain is fully managed in Cloudflare (registrar and DNS). Planned order:
+Principle: infrastructure goes on subdomains, content stays on the apex (`wildock.com/he/`, `/guides`) so search authority is not split. The domain is fully managed in Cloudflare (registrar and DNS).
 
-1. `www.` redirect to the apex.
-2. `img.`: R2 custom domain for catalogue photos (immutable keys only). Takes images out of the Worker request quota. Needs `img-src https://img.wildock.com` in the CSP, absolute URLs from `photoVariant`, and `/uploads` kept as fallback and for user uploads (takedowns need cache control).
-3. Workers Static Assets for hashed CSS and JS: free, no request limit, no subdomain or CSP change.
-4. `staging.`: separate Worker with its own D1 and R2 for checks before production.
-5. `admin.`: admin panel behind Cloudflare Access (free up to 50 seats), cookies isolated from the public site.
-6. `tiles.`: PMTiles basemap on R2 (zoom 0-10 only, about 1-3 GB), replaces the OpenStreetMap public tile servers.
-7. `api.` / `data.`: public JSON and an open data dump, later.
-8. Optional: `status.`, `usercontent.` (low value, CSP sandbox already isolates uploads).
+Done: `www.` redirects to the apex; `img.` serves catalogue photos from R2 (CDN cached); Cloudflare Web Analytics via the manual snippet; CSP nonce so Cloudflare JavaScript Detections works under the strict CSP.
+
+Postponed, in this order:
+
+1. `tiles.`: PMTiles basemap on R2 to replace the OpenStreetMap public tile servers. Needs a feasibility check first: size of the extract (world to zoom 8-10, plus regions around the docks to zoom 15-16, must fit the 10 GB R2 free tier), a vector style that matches the current look, and a client (`protomaps-leaflet`, keeps Leaflet).
+2. Workers Static Assets for hashed CSS and JS: free, no request limit, no subdomain or CSP change.
+3. `staging.`: separate Worker with its own D1 and R2 for checks before production.
+4. `admin.`: admin panel behind Cloudflare Access (free up to 50 seats), cookies isolated from the public site.
+5. `api.` / `data.`: public read-only JSON and an open data dump. Needs licence and attribution fields (Wikipedia text is CC BY-SA, Commons photos carry their own licences) and a low rate limit, since every call is a Worker request.
+6. Optional: `status.`, `usercontent.` (low value, the CSP sandbox already isolates uploads).
 
 On hold: Email Routing for `contact@wildock.com` (also resolves the empty `CONTACT_EMAIL`), then SPF and DMARC. HSTS once all subdomains serve HTTPS.
