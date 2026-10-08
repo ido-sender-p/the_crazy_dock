@@ -2,16 +2,28 @@
 export const dockCss = `
   .around { margin-top: 40px; }
   .around h2 { font-size: 1.3rem; margin: 0 0 6px; }
-  .around-vibe { color: var(--ink-soft); margin: 0 0 16px; }
+  .around-vibe { color: var(--ink-soft); margin: 0 0 16px; max-width: 44rem; }
   .around-vibe strong { color: var(--ink); }
   .around-tiles { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: 12px; }
   .around-tiles li { border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; background: var(--surface); }
+  .around-icon { width: 1.5rem; height: 1.5rem; display: block; margin-bottom: 8px; color: var(--accent-text); }
   .around-tiles .num { display: block; font-family: var(--font-serif-bare); font-weight: 600; font-size: 1.6rem; color: var(--accent-text); line-height: 1.1; }
   .around-tiles .lbl { display: block; margin-top: 4px; font-size: 0.82rem; color: var(--ink-soft); }
   .around-extras { margin: 16px 0 0; padding-inline-start: 1.1rem; font-size: 0.92rem; display: flex; flex-direction: column; gap: 4px; }
   .around-src { margin: 14px 0 0; font-size: 0.75rem; color: var(--ink-soft); }
   .around-src a { color: inherit; text-decoration: underline; }
   .dock-page { padding-block: clamp(2.5rem, 6vw, 4.5rem) clamp(4rem, 9vw, 7rem); max-width: calc(var(--page-max) + 2 * var(--gutter)); }
+  /* the head (breadcrumb, title) and the body share .dock-page; a full-width photo sits between them */
+  .dock-head { padding-bottom: 0; }
+  .dock-head .meta { margin-bottom: 1.75rem; }
+  .dock-body { padding-top: 0; }
+  .hero-bleed + .dock-body { padding-top: clamp(1.25rem, 3vw, 2.25rem); }
+  .hero-bleed { margin: 0; }
+  .hero-frame-bleed { display: block; width: 100%; padding: 0; border: 0; background: var(--surface); cursor: pointer; transition: opacity var(--ease); }
+  .hero-frame-bleed:hover { opacity: 0.94; }
+  .hero-img-bleed { display: block; width: 100%; height: clamp(16rem, 46vw, 40rem); object-fit: cover; object-position: center 55%; }
+  .hero-bleed figcaption { font-size: 0.75rem; color: var(--ink-soft); padding-top: 8px; text-align: center; }
+  .hero-bleed figcaption a { color: inherit; text-decoration: underline; }
   .dock-page figure { margin: 0; text-align: center; }
   .dock-page .hero-frame {
     display: inline-flex; max-width: 100%; background: var(--surface);
@@ -36,7 +48,7 @@ export const dockCss = `
   }
   .hero-lightbox .lb-close:hover { background: rgba(255,255,255,0.24); }
   .hero-lightbox .lb-close svg { width: 20px; height: 20px; }
-  .dock-page .desc-source { font-size: 0.75rem; color: var(--ink-soft); margin-top: -8px; }
+  .dock-page .desc-source { font-size: 0.75rem; color: var(--ink-soft); margin-top: -8px; max-width: 44rem; }
   .dock-page .desc-source a, .dock-page figcaption a, .hero-credit a { color: inherit; text-decoration: underline; }
   .dock-page figcaption { font-size: 0.75rem; color: var(--ink-soft); margin-top: 6px; }
 
@@ -73,17 +85,25 @@ export const dockCss = `
   .favorite-btn svg { width: 15px; height: 15px; }
   .favorite-btn.active { color: var(--amber); border-color: var(--amber); }
   .favorite-btn.active svg { fill: var(--amber); }
+  /* a compact row of facts, then the map across the full width */
+  .info-band { display: flex; flex-direction: column; gap: 16px; margin: 28px 0; }
   .facts {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 16px; margin: 28px 0; padding: 20px; background: var(--surface);
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 16px; margin: 0; padding: 16px 20px; background: var(--surface);
     border: 1px solid var(--border); border-radius: var(--radius-lg);
   }
+  .mini-map { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .dock-map { height: clamp(14rem, 30vw, 19rem); width: 100%; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; background: var(--surface); }
+  .map-caption { margin: 0; font-size: 0.75rem; color: var(--ink-soft); }
+  .map-caption a { color: inherit; text-decoration: underline; }
+  .dock-pin { background: none; border: none; }
+  .dock-pin svg { display: block; filter: drop-shadow(0 2px 3px rgba(11, 37, 69, 0.35)); }
   .facts dt { font-weight: 600; color: var(--ink-soft); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
   .facts dd { margin: 4px 0 0; font-size: 1.05rem; }
-  /* the story: centred and calm under a landscape photo, left-aligned beside a portrait one */
+  /* the story and everything read after it share one left edge */
   .dock-page p.desc {
     font-family: var(--font-serif); font-weight: 400; font-size: clamp(1.05rem, 1.4vw, 1.15rem); line-height: 1.8;
-    max-width: 40rem; color: var(--ink-prose-strong); text-align: center; margin: 2.25rem auto;
+    max-width: 44rem; color: var(--ink-prose-strong); text-align: left; margin: 0.5rem 0 1.5rem;
   }
   .dock-page .hero-split-text p.desc { text-align: left; margin: 0; }
 

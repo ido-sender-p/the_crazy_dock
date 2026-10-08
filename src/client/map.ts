@@ -28,11 +28,30 @@ export const mapJs = `
     js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
     js.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
     js.crossOrigin = '';
-    var markers = fetch(host.getAttribute('data-markers')).then(function (r) { return r.json(); });
+    // A dock page's mini map has its own coordinates (data-lat/data-lon) and no marker file.
+    var markers = host.hasAttribute('data-lat') ? Promise.resolve(null) : fetch(host.getAttribute('data-markers')).then(function (r) { return r.json(); });
     Promise.all([load(css), load(js), markers]).then(function (all) { init(all[2]); });
   }
 
+  function initSingle() {
+    var lat = Number(host.getAttribute('data-lat')), lon = Number(host.getAttribute('data-lon'));
+    // On a phone, dragging the map would trap the page scroll, so it only zooms with the buttons.
+    var map = L.map(host, { scrollWheelZoom: false, dragging: !L.Browser.mobile }).setView([lat, lon], Number(host.getAttribute('data-zoom')) || 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    }).addTo(map);
+    var pin = L.divIcon({
+      className: 'dock-pin',
+      html: '<svg width="34" height="44" viewBox="0 0 34 44" aria-hidden="true"><path d="M17 43C17 43 3 27 3 16a14 14 0 0 1 28 0c0 11-14 27-14 27z" fill="#0b2545" stroke="#fff" stroke-width="2"/><circle cx="17" cy="16" r="5.5" fill="#c9a24d"/></svg>',
+      iconSize: [34, 44],
+      iconAnchor: [17, 42]
+    });
+    L.marker([lat, lon], { icon: pin, keyboard: false, interactive: false }).addTo(map);
+  }
+
   function init(docks) {
+    if (host.hasAttribute('data-lat')) { initSingle(); return; }
     var escapeHtml = function (s) {
       return String(s).replace(/[&<>"']/g, function (ch) {
         return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch];

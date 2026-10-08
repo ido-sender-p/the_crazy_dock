@@ -8,6 +8,7 @@ import { parsePhotoCredit, WIKIPEDIA_LICENSE, ODBL_URL } from "../lib/credits";
 import { vibe, count, type Nearby } from "../lib/nearby";
 import { SETTLEMENT_PATH } from "../lib/places";
 import { placeLabel } from "../lib/places";
+import { AroundIconSvg, type AroundIcon } from "../components/icons";
 import { photoVariant } from "../lib/imageVariants";
 
 const GALLERY_PREVIEW_LIMIT = 6;
@@ -54,13 +55,13 @@ function TextCreditLine({ value }: { value: string }) {
 // "Around the dock": counts of nearby places from OpenStreetMap plus a one-line feel.
 function AroundSection({ name, nearby, dockType }: { name: string; nearby: Nearby; dockType: string }) {
   const v = vibe(nearby, dockType);
-  const tiles: [number, string][] = [
-    [nearby.eat, "places to eat & drink"],
-    [nearby.stay, "places to stay"],
-    [nearby.shops, "shops"],
-    [nearby.sights, "sights & museums"],
-    [nearby.historic, "historic sites"],
-    [nearby.beaches, "beaches"],
+  const tiles: [number, string, AroundIcon][] = [
+    [nearby.eat, "places to eat & drink", "eat"],
+    [nearby.stay, "places to stay", "stay"],
+    [nearby.shops, "shops", "shops"],
+    [nearby.sights, "sights & museums", "sights"],
+    [nearby.historic, "historic sites", "historic"],
+    [nearby.beaches, "beaches", "beaches"],
   ];
   const shown = tiles.filter(([n]) => n > 0);
   const extras: string[] = [];
@@ -74,8 +75,8 @@ function AroundSection({ name, nearby, dockType }: { name: string; nearby: Nearb
       <p class="around-vibe"><strong>{v.label}.</strong> {v.blurb}</p>
       {shown.length > 0 && (
         <ul class="around-tiles">
-          {shown.map(([n, label]) => (
-            <li><span class="num">{count(n, nearby.capped)}</span><span class="lbl">{label}</span></li>
+          {shown.map(([n, label, icon]) => (
+            <li><AroundIconSvg name={icon} /><span class="num">{count(n, nearby.capped)}</span><span class="lbl">{label}</span></li>
           ))}
         </ul>
       )}
@@ -108,7 +109,7 @@ export function DockPage(
   const hasSettlement = !!(d.settlement && d.settlementSlug);
   const place = placeLabel(d.settlement, d.stateProvince, d.country);
   const titlePlace = placeLabel(d.settlement, d.country);
-  const typeLabel = d.dockType.replaceAll("_", " ");
+  const typeLabel = d.dockType === "industrial" ? "port" : d.dockType.replaceAll("_", " ");
 
   const address: Record<string, string> = { "@type": "PostalAddress" };
   if (d.settlement) address.addressLocality = d.settlement;
@@ -145,13 +146,13 @@ export function DockPage(
   const loginHref = `/login?next=${encodeURIComponent(`/docks/${d.slug}`)}`;
 
   return (
-    <Layout page="dock" scripts={["dock"]}
+    <Layout page="dock" scripts={["dock", "map"]}
       title={`${d.name}${titlePlace ? ` · ${titlePlace}` : ""} | Wildock`}
       description={d.description.slice(0, 155)}
       jsonLd={jsonLd}
       path={`/docks/${d.slug}`}
     >
-      <div class="wrap dock-page">
+      <div class="wrap dock-page dock-head">
         <nav class="breadcrumb" aria-label="Breadcrumb">
           <a href="/">Wildock</a> / <a href={`/continents/${d.continentSlug}`}>{d.continent}</a> /{" "}
           <a href={`/countries/${d.countryCode || slugify(d.country)}`}>{d.country}</a> /{" "}
@@ -183,6 +184,24 @@ export function DockPage(
           </form>
         </div>
         <p class="meta">{place ? `${place} · ${typeLabel}` : typeLabel}</p>
+      </div>
+      {d.imageUrl && d.imageOrientation !== "portrait" && (
+        <figure class="hero-bleed">
+          <button class="hero-frame-bleed" type="button" id="hero-open" aria-label={`View larger photo of ${d.name}`}>
+            <img
+              class="hero-img-bleed"
+              src={photoVariant(d.imageUrl, "w1280")}
+              srcset={`${photoVariant(d.imageUrl, "w1280")} 1280w, ${photoVariant(d.imageUrl, "full")} 1600w`}
+              sizes="100vw"
+              alt={d.name}
+              decoding="async"
+              fetchpriority="high"
+            />
+          </button>
+          <figcaption class="wrap"><PhotoCreditLine value={d.imageAttribution} /></figcaption>
+        </figure>
+      )}
+      <div class="wrap dock-page dock-body">
         {!d.imageUrl ? (
           <div class="no-photo-yet">
             <p>No photo yet. Be the first to add one.</p>
@@ -201,25 +220,27 @@ export function DockPage(
           </div>
         ) : (
           <>
-            <figure>
-              <button class="hero-frame" type="button" id="hero-open" aria-label={`View larger photo of ${d.name}`}>
-                <img class="hero-img" src={photoVariant(d.imageUrl, "w1280")} alt={d.name} decoding="async" fetchpriority="high" />
-              </button>
-              <figcaption><PhotoCreditLine value={d.imageAttribution} /></figcaption>
-            </figure>
             {d.description && <p class="desc">{d.description}</p>}
             {d.descriptionSource && <p class="desc-source"><TextCreditLine value={d.descriptionSource} /></p>}
           </>
         )}
         {!d.imageUrl && d.description && <p class="desc">{d.description}</p>}
         {!d.imageUrl && d.descriptionSource && <p class="desc-source"><TextCreditLine value={d.descriptionSource} /></p>}
-        <dl class="facts">
-          <div><dt>Type</dt><dd>{typeLabel}</dd></div>
-          {d.lengthM > 0 && <div><dt>Length</dt><dd>{d.lengthM} m</dd></div>}
-          {d.yearBuilt != null && <div><dt>Built</dt><dd>{d.yearBuilt}</dd></div>}
-          <div><dt>Coordinates</dt><dd>{d.lat.toFixed(4)}, {d.lon.toFixed(4)}</dd></div>
-          {d.website && <div><dt>Website</dt><dd><a href={d.website} target="_blank" rel="nofollow noopener noreferrer">{new URL(d.website).hostname.replace(/^www\./, "")}</a></dd></div>}
-        </dl>
+        <div class="info-band">
+          <dl class="facts">
+            <div><dt>Type</dt><dd>{typeLabel}</dd></div>
+            {d.lengthM > 0 && <div><dt>Length</dt><dd>{d.lengthM} m</dd></div>}
+            {d.yearBuilt != null && <div><dt>Built</dt><dd>{d.yearBuilt}</dd></div>}
+            {d.website && <div><dt>Website</dt><dd><a href={d.website} target="_blank" rel="nofollow noopener noreferrer">{new URL(d.website).hostname.replace(/^www\./, "")}</a></dd></div>}
+          </dl>
+          <div class="mini-map">
+            <div id="dock-map" class="dock-map" data-leaflet data-lat={d.lat} data-lon={d.lon} data-zoom="13" role="region" aria-label={`Map showing where ${d.name} is`} />
+            <p class="map-caption">
+              {d.lat.toFixed(4)}, {d.lon.toFixed(4)} ·{" "}
+              <a href={`https://www.openstreetmap.org/?mlat=${d.lat}&mlon=${d.lon}#map=15/${d.lat}/${d.lon}`} target="_blank" rel="noopener noreferrer">Open in OpenStreetMap</a>
+            </p>
+          </div>
+        </div>
         {d.nearby && <AroundSection name={d.name} nearby={d.nearby} dockType={d.dockType} />}
         {photos.length > 0 && (
           <div class="gallery-section">
