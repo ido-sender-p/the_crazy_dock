@@ -26,7 +26,7 @@ export const homeCss = `
     font-size: clamp(1rem, 1.6vw, 1.2rem);
     font-weight: 500;
     line-height: 1.6;
-    margin: 1.75rem auto 0;
+    margin: clamp(2.25rem, 4.5vw, 3.5rem) auto 0; /* air between the headline and the mission line */
     max-width: 38rem;
     color: var(--white);
     text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 2px 18px rgba(0,0,0,0.55);
