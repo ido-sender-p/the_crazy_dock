@@ -236,14 +236,28 @@ const shareJs = `
     label.textContent = text;
     setTimeout(function () { label.textContent = original; }, 2000);
   }
+  // Older browsers and pages without clipboard permission: select a throwaway field and copy from it.
+  function legacyCopy() {
+    var field = document.createElement('textarea');
+    field.value = location.href;
+    field.setAttribute('readonly', '');
+    field.style.position = 'fixed';
+    field.style.opacity = '0';
+    document.body.appendChild(field);
+    field.select();
+    var ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(field);
+    say(ok ? 'Link copied' : 'Copy the address bar link');
+  }
   btn.addEventListener('click', function () {
     var data = { title: btn.getAttribute('data-title') || document.title, url: location.href };
     if (navigator.share) {
       navigator.share(data).catch(function () {});
     } else if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(location.href).then(function () { say('Link copied'); }, function () { say('Copy failed'); });
+      navigator.clipboard.writeText(location.href).then(function () { say('Link copied'); }, function () { legacyCopy(); });
     } else {
-      say('Copy the address bar link');
+      legacyCopy();
     }
   });
 })();

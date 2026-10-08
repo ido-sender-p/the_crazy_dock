@@ -16,13 +16,18 @@ export const dockCss = `
   /* Landscape photo: full-width hero, breadcrumb and title bottom-left on the photo, actions bottom-right */
   .dock-hero { position: relative; margin: 0; overflow: hidden; background: var(--navy); border-radius: 0 0 1.5rem 1.5rem; }
   .hero-open { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
-  .hero-img-bleed { display: block; width: 100%; height: clamp(24rem, 46vw, 38rem); object-fit: cover; object-position: center 55%; }
+  /* the photo is the point of the page: shown whole, at its own proportions (very tall ones are fitted to the screen on a navy ground) */
+  .hero-img-bleed { display: block; width: 100%; height: auto; max-height: min(88vh, 60rem); object-fit: contain; background: var(--navy); }
   .hero-overlay {
     position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 0.35rem;
     padding: 1.5rem max(var(--gutter), calc((100% - var(--page-max)) / 2)) clamp(1.1rem, 2.5vw, 1.9rem);
-    background: linear-gradient(to top, rgba(6, 16, 31, 0.86) 0%, rgba(6, 16, 31, 0.5) 38%, rgba(6, 16, 31, 0) 72%);
     color: var(--white); pointer-events: none;
   }
+  .hero-overlay::before {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: clamp(9rem, 32%, 14rem); pointer-events: none;
+    background: linear-gradient(to top, rgba(6, 16, 31, 0.82) 0%, rgba(6, 16, 31, 0.45) 50%, rgba(6, 16, 31, 0) 100%);
+  }
+  .hero-overlay > * { position: relative; }
   .hero-overlay a, .hero-overlay button, .hero-overlay form { pointer-events: auto; }
   .hero-overlay .breadcrumb { text-align: left; margin: 0; color: rgba(255, 255, 255, 0.82); font-size: 0.85rem; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5); }
   .hero-overlay .breadcrumb a { color: rgba(255, 255, 255, 0.95); }
@@ -43,8 +48,10 @@ export const dockCss = `
   .hero-overlay .share-btn { background: var(--white); color: var(--navy); border-color: var(--white); }
   .hero-overlay .photos-btn { background: rgba(255, 255, 255, 0.22); color: var(--white); border-color: rgba(255, 255, 255, 0.3); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
   @media (max-width: 640px) {
-    .hero-overlay .breadcrumb { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .hero-overlay { background: linear-gradient(to top, rgba(6, 16, 31, 0.9) 0%, rgba(6, 16, 31, 0.6) 45%, rgba(6, 16, 31, 0) 80%); }
+    .hero-overlay { position: static; padding: 1rem var(--gutter) 1.25rem; }
+    .hero-overlay::before { display: none; }
+    .hero-overlay .breadcrumb { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: none; }
+    .hero-titles h1, .hero-titles .meta, .hero-overlay .breadcrumb { text-shadow: none; }
   }
   .photo-credit-row .photo-credit { margin: 8px 0 0; font-size: 0.75rem; color: var(--ink-soft); text-align: left; }
   .photo-credit-row .photo-credit a { color: inherit; text-decoration: underline; }
@@ -94,14 +101,13 @@ export const dockCss = `
     border: 1px solid var(--border); border-radius: var(--radius-xl); overflow: hidden; margin: 24px 0 32px;
   }
   .hero-frame-split { border: none; padding: 0; margin: 0; cursor: pointer; display: block; background: none; }
-  .hero-img-split { width: 100%; height: 100%; min-height: 320px; object-fit: cover; display: block; transition: opacity var(--ease); }
+  .hero-img-split { width: 100%; height: auto; max-height: 80vh; object-fit: contain; display: block; transition: opacity var(--ease); }
   .hero-frame-split:hover .hero-img-split { opacity: 0.9; }
   .hero-split-text { padding: 32px; display: flex; flex-direction: column; justify-content: center; gap: 12px; }
   .hero-split-text .desc { margin: 0; }
   .hero-split-text .hero-credit { font-size: 0.75rem; color: var(--ink-soft); }
   @media (max-width: 700px) {
     .hero-split { grid-template-columns: 1fr; }
-    .hero-img-split { min-height: 240px; }
   }
   .dock-page h1 { margin-top: 4px; }
   .dock-page .meta { color: var(--ink-soft); margin-bottom: 2rem; text-align: center; }
