@@ -13,28 +13,13 @@ export const dockCss = `
   .around-src { margin: 14px 0 0; font-size: 0.75rem; color: var(--ink-soft); }
   .around-src a { color: inherit; text-decoration: underline; }
   .dock-page { padding-block: clamp(2.5rem, 6vw, 4.5rem) clamp(4rem, 9vw, 7rem); max-width: calc(var(--page-max) + 2 * var(--gutter)); }
-  /* Landscape photo: full-width hero, breadcrumb and title bottom-left on the photo, actions bottom-right */
-  .dock-hero { position: relative; margin: 0; overflow: hidden; background: var(--navy); border-radius: 0 0 1.5rem 1.5rem; }
-  .hero-open { display: block; width: 100%; padding: 0; border: 0; background: none; cursor: pointer; }
-  /* the photo is the point of the page: shown whole, at its own proportions (very tall ones are fitted to the screen on a navy ground) */
-  .hero-img-bleed { display: block; width: 100%; height: auto; max-height: min(88vh, 60rem); object-fit: contain; background: var(--navy); }
-  .hero-overlay {
-    position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: flex-end; gap: 0.35rem;
-    padding: 1.5rem max(var(--gutter), calc((100% - var(--page-max)) / 2)) clamp(1.1rem, 2.5vw, 1.9rem);
-    color: var(--white); pointer-events: none;
-  }
-  .hero-overlay::before {
-    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: clamp(9rem, 32%, 14rem); pointer-events: none;
-    background: linear-gradient(to top, rgba(6, 16, 31, 0.82) 0%, rgba(6, 16, 31, 0.45) 50%, rgba(6, 16, 31, 0) 100%);
-  }
-  .hero-overlay > * { position: relative; }
-  .hero-overlay a, .hero-overlay button, .hero-overlay form { pointer-events: auto; }
-  .hero-overlay .breadcrumb { text-align: left; margin: 0; color: rgba(255, 255, 255, 0.82); font-size: 0.85rem; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5); }
-  .hero-overlay .breadcrumb a { color: rgba(255, 255, 255, 0.95); }
-  .hero-bottom { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem 1.5rem; flex-wrap: wrap; }
-  .hero-titles { min-width: 0; }
-  .hero-titles h1 { margin: 0.15rem 0 0.2rem; color: var(--white); font-size: clamp(2rem, 4.6vw, 3.4rem); line-height: 1.1; text-shadow: 0 2px 18px rgba(0, 0, 0, 0.5); }
-  .hero-titles .meta { margin: 0; text-align: left; color: rgba(255, 255, 255, 0.85); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5); }
+  /* Photo under the heading: shown whole, at its own proportions, rounded, at the width of the content */
+  .dock-photo-row { padding-top: 0; max-width: calc(var(--page-max) + 2 * var(--gutter)); }
+  .dock-photo { display: block; width: 100%; padding: 0; border: 0; background: var(--surface); border-radius: var(--radius-xl); overflow: hidden; cursor: pointer; transition: opacity var(--ease); }
+  .dock-photo:hover { opacity: 0.92; }
+  .dock-photo img { display: block; width: 100%; height: auto; }
+  .dock-photo-row .photo-credit { margin: 8px 0 0; font-size: 0.75rem; color: var(--ink-soft); text-align: left; }
+  .dock-photo-row .photo-credit a { color: inherit; text-decoration: underline; }
   .hero-actions-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
   .hero-actions-row form { margin: 0; }
   .share-btn, .photos-btn {
@@ -44,24 +29,13 @@ export const dockCss = `
   .share-btn svg, .photos-btn svg { width: 16px; height: 16px; }
   /* one size for all three actions */
   .hero-actions-row .favorite-btn, .hero-actions-row .share-btn, .hero-actions-row .photos-btn { line-height: 1.2; padding: 9px 16px; font-size: 0.85rem; font-family: inherit; }
-  .hero-overlay .favorite-btn { background: rgba(14, 30, 50, 0.62); color: var(--white); border-color: rgba(255, 255, 255, 0.28); }
-  .hero-overlay .share-btn { background: var(--white); color: var(--navy); border-color: var(--white); }
-  .hero-overlay .photos-btn { background: rgba(255, 255, 255, 0.22); color: var(--white); border-color: rgba(255, 255, 255, 0.3); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
-  @media (max-width: 640px) {
-    .hero-overlay { position: static; padding: 1rem var(--gutter) 1.25rem; }
-    .hero-overlay::before { display: none; }
-    .hero-overlay .breadcrumb { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: none; }
-    .hero-titles h1, .hero-titles .meta, .hero-overlay .breadcrumb { text-shadow: none; }
-  }
-  .photo-credit-row .photo-credit { margin: 8px 0 0; font-size: 0.75rem; color: var(--ink-soft); text-align: left; }
-  .photo-credit-row .photo-credit a { color: inherit; text-decoration: underline; }
-  /* without the photo overlay the heading and actions stay centred, as before */
+  /* heading and actions stay centred above the photo */
   .dock-head { text-align: center; padding-bottom: 0; }
   .dock-head .plain-title { margin: 4px 0 0; }
   .dock-head .hero-actions-row { justify-content: center; margin-bottom: 1.75rem; }
   .dock-head .meta { margin-bottom: 1rem; }
   .dock-body { padding-top: 0; }
-  .photo-credit-row + .dock-body { padding-top: clamp(1rem, 2.5vw, 1.75rem); }
+  .dock-photo-row + .dock-body { padding-top: clamp(1rem, 2.5vw, 1.75rem); }
   .dock-page figure { margin: 0; text-align: center; }
   .dock-page .hero-frame {
     display: inline-flex; max-width: 100%; background: var(--surface);
@@ -144,6 +118,8 @@ export const dockCss = `
   .dock-page .hero-split-text p.desc { text-align: left; margin: 0; }
 
   .gallery-section { margin: 36px 0; }
+  .about h2 { font-size: 1.2rem; margin: 0 0 12px; text-align: left; }
+  .about p.desc { text-align: left; max-width: 44rem; margin-inline: 0; }
   .gallery-section h2 { font-size: 1.2rem; margin: 0 0 16px; }
   .gallery-grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .gallery-tile {

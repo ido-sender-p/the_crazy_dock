@@ -37,18 +37,35 @@ function PhotoCreditLine({ value }: { value: string }) {
   );
 }
 
-function TextCreditLine({ value }: { value: string }) {
-  if (value.startsWith("OpenStreetMap|")) {
-    return (
-      <>
-        Details from <Credit value={value} /> contributors (<a href={ODBL_URL} target="_blank" rel="noopener noreferrer license">ODbL</a>).
-      </>
-    );
-  }
+// "About": the dock's own description, extra verified facts, then a short note on the settlement it belongs to (Wikipedia).
+// One small line names the sources and their licences (CC BY-SA and ODbL both only ask for attribution and a licence link).
+function AboutBlock({ d }: { d: Dock }) {
+  const blurb = d.placeBlurb;
+  if (!d.description && !d.aboutExtras && !blurb) return null;
+  const [srcName, srcUrl] = (d.descriptionSource ?? "").split("|");
+  const fromOsm = srcName === "OpenStreetMap" || !!d.aboutExtras;
+  const wiki: { title: string; url: string }[] = [];
+  if (srcName && srcName !== "OpenStreetMap" && srcUrl) wiki.push({ title: d.name, url: srcUrl });
+  if (blurb) wiki.push({ title: blurb.title, url: `https://en.wikipedia.org/wiki/${encodeURIComponent(blurb.title.replace(/ /g, "_"))}` });
   return (
-    <>
-      <Credit value={value} prefix="Text from " /> (<a href={WIKIPEDIA_LICENSE.url} target="_blank" rel="noopener noreferrer license">{WIKIPEDIA_LICENSE.name}</a>), shortened.
-    </>
+    <section class="about" aria-labelledby="about-title">
+      <h2 id="about-title">About</h2>
+      {d.description && <p class="desc">{d.description}</p>}
+      {d.aboutExtras && <p class="desc">{d.aboutExtras}</p>}
+      {blurb && <p class="desc"><strong>{d.settlement}.</strong> {blurb.text}</p>}
+      <p class="desc-source">
+        Sources:{" "}
+        {wiki.map((w, i) => (
+          <>
+            {i > 0 && " and "}
+            <a href={w.url} target="_blank" rel="noopener noreferrer">{w.title}</a>
+          </>
+        ))}
+        {wiki.length > 0 && <> on Wikipedia (<a href={WIKIPEDIA_LICENSE.url} target="_blank" rel="noopener noreferrer license">{WIKIPEDIA_LICENSE.name}</a>, shortened)</>}
+        {wiki.length > 0 && fromOsm && "; "}
+        {fromOsm && <><a href={srcName === "OpenStreetMap" && srcUrl ? srcUrl : "https://www.openstreetmap.org/copyright"} target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors (<a href={ODBL_URL} target="_blank" rel="noopener noreferrer license">ODbL</a>)</>}.
+      </p>
+    </section>
   );
 }
 
@@ -199,32 +216,17 @@ export function DockPage(
       jsonLd={jsonLd}
       path={`/docks/${d.slug}`}
     >
-      {bleed ? (
-        <header class="dock-hero">
-          <button class="hero-open" type="button" id="hero-open" aria-label={`View larger photo of ${d.name}`}>
-            <img class="hero-img-bleed" src={photoVariant(d.imageUrl, "full")} alt={d.name} decoding="async" fetchpriority="high" />
-          </button>
-          <div class="hero-overlay">
-            {crumbs}
-            <div class="hero-bottom">
-              <div class="hero-titles">
-                <h1>{d.name}</h1>
-                <p class="meta">{place ? `${place} · ${typeLabel}` : typeLabel}</p>
-              </div>
-              {actions}
-            </div>
-          </div>
-        </header>
-      ) : (
-        <div class="wrap dock-page dock-head">
-          {crumbs}
-          <h1 class="plain-title">{d.name}</h1>
-          <p class="meta">{place ? `${place} · ${typeLabel}` : typeLabel}</p>
-          {actions}
-        </div>
-      )}
+      <div class="wrap dock-page dock-head">
+        {crumbs}
+        <h1 class="plain-title">{d.name}</h1>
+        <p class="meta">{place ? `${place} · ${typeLabel}` : typeLabel}</p>
+        {actions}
+      </div>
       {bleed && (
-        <div class="wrap photo-credit-row">
+        <div class="wrap dock-photo-row">
+          <button class="dock-photo" type="button" id="hero-open" aria-label={`View larger photo of ${d.name}`}>
+            <img src={photoVariant(d.imageUrl, "full")} alt={d.name} decoding="async" fetchpriority="high" />
+          </button>
           <p class="photo-credit"><PhotoCreditLine value={d.imageAttribution} /></p>
         </div>
       )}
@@ -240,19 +242,14 @@ export function DockPage(
               <img class="hero-img-split" src={photoVariant(d.imageUrl, "w1280")} alt={d.name} decoding="async" fetchpriority="high" />
             </button>
             <div class="hero-split-text">
-              {d.description && <p class="desc">{d.description}</p>}
-              {d.descriptionSource && <span class="hero-credit"><TextCreditLine value={d.descriptionSource} /></span>}
+              <AboutBlock d={d} />
               <span class="hero-credit"><PhotoCreditLine value={d.imageAttribution} /></span>
             </div>
           </div>
         ) : (
-          <>
-            {d.description && <p class="desc">{d.description}</p>}
-            {d.descriptionSource && <p class="desc-source"><TextCreditLine value={d.descriptionSource} /></p>}
-          </>
+          <AboutBlock d={d} />
         )}
-        {!d.imageUrl && d.description && <p class="desc">{d.description}</p>}
-        {!d.imageUrl && d.descriptionSource && <p class="desc-source"><TextCreditLine value={d.descriptionSource} /></p>}
+        {!d.imageUrl && <AboutBlock d={d} />}
         <div class="info-band">
           <dl class="facts">
             <div><dt>Type</dt><dd>{typeLabel}</dd></div>

@@ -128,6 +128,7 @@ explicit upload step.
    facilities, VHF channel, fee, website). Nothing is invented.
 3. **Build**: `npm run catalogue:build` writes `src/catalogue.json`. An OpenStreetMap dock is published only with a photo
    or at least `MIN_OSM_FACTS` real details; thinner entries stay in `docks.json` for later.
+3b. **About**: `node scripts/fetch-place-blurbs.mjs` (first two sentences of each settlement's Wikipedia article, only on an exact title match within 15 km), then `node scripts/build-about.mjs`. Run the second one after every `catalogue:build`, which rewrites `src/catalogue.json` without the `ab`, `pb` and `pt` fields. The dock page shows them under an About heading with one small Sources line (Wikipedia CC BY-SA 4.0, OpenStreetMap ODbL). Lightly rewording the text does not remove the licence duty, so the credit stays.
 4. **Around the dock** (restaurants, hotels, shops, sights nearby): `node scripts/enrich-nearby.mjs [slugs...]`, slow.
 5. **Photo sizes**: `npm run catalogue:variants` (skips rows that use Cloudflare Images and files that exist).
 6. **Local preview of photos**: stop the dev server, then `npm run catalogue:images` (local R2). The preview points at

@@ -8,7 +8,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 
 const UA = "WildockBot/0.1 (https://wildock.com; idosender1@gmail.com)";
 // The main instance is often overloaded; these are tried in rotation on failure.
-const ENDPOINTS = ["https://overpass-api.de/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter"];
+const ENDPOINTS = ["https://overpass.private.coffee/api/interpreter", "https://overpass-api.de/api/interpreter", "https://maps.mail.ru/osm/tools/overpass/api/interpreter"];
 const CACHE = new URL("./data/nearby.json", import.meta.url);
 const WALK = 1000; // metres for everyday places
 const FAR = 2500; // metres for malls and big attractions

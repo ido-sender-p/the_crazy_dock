@@ -55,6 +55,8 @@ export type Dock = {
   website?: string; // official site, from OpenStreetMap (http or https only)
   imageTransform?: boolean; // photo is one original in R2; card sizes come from Cloudflare Images (see lib/imageVariants.ts)
   nearby?: Nearby; // places around the dock, from OpenStreetMap; absent for hand-written entries
+  aboutExtras?: string; // extra verified facts for the About section (OpenStreetMap tags, length, year)
+  placeBlurb?: { text: string; title: string }; // first sentences of the settlement's Wikipedia article (CC BY-SA)
 };
 
 import catalogue from "./catalogue.json";
@@ -118,6 +120,9 @@ type CatalogueRow = {
   web?: string;
   tx?: number; // 1: photo has no pre-made sizes: card sizes come from Cloudflare Images
   nb?: [number, number, number, number, number, number, number, number, 0 | 1]; // eat, stay, shops, sights, historic, beaches, stations, ferries, capped
+  ab?: string; // extra verified facts, see scripts/build-about.mjs
+  pb?: string; // Wikipedia blurb about the settlement
+  pt?: string; // title of that Wikipedia article
   ml?: string[]; // mall names
   lm?: string[]; // landmark names
 };
@@ -151,6 +156,8 @@ function toDock(r: CatalogueRow): Dock {
     lengthM: r.lengthM ?? 0,
     yearBuilt: r.yearBuilt ?? null,
     website: r.web,
+    aboutExtras: r.ab,
+    placeBlurb: r.pb && r.pt ? { text: r.pb, title: r.pt } : undefined,
     imageTransform: r.tx === 1,
     nearby: r.nb && {
       eat: r.nb[0], stay: r.nb[1], shops: r.nb[2], sights: r.nb[3], historic: r.nb[4],
