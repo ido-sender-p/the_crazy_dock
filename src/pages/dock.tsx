@@ -145,6 +145,53 @@ export function DockPage(
 
   const loginHref = `/login?next=${encodeURIComponent(`/docks/${d.slug}`)}`;
 
+  // Landscape photos become a full-width hero with the title on top of it; portrait and photo-less docks keep a plain heading.
+  const bleed = !!d.imageUrl && d.imageOrientation !== "portrait";
+  const crumbs = (
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/">Wildock</a> / <a href={`/continents/${d.continentSlug}`}>{d.continent}</a> /{" "}
+      <a href={`/countries/${d.countryCode || slugify(d.country)}`}>{d.country}</a> /{" "}
+      {hasState && (
+        <>
+          <a href={`/regions/${d.stateProvinceSlug}`}>{d.stateProvince}</a> /{" "}
+        </>
+      )}
+      {hasSettlement && (
+        <>
+          <a href={`/${SETTLEMENT_PATH[d.settlementType]}/${d.settlementSlug}`}>{d.settlement}</a> /{" "}
+        </>
+      )}
+      {d.name}
+    </nav>
+  );
+  const actions = (
+    <div class="hero-actions-row">
+      <form method="post" action={`/docks/${d.slug}/favorite`}>
+        <button class={`favorite-btn${d.isFavorited ? " active" : ""}`} type="submit" aria-pressed={d.isFavorited ? "true" : "false"}>
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill={d.isFavorited ? "currentColor" : "none"} stroke="currentColor" stroke-width="2">
+            <path d="M12 4l2.47 5.77 6.28.55-4.75 4.13 1.42 6.13L12 17.27l-5.42 3.31 1.42-6.13-4.75-4.13 6.28-.55L12 4z" />
+          </svg>
+          {d.isFavorited ? "Favorited" : "Save"}
+        </button>
+      </form>
+      <button class="share-btn" type="button" id="share-btn" data-title={d.name}>
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 15V3M8 7l4-4 4 4M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+        </svg>
+        <span id="share-label">Share</span>
+      </button>
+      {photos.length > 0 && (
+        <a class="photos-btn" href="#more-photos">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 8h3l2-3h6l2 3h3v11H4z" />
+            <circle cx="12" cy="13" r="3.5" />
+          </svg>
+          +{photos.length} {photos.length === 1 ? "photo" : "photos"}
+        </a>
+      )}
+    </div>
+  );
+
   return (
     <Layout page="dock" scripts={["dock", "map"]}
       title={`${d.name}${titlePlace ? ` · ${titlePlace}` : ""} | Wildock`}
@@ -152,52 +199,34 @@ export function DockPage(
       jsonLd={jsonLd}
       path={`/docks/${d.slug}`}
     >
-      <div class="wrap dock-page dock-head">
-        <nav class="breadcrumb" aria-label="Breadcrumb">
-          <a href="/">Wildock</a> / <a href={`/continents/${d.continentSlug}`}>{d.continent}</a> /{" "}
-          <a href={`/countries/${d.countryCode || slugify(d.country)}`}>{d.country}</a> /{" "}
-          {hasState && (
-            <>
-              <a href={`/regions/${d.stateProvinceSlug}`}>{d.stateProvince}</a> /{" "}
-            </>
-          )}
-          {hasSettlement && (
-            <>
-              <a href={`/${SETTLEMENT_PATH[d.settlementType]}/${d.settlementSlug}`}>{d.settlement}</a> /{" "}
-            </>
-          )}
-          {d.name}
-        </nav>
-        <div class="title-row">
-          <h1>{d.name}</h1>
-          <form method="post" action={`/docks/${d.slug}/favorite`}>
-            <button
-              class={`favorite-btn${d.isFavorited ? " active" : ""}`}
-              type="submit"
-              aria-pressed={d.isFavorited ? "true" : "false"}
-            >
-              <svg aria-hidden="true" viewBox="0 0 24 24" fill={d.isFavorited ? "currentColor" : "none"} stroke="currentColor" stroke-width="2">
-                <path d="M12 4l2.47 5.77 6.28.55-4.75 4.13 1.42 6.13L12 17.27l-5.42 3.31 1.42-6.13-4.75-4.13 6.28-.55L12 4z" />
-              </svg>
-              {d.isFavorited ? "Favorited" : "Save"}
-            </button>
-          </form>
-        </div>
-        <p class="meta">{place ? `${place} · ${typeLabel}` : typeLabel}</p>
-      </div>
-      {d.imageUrl && d.imageOrientation !== "portrait" && (
-        <figure class="hero-bleed">
-          <button class="hero-frame-bleed" type="button" id="hero-open" aria-label={`View larger photo of ${d.name}`}>
-            <img
-              class="hero-img-bleed"
-              src={photoVariant(d.imageUrl, "full")}
-              alt={d.name}
-              decoding="async"
-              fetchpriority="high"
-            />
+      {bleed ? (
+        <header class="dock-hero">
+          <button class="hero-open" type="button" id="hero-open" aria-label={`View larger photo of ${d.name}`}>
+            <img class="hero-img-bleed" src={photoVariant(d.imageUrl, "full")} alt={d.name} decoding="async" fetchpriority="high" />
           </button>
-          <figcaption class="wrap"><PhotoCreditLine value={d.imageAttribution} /></figcaption>
-        </figure>
+          <div class="hero-overlay">
+            {crumbs}
+            <div class="hero-bottom">
+              <div class="hero-titles">
+                <h1>{d.name}</h1>
+                <p class="meta">{place ? `${place} · ${typeLabel}` : typeLabel}</p>
+              </div>
+              {actions}
+            </div>
+          </div>
+        </header>
+      ) : (
+        <div class="wrap dock-page dock-head">
+          {crumbs}
+          <h1 class="plain-title">{d.name}</h1>
+          <p class="meta">{place ? `${place} · ${typeLabel}` : typeLabel}</p>
+          {actions}
+        </div>
+      )}
+      {bleed && (
+        <div class="wrap photo-credit-row">
+          <p class="photo-credit"><PhotoCreditLine value={d.imageAttribution} /></p>
+        </div>
       )}
       <div class="wrap dock-page dock-body">
         {!d.imageUrl ? (
@@ -241,7 +270,7 @@ export function DockPage(
         </div>
         {d.nearby && <AroundSection name={d.name} nearby={d.nearby} dockType={d.dockType} />}
         {photos.length > 0 && (
-          <div class="gallery-section">
+          <div class="gallery-section" id="more-photos">
             <h2>More photos of {d.name}</h2>
             <div class="gallery-grid">
               {photos.slice(0, GALLERY_PREVIEW_LIMIT).map((p, i) => {

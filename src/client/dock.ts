@@ -224,4 +224,29 @@ const galleryJs = `
     })();
 `;
 
-export const dockJs = heroLightboxJs + "\n" + galleryJs;
+// Share button: the phone's share sheet when there is one, otherwise the link is copied.
+const shareJs = `
+(function () {
+  var btn = document.getElementById('share-btn');
+  if (!btn) return;
+  var label = document.getElementById('share-label');
+  var original = label ? label.textContent : '';
+  function say(text) {
+    if (!label) return;
+    label.textContent = text;
+    setTimeout(function () { label.textContent = original; }, 2000);
+  }
+  btn.addEventListener('click', function () {
+    var data = { title: btn.getAttribute('data-title') || document.title, url: location.href };
+    if (navigator.share) {
+      navigator.share(data).catch(function () {});
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(location.href).then(function () { say('Link copied'); }, function () { say('Copy failed'); });
+    } else {
+      say('Copy the address bar link');
+    }
+  });
+})();
+`;
+
+export const dockJs = heroLightboxJs + "\n" + galleryJs + "\n" + shareJs;
