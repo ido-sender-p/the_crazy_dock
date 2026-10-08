@@ -54,9 +54,6 @@ export const homeCss = `
   }
   .hero .hero-link:hover { background: rgba(14, 30, 50, 0.72); border-color: rgba(255, 255, 255, 0.5); }
   .hero .hero-link:focus-visible { outline: 2px solid var(--white); outline-offset: 3px; }
-  .hero .hero-link-arrow { width: 0.8em; height: 0.5em; transition: transform 0.2s ease; }
-  .hero .hero-link-arrow path { vector-effect: non-scaling-stroke; }
-  .hero .hero-link:hover .hero-link-arrow { transform: translateX(3px); }
   @media (max-width: 720px) { .hero-actions { flex-direction: column; } .hero .hero-link { justify-content: center; } }
   /* the photo dissolves into the page background so the hero flows into the next section */
   .hero::after {

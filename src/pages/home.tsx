@@ -44,9 +44,6 @@ export function HomePage() {
                 <line x1="16" y1="6" x2="16" y2="22" />
               </svg>
               or just explore on the map
-              <svg class="hero-link-arrow" aria-hidden="true" viewBox="0 0 32 16" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 8h29M23.5 1.5L30 8l-6.5 6.5" />
-              </svg>
             </a>
           </div>
         </div>
