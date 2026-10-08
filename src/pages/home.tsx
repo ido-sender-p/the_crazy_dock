@@ -5,6 +5,21 @@ import { markersUrl } from "../lib/assets";
 import { SITE_ORIGIN } from "../lib/site";
 import { FeaturedCard, featuredDock } from "../components/featured";
 
+// The hero search field shows one of these at random on each visit (site.ts picks it in the browser, since the page is cached).
+// The first one is the fallback when JavaScript is off.
+const SEARCH_PROMPTS = [
+  "What dock are you looking for?",
+  "Find a marina near you",
+  "Where is your next mooring?",
+  "Search a harbour, pier or port",
+  "Which dock holds your story?",
+  "Try \"Rhodes\" or \"Miami\"",
+  "Looking for a quiet pier?",
+  "Search by marina, city or country",
+  "Where did you last drop anchor?",
+  "Find a dock with a view",
+];
+
 export function HomePage() {
   const jsonLd = {
     "@context": "https://schema.org",
@@ -35,7 +50,7 @@ export function HomePage() {
                 <circle cx="11" cy="11" r="7" />
                 <path d="M21 21l-4.3-4.3" />
               </svg>
-              <input type="search" name="q" placeholder="What dock are you looking for?" aria-label="Search for a dock, place or profile" autocomplete="off" required minlength={2} />
+              <input type="search" name="q" placeholder={SEARCH_PROMPTS[0]} data-placeholders={JSON.stringify(SEARCH_PROMPTS)} aria-label="Search for a dock, place or profile" autocomplete="off" required minlength={2} />
             </form>
             <a class="hero-link" href="#map">
               <svg class="hero-link-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">

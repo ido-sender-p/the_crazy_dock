@@ -9,6 +9,18 @@ export const siteJs = `
   if (profileLink) profileLink.style.display = 'inline-flex';
 })();
 
+// A search field with data-placeholders (a JSON list of phrases) shows one of them at random on each visit.
+// The page itself is cached, so the choice has to happen in the browser.
+(function () {
+  var inputs = document.querySelectorAll('input[data-placeholders]');
+  for (var i = 0; i < inputs.length; i++) {
+    try {
+      var list = JSON.parse(inputs[i].getAttribute('data-placeholders'));
+      if (list && list.length) inputs[i].setAttribute('placeholder', list[Math.floor(Math.random() * list.length)]);
+    } catch (e) {}
+  }
+})();
+
 (function () {
   var STORAGE_KEY = 'wildock-a11y';
   var toggle = document.getElementById('a11y-toggle');
