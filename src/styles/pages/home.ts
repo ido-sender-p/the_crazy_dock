@@ -56,15 +56,26 @@ export const homeCss = `
     letter-spacing: -0.005em; margin: 0.9rem 0 2.25rem;
   }
 
-  .world-map { width: 100%; margin-top: 8px; }
-  .world-map svg { width: 100%; height: auto; display: block; }
-  .world-map a { text-decoration: none; }
-  .world-map .shape { fill: var(--accent-dark); fill-opacity: 0.24; transition: fill-opacity var(--ease); }
-  .world-map a:hover .shape { fill-opacity: 0.42; }
-  .world-map .label {
-    font-family: var(--font-serif-bare); font-weight: 600; fill: var(--ink);
-    text-anchor: middle; pointer-events: none;
+  /* By continent: one card per continent, with its outline in its own colour */
+  .continent-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; margin-top: 8px; }
+  .continent-card {
+    display: flex; flex-direction: column; align-items: center; gap: 0.9rem;
+    padding: 1.4rem 0.75rem 1.1rem; background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+    color: var(--ink); text-decoration: none; transition: transform var(--ease), box-shadow var(--ease);
   }
+  .continent-card:hover { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(11, 37, 69, 0.08); }
+  .continent-card .shape { width: 100%; height: 6.25rem; display: block; }
+  .continent-card .name { font-family: var(--font-serif); font-weight: 500; font-size: 1rem; line-height: 1.25; min-height: 2.5em; display: flex; align-items: center; }
+  .continent-card .arrow { width: 1.4rem; height: 0.7rem; color: var(--ink-soft); transition: transform 0.2s ease; }
+  .continent-card:hover .arrow { transform: translateX(3px); }
+  .c-north-america .shape { fill: #8fa886; }
+  .c-south-america .shape { fill: #7a9a6a; }
+  .c-europe .shape { fill: #e6c47a; }
+  .c-africa .shape { fill: #e0905c; }
+  .c-asia .shape { fill: #9db9d6; }
+  .c-oceania .shape { fill: #ee9c82; }
+  @media (max-width: 960px) { .continent-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 520px) { .continent-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } .continent-card .shape { height: 4.5rem; } }
 
   .map-teaser {
     position: relative;

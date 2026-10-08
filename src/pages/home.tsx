@@ -1,6 +1,6 @@
 import { Layout } from "../components/layout";
 import { continents } from "../data";
-import { WORLD_MAP_VIEWBOX, CONTINENT_SHAPES } from "../continents";
+import { CONTINENT_ICONS } from "../continentShapes";
 import { markersUrl } from "../lib/assets";
 import { SITE_ORIGIN } from "../lib/site";
 import { FeaturedCard, featuredDock } from "../components/featured";
@@ -111,18 +111,20 @@ export function HomePage() {
       <section class="block wrap" id="continents">
         <div class="kicker">Browse</div>
         <h2>By continent</h2>
-        <div class="world-map">
-          <svg viewBox={WORLD_MAP_VIEWBOX} xmlns="http://www.w3.org/2000/svg">
-            {continents.map((ct) => {
-              const shape = CONTINENT_SHAPES[ct.slug];
-              return (
-                <a href={`/continents/${ct.slug}`}>
-                  <path class="shape" d={shape.d} />
-                  <text class="label" x={shape.cx} y={shape.cy} font-size="20">{ct.name}</text>
-                </a>
-              );
-            })}
-          </svg>
+        <div class="continent-grid">
+          {Object.entries(CONTINENT_ICONS).map(([slug, icon]) => {
+            const ct = continents.find((c) => c.slug === slug);
+            if (!ct) return null;
+            return (
+              <a class={`continent-card c-${ct.slug}`} href={`/continents/${ct.slug}`}>
+                <svg class="shape" viewBox={icon.viewBox} aria-hidden="true"><path d={icon.d} /></svg>
+                <span class="name">{ct.name}</span>
+                <svg class="arrow" viewBox="0 0 32 16" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M1 8h29M23.5 1.5L30 8l-6.5 6.5" />
+                </svg>
+              </a>
+            );
+          })}
         </div>
       </section>
 

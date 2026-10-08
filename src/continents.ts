@@ -2,60 +2,6 @@ import type { Water } from "./styles/sea";
 // ".ts" on purpose: scripts/import-wikidata.mjs loads this file under plain Node, which needs the extension.
 import { slugify } from "./lib/slug.ts";
 
-// Shared continent map data , the same loose, illustrative shapes power both
-// the homepage "By continent" world map and each continent's own zoomed page.
-// Coordinates live on one shared 1000x460 canvas (see WORLD_MAP_VIEWBOX) so a
-// continent page can crop to just that continent's bounding box and reuse the
-// exact same path, just shown larger.
-
-export const WORLD_MAP_VIEWBOX = "0 0 1000 460";
-
-export type ContinentShape = {
-  d: string;
-  cx: number;
-  cy: number;
-  bbox: { minX: number; minY: number; maxX: number; maxY: number };
-};
-
-export const CONTINENT_SHAPES: Record<string, ContinentShape> = {
-  europe: {
-    d: "M530.5,151.7 L507.8,140.4 L457,156.1 L506.4,106.2 L567.7,97.3 L543.2,95.4 L546.6,80.6 L523,109.9 L498.8,100.8 L534.3,70.6 L597.7,75.6 L572.2,77.1 L587.6,86.5 L667.9,75.5 L642.9,105.8 L654.6,122.7 L614.2,125.3 L617,149.4 L571.9,132.6 L546.1,162.8 L517.7,137.5 L530.5,151.7 Z",
-    cx: 562.5,
-    cy: 116.7,
-    bbox: { minX: 457, minY: 70.6, maxX: 667.9, maxY: 162.8 },
-  },
-  asia: {
-    d: "M642.8,191.8 L617.1,180.6 L650.2,202.1 L604.6,228.9 L584.3,161.7 L556.3,152.9 L654.6,122.7 L676.6,61 L684.1,79.7 L773.4,47.6 L985,72 L920,122.5 L945,90.2 L860.2,111.2 L877.5,119.6 L843.6,166.2 L811.7,155.1 L816.8,193.6 L780.6,205.7 L776.4,240.2 L762,227.2 L773.8,260.5 L736.2,198.6 L699.5,241.7 L686.6,202.2 L642.8,191.8 Z",
-    cx: 770.7,
-    cy: 154.1,
-    bbox: { minX: 556.3, minY: 47.6, maxX: 985, maxY: 260.5 },
-  },
-  africa: {
-    d: "M485.4,248.1 L460.5,251.5 L434.6,223.1 L439.1,198 L468.3,164.2 L510.9,160.2 L512.1,170.2 L536.3,179.9 L544,172.4 L578.8,177 L578.9,187 L573.6,181.8 L602,232.2 L626.3,231.3 L617.2,251.6 L592.7,277.2 L597.3,305.3 L579.9,318.9 L582.3,331.6 L561.2,356.3 L539.2,361.3 L516.3,314.4 L522.1,294.8 L520.2,280.5 L507.7,266 L510.6,253.5 L494.1,245.8 L485.4,248.1 Z",
-    cx: 530.5,
-    cy: 260.8,
-    bbox: { minX: 434.6, minY: 160.2, maxX: 626.3, maxY: 361.3 },
-  },
-  "north-america": {
-    d: "M311.6,106.7 L328.3,119.1 L285.5,129.3 L313.6,138.1 L268.7,155.8 L259.5,194.1 L243.1,179.3 L211.1,187.7 L216.5,212 L241.5,204.5 L258.2,244.1 L191,210.4 L163,175.2 L171.2,195.3 L110.7,101.2 L66.5,92.9 L28.3,111.5 L46.6,99.4 L15,81.3 L47.1,65.4 L216.7,78.6 L220.1,63.6 L256.8,71.5 L219.3,98.1 L257.8,122 L267.5,89.9 L311.6,106.7 Z",
-    cx: 171.7,
-    cy: 153.9,
-    bbox: { minX: 15, minY: 63.6, maxX: 328.3, maxY: 244.1 },
-  },
-  "south-america": {
-    d: "M372.9,315.3 L366.3,328.1 L347.7,335.1 L332.6,360.8 L321.3,354.6 L325.5,367.1 L302,378 L306.3,383 L295.2,392.4 L300.2,397.9 L292.9,410 L279.2,412.4 L272.5,394.4 L281.1,388.1 L288.1,319.9 L257.3,281.2 L267.9,240.1 L283.8,229.5 L283.9,239 L288.4,230.2 L311.1,234.3 L324,248.9 L340.6,252.7 L344.4,261 L336.6,268.7 L351.7,265.9 L384.6,278.6 L372.9,315.3 Z",
-    cx: 321,
-    cy: 321,
-    bbox: { minX: 257.3, minY: 229.5, maxX: 384.6, maxY: 412.4 },
-  },
-  oceania: {
-    d: "M905.7,331.2 L910.3,336.5 L909.6,351.6 L901.3,368.8 L891.4,373.3 L887.3,369.7 L883.4,372.5 L875,370.1 L868.2,359.3 L864.8,362.6 L867.3,354.9 L862.3,361.8 L857.3,354.7 L848.9,351.9 L806.6,361.2 L798.9,337.3 L801.7,337.5 L801.2,325.1 L820.7,318.8 L834.6,303 L844.9,306.5 L847.3,298.8 L853.3,298 L851.2,295.2 L864,297.5 L860.9,305.8 L873.9,313.6 L880.8,294.2 L891,316.9 L905.7,331.2 Z",
-    cx: 854.6,
-    cy: 333.8,
-    bbox: { minX: 798.9, minY: 294.2, maxX: 910.3, maxY: 373.3 },
-  },
-};
-
 // Not geographically precise , a systematic, illustrative country list per
 // continent so every continent page can show names without needing exact
 // per-country coordinates.
