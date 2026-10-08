@@ -190,9 +190,7 @@ export function DockPage(
           <button class="hero-frame-bleed" type="button" id="hero-open" aria-label={`View larger photo of ${d.name}`}>
             <img
               class="hero-img-bleed"
-              src={photoVariant(d.imageUrl, "w1280")}
-              srcset={`${photoVariant(d.imageUrl, "w1280")} 1280w, ${photoVariant(d.imageUrl, "full")} 1600w`}
-              sizes="100vw"
+              src={photoVariant(d.imageUrl, "full")}
               alt={d.name}
               decoding="async"
               fetchpriority="high"
