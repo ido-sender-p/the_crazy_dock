@@ -63,12 +63,14 @@ export const Layout: FC<
             </svg>
           </a>
           <div class="header-actions">
-            <a class="icon-btn icon-optional" href="/search" aria-label="Search">
-              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <circle cx="11" cy="11" r="7" />
-                <path d="M21 21l-4.3-4.3" />
-              </svg>
-            </a>
+            {page !== "home" && (
+              <a class="icon-btn icon-optional" href="/search" aria-label="Search">
+                <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                  <circle cx="11" cy="11" r="7" />
+                  <path d="M21 21l-4.3-4.3" />
+                </svg>
+              </a>
+            )}
             <div class="a11y-wrap">
               <button
                 class="icon-btn"

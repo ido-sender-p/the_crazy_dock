@@ -31,16 +31,33 @@ export const homeCss = `
     color: var(--white);
     text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 2px 18px rgba(0,0,0,0.55);
   }
-  .hero-actions { display: flex; gap: 0.9rem; flex-wrap: wrap; justify-content: center; margin-top: 2.75rem; }
-  /* plain serif text link with an arrow, no button chrome */
-  .hero .hero-link {
-    display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0;
-    font-family: var(--font-serif); font-weight: 500; font-size: clamp(1.05rem, 1.5vw, 1.25rem);
-    color: var(--white); text-decoration: none; text-shadow: 0 1px 3px rgba(0,0,0,0.6), 0 2px 18px rgba(0,0,0,0.55);
+  /* search field and the map link side by side, both as frosted boxes over the photo */
+  .hero-actions { display: flex; gap: 1rem; justify-content: center; align-items: stretch; margin: 2.75rem auto 0; max-width: 46rem; }
+  .hero-search, .hero .hero-link {
+    display: flex; align-items: center; gap: 0.7rem; min-height: 3.5rem; padding: 0 1.25rem;
+    background: rgba(14, 30, 50, 0.55); border: 1px solid rgba(255, 255, 255, 0.28); border-radius: 12px;
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); box-shadow: 0 6px 22px rgba(0, 0, 0, 0.22);
+    color: var(--white);
   }
-  .hero .hero-link svg { width: 0.7em; height: 0.45em; position: relative; top: 0.14em; transition: transform 0.2s ease; }
-  .hero .hero-link svg path { vector-effect: non-scaling-stroke; }
-  .hero .hero-link:hover svg { transform: translateX(3px); }
+  .hero-search { flex: 1 1 0; min-width: 0; margin: 0; }
+  .hero-search:focus-within { border-color: rgba(255, 255, 255, 0.75); }
+  .hero-search-icon, .hero-link-icon { width: 1.25rem; height: 1.25rem; flex: none; opacity: 0.85; }
+  .hero-search input {
+    flex: 1; min-width: 0; background: transparent; border: none; outline: none; padding: 0.9rem 0;
+    font-family: var(--font-sans); font-size: 1rem; color: var(--white);
+  }
+  .hero-search input::placeholder { color: rgba(255, 255, 255, 0.72); opacity: 1; }
+  .hero-search input::-webkit-search-cancel-button { display: none; }
+  .hero .hero-link {
+    flex: 0 0 auto; font-family: var(--font-serif); font-weight: 500; font-size: clamp(1rem, 1.4vw, 1.15rem);
+    text-decoration: none; white-space: nowrap; transition: background var(--ease), border-color var(--ease);
+  }
+  .hero .hero-link:hover { background: rgba(14, 30, 50, 0.72); border-color: rgba(255, 255, 255, 0.5); }
+  .hero .hero-link:focus-visible { outline: 2px solid var(--white); outline-offset: 3px; }
+  .hero .hero-link-arrow { width: 0.8em; height: 0.5em; transition: transform 0.2s ease; }
+  .hero .hero-link-arrow path { vector-effect: non-scaling-stroke; }
+  .hero .hero-link:hover .hero-link-arrow { transform: translateX(3px); }
+  @media (max-width: 720px) { .hero-actions { flex-direction: column; } .hero .hero-link { justify-content: center; } }
   /* the photo dissolves into the page background so the hero flows into the next section */
   .hero::after {
     content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 48%; z-index: 0; pointer-events: none;

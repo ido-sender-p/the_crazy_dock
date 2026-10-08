@@ -30,9 +30,21 @@ export function HomePage() {
           <h1>From the whisper of seas<br />To the legends of the lakes</h1>
           <p class="tagline">Wildock is on a mission to map every dock in the world and give people a place to share their stories about them.</p>
           <div class="hero-actions">
+            <form class="hero-search" method="get" action="/search" role="search">
+              <svg class="hero-search-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="11" cy="11" r="7" />
+                <path d="M21 21l-4.3-4.3" />
+              </svg>
+              <input type="search" name="q" placeholder="What dock are you looking for?" aria-label="Search for a dock, place or profile" autocomplete="off" required minlength={2} />
+            </form>
             <a class="hero-link" href="#map">
-              Explore docks on the map
-              <svg aria-hidden="true" viewBox="0 0 32 16" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg class="hero-link-icon" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6" />
+                <line x1="8" y1="2" x2="8" y2="18" />
+                <line x1="16" y1="6" x2="16" y2="22" />
+              </svg>
+              or just explore on the map
+              <svg class="hero-link-arrow" aria-hidden="true" viewBox="0 0 32 16" preserveAspectRatio="none" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M1 8h29M23.5 1.5L30 8l-6.5 6.5" />
               </svg>
             </a>
