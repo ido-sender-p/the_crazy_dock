@@ -53,6 +53,7 @@ export type Dock = {
   lengthM: number;
   yearBuilt: number | null;
   website?: string; // official site, from OpenStreetMap (http or https only)
+  imageTransform?: boolean; // photo is one original in R2; card sizes come from Cloudflare Images (see lib/imageVariants.ts)
   nearby?: Nearby; // places around the dock, from OpenStreetMap; absent for hand-written entries
 };
 
@@ -115,6 +116,7 @@ type CatalogueRow = {
   lengthM?: number;
   yearBuilt?: number;
   web?: string;
+  tx?: number; // 1: photo has no pre-made sizes: card sizes come from Cloudflare Images
   nb?: [number, number, number, number, number, number, number, number, 0 | 1]; // eat, stay, shops, sights, historic, beaches, stations, ferries, capped
   ml?: string[]; // mall names
   lm?: string[]; // landmark names
@@ -149,6 +151,7 @@ function toDock(r: CatalogueRow): Dock {
     lengthM: r.lengthM ?? 0,
     yearBuilt: r.yearBuilt ?? null,
     website: r.web,
+    imageTransform: r.tx === 1,
     nearby: r.nb && {
       eat: r.nb[0], stay: r.nb[1], shops: r.nb[2], sights: r.nb[3], historic: r.nb[4],
       beaches: r.nb[5], stations: r.nb[6], ferries: r.nb[7], capped: r.nb[8] === 1,

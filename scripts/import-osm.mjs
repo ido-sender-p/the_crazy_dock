@@ -2,7 +2,7 @@
 // downloads candidate marinas, harbours, ferry terminals and named piers via Overpass and caches them in
 // scripts/data/osm-<ISO>.json. Usage: node scripts/import-osm.mjs GR CY
 // Codes: an ISO 3166-1 country (GR) or an ISO 3166-2 region (US-FL). (c) OpenStreetMap contributors, ODbL. Resumable (cached files are reused); nothing is written to D1 or R2.
-import { writeFile, readFile } from "node:fs/promises";
+import { writeFile, readFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { setTimeout as sleep } from "node:timers/promises";
 
@@ -30,12 +30,12 @@ out center tags;`;
 // (the box also covers neighbouring land and sea; enrich-osm.mjs keeps only places whose reverse geocode says Florida).
 function florida() {
   const tiles = [];
-  for (let lat = 24.3; lat < 31.1; lat += 1.7) for (let lon = -87.7; lon < -79.8; lon += 2.0) tiles.push([+lat.toFixed(1), +lon.toFixed(1), +(lat + 1.7).toFixed(1), +(lon + 2.0).toFixed(1)]);
+  for (let lat = 24.3; lat < 31.1; lat += 1.2) for (let lon = -87.7; lon < -79.8; lon += 1.5) tiles.push([+lat.toFixed(1), +lon.toFixed(1), +(lat + 1.2).toFixed(1), +(lon + 1.5).toFixed(1)]);
   return tiles;
 }
 
 async function overpassQuery(q, label) {
-  for (let round = 0; round < 2; round++) {
+  for (let round = 0; round < 1; round++) {
     for (const ep of ENDPOINTS) {
       try {
         const r = await fetch(ep, { method: "POST", body: "data=" + encodeURIComponent(q), headers: { "User-Agent": UA, "Content-Type": "application/x-www-form-urlencoded" }, signal: AbortSignal.timeout(300000) });
@@ -51,11 +51,33 @@ async function overpassQuery(q, label) {
 
 async function overpass(iso) {
   if (iso !== "US-FL") return overpassQuery(areaQuery(iso), iso);
+  // Each box is cached in osm-tiles/, so a rerun only fetches the boxes that are still missing; a failed box does not stop the others.
+  await mkdir(new URL("./data/osm-tiles/", import.meta.url), { recursive: true });
   const seen = new Map();
+  let failed = 0;
+  // A box the servers cannot answer is split into four and retried (down to about 0.15 degrees), so dense coasts still get through.
+  const tile = async (b, depth = 0) => {
+    const file = new URL(`./data/osm-tiles/FL-${b.join("_")}.json`, import.meta.url);
+    if (existsSync(file)) return JSON.parse(await readFile(file, "utf8"));
+    try {
+      const els = await overpassQuery(bboxQuery(b), `US-FL ${b}`);
+      await writeFile(file, JSON.stringify(els));
+      return els;
+    } catch {
+      if (depth >= 3) { failed++; console.log("US-FL tile failed, rerun later:", b.join(",")); return []; }
+      const [s0, w0, n0, e0] = b, ms = +((s0 + n0) / 2).toFixed(3), mw = +((w0 + e0) / 2).toFixed(3);
+      const parts = [[s0, w0, ms, mw], [s0, mw, ms, e0], [ms, w0, n0, mw], [ms, mw, n0, e0]];
+      const out = [], failedBefore = failed;
+      for (const p of parts) out.push(...(await tile(p, depth + 1)));
+      if (failed === failedBefore) await writeFile(file, JSON.stringify(out)); // cached as complete only if every part answered
+      return out;
+    }
+  };
   for (const b of florida()) {
-    for (const e of await overpassQuery(bboxQuery(b), `US-FL ${b}`)) seen.set(`${e.type}/${e.id}`, e);
-    console.log("US-FL tile", b.join(","), "total so far", seen.size);
+    for (const e of await tile(b)) seen.set(`${e.type}/${e.id}`, e);
+    console.log("US-FL box", b.join(","), "total so far", seen.size);
   }
+  if (failed) throw new Error(`${failed} Florida boxes still missing`);
   return [...seen.values()];
 }
 

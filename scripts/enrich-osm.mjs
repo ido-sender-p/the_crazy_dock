@@ -51,7 +51,7 @@ const NOT_A_DOCK = /\b(charter|boat hire|boat rental|rent(als?)?|camps?|camping|
 const GENERIC_NAME = /^(port|harbou?r|marina|pier|jetty|quay|ferry terminal|ferry|limani|lim[ae]ni|small harbou?r|fishing harbou?r|yacht harbou?r)$/i;
 
 // A bare place name ("Kos", "Milos") is not recognisable as a dock: add what it is.
-const HAS_KIND = /(port|marina|marine|harbou?r|pier|quay|jetty|limani|limenas|limenisko|dock|mole|wharf|terminal|yacht|nautical|club|katafygio|skala)/i;
+const HAS_KIND = /(port|puerto|muelle|embarcadero|quai|havn|marina|marine|harbou?r|pier|quay|jetty|limani|limenas|limenisko|dock|mole|wharf|terminal|yacht|nautical|club|katafygio|skala)/i;
 export const withKind = (name, type, label) => (HAS_KIND.test(name) ? name : `${name} ${label === "marina" ? "Marina" : label === "ferry terminal" ? "Ferry Terminal" : type === "industrial" ? "Port" : label === "pier" ? "Pier" : "Harbour"}`);
 
 function pickName(tags) {

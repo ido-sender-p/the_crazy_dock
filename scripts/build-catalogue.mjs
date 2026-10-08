@@ -99,6 +99,8 @@ const out = picked.map((d) => {
   if (d.lengthM) row.lengthM = d.lengthM;
   if (d.yearBuilt != null) row.yearBuilt = d.yearBuilt;
   if (d.web) row.web = d.web;
+  // Outside Greece the photos are served through Cloudflare Images (one original per photo, no pre-made sizes).
+  if (d.imageAttribution && !wikiSource && d.country !== "Greece") row.tx = 1;
   return row;
 });
 
