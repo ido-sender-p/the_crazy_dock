@@ -4,11 +4,12 @@
 // A file is only a candidate when its own title has a distinctive word of the dock's name and a harbour word
 // (so "Olive grove" or a map never passes), it is a JPEG/PNG of at least 1000 px with a usable CC licence and author.
 // Nothing is downloaded or changed: results go to scripts/data/photo-candidates.json for review.
-// Usage: node scripts/find-photos.mjs [--limit N]   (resumable: docks already in the file are skipped)
+// Usage: node scripts/find-photos.mjs [--limit N] [--withheld=Florida]   (resumable: docks already in the file are skipped)
 import { readFile, writeFile } from "node:fs/promises";
 import { setTimeout as sleep } from "node:timers/promises";
 import { slugify } from "./lib/slugify.mjs";
 import { cleanAuthor, authorUsable } from "./lib/clean.mjs";
+import { photoTargets } from "./lib/photoTargets.mjs";
 import { getJson, licenseOk, stripHtml } from "./import-wikidata.mjs";
 
 const OUT = new URL("./data/photo-candidates.json", import.meta.url);
@@ -89,7 +90,7 @@ async function searchFor(dock) {
   return [...cands.values()].sort((a, b) => b.score - a.score).slice(0, 3);
 }
 
-const rows = JSON.parse(await readFile(new URL("../src/catalogue.json", import.meta.url), "utf8")).filter((d) => !d.imageAttribution);
+const rows = await photoTargets();
 const results = await readFile(OUT, "utf8").then(JSON.parse, () => ({}));
 const todo = rows.filter((d) => !(d.slug in results)).slice(0, LIMIT);
 console.log(`${rows.length} docks without a photo, ${todo.length} to search`);

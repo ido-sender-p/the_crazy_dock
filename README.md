@@ -136,7 +136,9 @@ explicit upload step.
 6. **Local preview of photos**: stop the dev server, then `npm run catalogue:images` (local R2). The preview points at
    `img.wildock.com`, so photos not yet uploaded to production show broken locally.
 7. **Upload to production R2**: only on the owner's say-so. `scripts/data/r2-upload-list.txt` lists key and file; use
-   `wrangler r2 object put wildock-photos/<key> --file=<file> --remote` with the Workers token, three at a time. Verify
+   `wrangler r2 object put wildock-photos/<key> --file=<file> --remote`, three at a time. The login `wrangler` has by default
+   cannot write to R2: export the token kept in `.env` (git-ignored) as `CLOUDFLARE_R2` first, without printing it:
+   `export CLOUDFLARE_API_TOKEN="$(grep '^CLOUDFLARE_R2=' .env | cut -d= -f2-)"`. Verify
    every key answers 200 on `img.wildock.com` (and a sample of `/cdn-cgi/image/...` URLs) **before** deploying.
 
 ## Browsing hierarchy

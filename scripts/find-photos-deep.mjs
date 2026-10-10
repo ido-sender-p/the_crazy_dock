@@ -5,11 +5,12 @@
 //   category   a Commons category named after the dock (or "<name> harbour" ...), the files inside it
 //   geo        a Commons file geotagged within 250 m whose own categories show a harbour subject (marina, harbour, pier, port)
 // Nothing is downloaded or changed: results go to scripts/data/photo-candidates-deep.json for review.
-// Usage: node scripts/find-photos-deep.mjs [--limit N]   (resumable)
+// Usage: node scripts/find-photos-deep.mjs [--limit N] [--withheld=Florida]   (resumable)
 import { readFile, writeFile } from "node:fs/promises";
 import { setTimeout as sleep } from "node:timers/promises";
 import { slugify } from "./lib/slugify.mjs";
 import { cleanAuthor, authorUsable } from "./lib/clean.mjs";
+import { photoTargets } from "./lib/photoTargets.mjs";
 import { getJson, licenseOk, stripHtml } from "./import-wikidata.mjs";
 
 const OUT = new URL("./data/photo-candidates-deep.json", import.meta.url);
@@ -121,7 +122,7 @@ async function search(dock) {
 }
 
 const first = await readFile(FIRST, "utf8").then(JSON.parse, () => ({}));
-const rows = JSON.parse(await readFile(new URL("../src/catalogue.json", import.meta.url), "utf8")).filter((d) => !d.imageAttribution);
+const rows = await photoTargets();
 const results = await readFile(OUT, "utf8").then(JSON.parse, () => ({}));
 const todo = rows.filter((d) => !(d.slug in results)).slice(0, LIMIT);
 console.log(`${rows.length} docks without a photo, ${todo.length} to search (${Object.values(first).filter((r) => r.length).length} also have first-pass candidates)`);

@@ -3,10 +3,11 @@
 // Wikimedia Commons files geotagged within 2 km whose own categories or title show water, with a usable CC licence and author,
 // at least 1000 px wide, landscape. People, vehicles, interiors, signs and maps are excluded. Nothing is downloaded:
 // results go to scripts/data/photo-candidates-area.json (nearest first) for review. Resumable.
-// Usage: node scripts/find-photos-area.mjs [--limit N]
+// Usage: node scripts/find-photos-area.mjs [--limit N] [--withheld=Florida]
 import { readFile, writeFile } from "node:fs/promises";
 import { setTimeout as sleep } from "node:timers/promises";
 import { cleanAuthor, authorUsable } from "./lib/clean.mjs";
+import { photoTargets } from "./lib/photoTargets.mjs";
 import { getJson, licenseOk, stripHtml } from "./import-wikidata.mjs";
 
 const OUT = new URL("./data/photo-candidates-area.json", import.meta.url);
@@ -58,7 +59,7 @@ async function search(dock) {
   return out.sort((a, b) => b.score - a.score).slice(0, 4);
 }
 
-const rows = JSON.parse(await readFile(new URL("../src/catalogue.json", import.meta.url), "utf8")).filter((d) => !d.imageAttribution);
+const rows = await photoTargets();
 const results = await readFile(OUT, "utf8").then(JSON.parse, () => ({}));
 const todo = rows.filter((d) => !(d.slug in results)).slice(0, LIMIT);
 console.log(`${rows.length} docks without a photo, ${todo.length} to search`);
