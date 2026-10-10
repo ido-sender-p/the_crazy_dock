@@ -74,7 +74,29 @@ all subdomains serve HTTPS.
 
 ## Before opening registration to the public
 
-Registration stays closed to the public for now. Before it opens:
+Registration is **closed in code**, not only by policy. `src/lib/signup.ts` reads `SIGNUP_ALLOWLIST` (comma-separated emails,
+`wrangler.toml` [vars]); empty, as shipped, means nobody can create an account:
+
+- `GET /signup` shows "Registration is closed" (403) and `POST /signup` is refused before it reads the form or touches D1
+  (no throttle row, no account). The "Create an account" link is hidden on the login page.
+- A new Google sign-in is refused too; accounts that already exist can still log in with a password or Google.
+- To make the first admin (nothing in D1 has an account yet): put the owner's email in `SIGNUP_ALLOWLIST`, deploy, sign up,
+  mark the row `is_admin = 1` in D1, then empty the variable again. Only listed addresses can register while it is set.
+- To open registration to everyone, finish the list below, then make `registrationOpen` and `mayRegister` in
+  `src/lib/signup.ts` return true.
+
+What an account can do today (so you know what opening it means): edit its profile; save favourites (capped); propose a dock
+(3 pending at most) and add a photo to a dock (5 pending at most), both held as `pending` until an admin approves them in
+`/admin/submissions`; rate published photos (100 a day); comment on published photos (20 a day, **shown at once, no
+approval**); send private messages to other users (20 an hour, no content filter). A visitor is never an admin.
+
+Before it opens:
+
+- **Verify email addresses.** Today anyone can sign up with an address that is not theirs; there is no confirmation email.
+- **Moderate comments** (hold them as pending, or filter), since they appear without review. Private messages need at least a
+  report or block option.
+- Photo kinds: a visitor's upload is kind 1, the owner's is kind 2 and a nearby view is kind 3 (see the README); decide how
+  the tags read once real visitor photos exist.
 
 - Google sign-in returns 501 in production: set the `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` secrets
   (`npx wrangler secret put ...`, values from Google Cloud Console, never pasted into a chat) and add

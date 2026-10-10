@@ -29,6 +29,8 @@ bucket_name = "wildock-photos"
 SITE_URL = "https://wildock.com"
 # Public address for takedown/credit requests, shown on /credits. Empty = the page says it is being set up.
 CONTACT_EMAIL = ""
+# Registration is closed. Emails listed here (comma-separated) may still create an account, for example to make the first admin; empty = nobody.
+SIGNUP_ALLOWLIST = ""
 
 # Gives the Worker the id of its deployed version, which keys the edge cache so every deploy starts with fresh HTML.
 [version_metadata]

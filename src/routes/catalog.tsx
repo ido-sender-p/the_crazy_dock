@@ -57,6 +57,7 @@ catalog.get("/docks/:slug", (c) => {
           ...dock,
           imageUrl: cover.image_url,
           imageAttribution: `Photo by ${cover.username}, voted the best shot by the community`,
+          photoKind: 1 as const,
           imageOrientation: cover.image_orientation === "portrait" ? ("portrait" as const) : ("landscape" as const),
         }
       : dock;

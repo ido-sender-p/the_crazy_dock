@@ -1,7 +1,8 @@
 import { Hono, type Context } from "hono";
 import { setCookie, deleteCookie, getCookie } from "hono/cookie";
 import type { Env } from "../env";
-import { LoginPage, SignupPage, ForgotPasswordPage } from "../pages/login";
+import { LoginPage, SignupPage, SignupClosedPage, ForgotPasswordPage } from "../pages/login";
+import { mayRegister, registrationOpen } from "../lib/signup";
 import { ProfilePage } from "../pages/profile";
 import { verifyPassword, hashPassword, newSessionToken, DUMMY_PASSWORD_HASH } from "../lib/auth";
 import { findUserByEmail,
@@ -52,7 +53,7 @@ async function startSession(c: Context<Env>, userId: number) {
 auth.get("/login", async (c) => {
   const next = safeNextPath(c.req.query("next"), "/profile");
   if (await currentUser(c)) return c.redirect(next);
-  return c.html(<LoginPage next={next} path="/login" />);
+  return c.html(<LoginPage signupOpen={registrationOpen(c.env)} next={next} path="/login" />);
 });
 
 auth.post("/login", smallBody, async (c) => {
@@ -65,7 +66,7 @@ auth.post("/login", smallBody, async (c) => {
   const genericError = "Invalid email or password.";
   const throttle = await checkLoginThrottle(c.env.DB, email, ip);
   if (throttle.locked) {
-    return c.html(<LoginPage next={next} path="/login" error="Too many attempts. Try again in a few minutes." />, 429);
+    return c.html(<LoginPage signupOpen={registrationOpen(c.env)} next={next} path="/login" error="Too many attempts. Try again in a few minutes." />, 429);
   }
 
   const user = await findUserWithHashByEmail(c.env.DB, email);
@@ -73,7 +74,7 @@ auth.post("/login", smallBody, async (c) => {
     password.length <= MAX_PASSWORD_LENGTH && (await verifyPassword(password, user?.password_hash ?? DUMMY_PASSWORD_HASH));
   if (!user || !passwordOk) {
     await recordLoginFailure(c.env.DB, email, ip);
-    return c.html(<LoginPage next={next} path="/login" error={genericError} />, 401);
+    return c.html(<LoginPage signupOpen={registrationOpen(c.env)} next={next} path="/login" error={genericError} />, 401);
   }
   if (throttle.emailFailures > 0) await clearLoginFailures(c.env.DB, email);
   await startSession(c, user.id);
@@ -83,19 +84,24 @@ auth.post("/login", smallBody, async (c) => {
 auth.get("/signup", async (c) => {
   const next = safeNextPath(c.req.query("next"), "/profile");
   if (await currentUser(c)) return c.redirect(next);
+  if (!registrationOpen(c.env)) return c.html(<SignupClosedPage path="/signup" />, 403);
   return c.html(<SignupPage next={next} path="/signup" />);
 });
 
 auth.post("/signup", smallBody, async (c) => {
+  // Closed: refuse before reading the form or touching the database (no throttle row, no account).
+  if (!registrationOpen(c.env)) return c.html(<SignupClosedPage path="/signup" />, 403);
   const form = await c.req.formData();
   const next = safeNextPath(String(form.get("next") ?? ""), "/profile");
-  const rejectWith = (error: string, status: 400 | 429 = 400) =>
+  const rejectWith = (error: string, status: 400 | 403 | 429 = 400) =>
     c.html(<SignupPage next={next} path="/signup" error={error} />, status);
 
   const username = checkUsername(String(form.get("username") ?? ""));
   if (!username.ok) return rejectWith(username.error);
   const email = checkEmail(String(form.get("email") ?? ""));
   if (!email.ok) return rejectWith(email.error);
+
+  if (!mayRegister(c.env, email.value)) return rejectWith("Registration is closed.", 403);
 
   const password = String(form.get("password") ?? "");
   const passwordError = checkNewPassword(password, String(form.get("confirmPassword") ?? ""));
@@ -162,7 +168,7 @@ auth.get("/auth/google/callback", async (c) => {
 
   const code = c.req.query("code");
   const returnedState = c.req.query("state");
-  const fail = (message: string) => c.html(<LoginPage next={next} path="/login" error={message} />, 400);
+  const fail = (message: string) => c.html(<LoginPage signupOpen={registrationOpen(c.env)} next={next} path="/login" error={message} />, 400);
 
   if (!c.env.GOOGLE_CLIENT_ID || !c.env.GOOGLE_CLIENT_SECRET) return c.text("Google sign-in isn't configured yet.", 501);
   if (!code || !returnedState || returnedState !== savedState) return fail("Google sign-in failed. Please try again.");
@@ -190,6 +196,7 @@ auth.get("/auth/google/callback", async (c) => {
       }
       user = existing;
     } else {
+      if (!mayRegister(c.env, email)) return fail("Registration is closed.");
       try {
         user = await createGoogleUserWithFreeName(c, email, profile.name, profile.sub);
       } catch (err) {

@@ -21,6 +21,11 @@ export function dedupeDocksBySlug<T extends { slug: string }>(items: T[]): T[] {
   });
 }
 
+// Who supplied a dock's main photo: 1 a visitor (uploaded through the site), 2 the owner (everything in the catalogue and the
+// hand-written entries; kept even if a photo is later removed or replaced), 3 the owner too, but the photo shows the water
+// near the dock and not the dock itself. Shown on the dock page and recorded in the catalogue as `pk`.
+export type PhotoKind = 1 | 2 | 3;
+
 export type Dock = {
   slug: string;
   name: string;
@@ -53,6 +58,7 @@ export type Dock = {
   lengthM: number;
   yearBuilt: number | null;
   website?: string; // official site, from OpenStreetMap (http or https only)
+  photoKind?: PhotoKind;
   imageTransform?: boolean; // photo is one original in R2; card sizes come from Cloudflare Images (see lib/imageVariants.ts)
   nearby?: Nearby; // places around the dock, from OpenStreetMap; absent for hand-written entries
   aboutExtras?: string; // extra verified facts for the About section (OpenStreetMap tags, length, year)
@@ -84,6 +90,7 @@ const legacyDocks: Dock[] = [
     imageUrl: "/uploads/marina-piccola-capri-cover",
     imageAttribution: "Photo by Ido Sender",
     imageOrientation: "portrait",
+    photoKind: 2,
     lengthM: 80,
     yearBuilt: null,
   },
@@ -118,6 +125,7 @@ type CatalogueRow = {
   lengthM?: number;
   yearBuilt?: number;
   web?: string;
+  pk?: number; // photo kind, see PhotoKind: 2 the owner's photo of the dock, 3 the owner's view of the water nearby
   tx?: number; // 1: photo has no pre-made sizes: card sizes come from Cloudflare Images
   nb?: [number, number, number, number, number, number, number, number, 0 | 1]; // eat, stay, shops, sights, historic, beaches, stations, ferries, capped
   ab?: string; // extra verified facts, see scripts/build-about.mjs
@@ -158,6 +166,7 @@ function toDock(r: CatalogueRow): Dock {
     website: r.web,
     aboutExtras: r.ab,
     placeBlurb: r.pb && r.pt ? { text: r.pb, title: r.pt } : undefined,
+    photoKind: r.imageAttribution ? (r.pk === 3 ? 3 : 2) : undefined,
     imageTransform: r.tx === 1,
     nearby: r.nb && {
       eat: r.nb[0], stay: r.nb[1], shops: r.nb[2], sights: r.nb[3], historic: r.nb[4],

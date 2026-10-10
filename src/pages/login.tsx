@@ -12,7 +12,7 @@ function GoogleIcon() {
   );
 }
 
-export function LoginPage(opts: { next: string; error?: string; path: string }) {
+export function LoginPage(opts: { next: string; error?: string; path: string; signupOpen?: boolean }) {
   return (
     <Layout page="login" hero noindex title="Log in | Wildock" description="Log in to Wildock to submit a new dock, pier or marina." path={opts.path}>
       <section class="hero auth-hero">
@@ -43,9 +43,11 @@ export function LoginPage(opts: { next: string; error?: string; path: string }) 
             </button>
           </form>
           <a class="forgot" href="/forgot-password">Forgot your password?</a>
-          <p class="switch">
-            New here? <a href={`/signup?next=${encodeURIComponent(opts.next)}`}>Create an account</a>
-          </p>
+          {opts.signupOpen && (
+            <p class="switch">
+              New here? <a href={`/signup?next=${encodeURIComponent(opts.next)}`}>Create an account</a>
+            </p>
+          )}
         </div>
       </section>
     </Layout>
@@ -87,6 +89,25 @@ export function SignupPage(opts: { next: string; error?: string; path: string })
           </form>
           <p class="switch">
             Already have an account? <a href={`/login?next=${encodeURIComponent(opts.next)}`}>Log in</a>
+          </p>
+        </div>
+      </section>
+    </Layout>
+  );
+}
+
+export function SignupClosedPage(opts: { path: string }) {
+  return (
+    <Layout page="login" hero noindex title="Registration closed | Wildock" description="Wildock is not accepting new accounts yet." path={opts.path}>
+      <section class="hero auth-hero">
+        <div class="auth-card">
+          <div class="auth-icon">
+            <DockIcon />
+          </div>
+          <h1>Registration is closed</h1>
+          <p class="intro">Wildock is not accepting new accounts yet. You can still browse every dock, pier and marina.</p>
+          <p class="switch">
+            <a href="/">Back to the map and catalogue</a>
           </p>
         </div>
       </section>

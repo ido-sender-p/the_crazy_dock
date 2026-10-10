@@ -99,6 +99,8 @@ const out = picked.map((d) => {
   if (d.lengthM) row.lengthM = d.lengthM;
   if (d.yearBuilt != null) row.yearBuilt = d.yearBuilt;
   if (d.web) row.web = d.web;
+  // Photo kind (see PhotoKind in src/data.ts): every catalogue photo is the owner's; 3 when it shows the water nearby, not the dock.
+  if (d.imageAttribution) row.pk = d.imageNear ? 3 : 2;
   // Outside Greece the photos are served through Cloudflare Images (one original per photo, no pre-made sizes).
   if (d.imageAttribution && !wikiSource && d.country !== "Greece") row.tx = 1;
   return row;

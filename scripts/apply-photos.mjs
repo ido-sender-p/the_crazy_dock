@@ -6,9 +6,10 @@ import { existsSync } from "node:fs";
 import { download } from "./import-wikidata.mjs";
 
 const DATA = new URL("./data/", import.meta.url);
-const slugs = process.argv.slice(2);
+const AREA = process.argv.includes("--area"); // photos of the water near the dock: flagged so the page says so
+const slugs = process.argv.slice(2).filter((a) => a !== "--area");
 const cands = {};
-for (const f of ["photo-candidates.json", "photo-candidates-deep.json"]) {
+for (const f of AREA ? ["photo-candidates-area.json"] : ["photo-candidates.json", "photo-candidates-deep.json"]) {
   const j = await readFile(new URL(f, DATA), "utf8").then(JSON.parse, () => ({}));
   for (const [s, v] of Object.entries(j)) cands[s] = [...(cands[s] ?? []), ...v];
 }
@@ -31,6 +32,7 @@ for (const s of slugOnly.keys()) {
   if (!existsSync(new URL(`images/${imageFile}`, DATA)) && !(await download(c.thumb, new URL(`images/${imageFile}`, DATA)))) { console.log("download failed", s); continue; }
   d.imageFile = imageFile;
   d.imageAttribution = `Photo: ${c.author}, ${c.license}, via Wikimedia Commons|${c.commonsUrl}`;
+  if (AREA) d.imageNear = true; else delete d.imageNear;
   d.imageOrientation = c.height > c.width ? "portrait" : "landscape";
   applied++; console.log("ok", s, "<-", c.title);
 }

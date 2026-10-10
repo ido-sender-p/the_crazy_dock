@@ -19,6 +19,10 @@ export const dockCss = `
   .dock-photo:hover { opacity: 0.92; }
   .dock-photo img { display: block; width: 100%; height: auto; }
   .dock-photo-row .photo-credit { margin: 8px 0 0; font-size: 0.75rem; color: var(--ink-soft); text-align: left; }
+  .photo-kind { display: inline-block; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.02em; padding: 2px 9px; margin-right: 4px; border-radius: var(--radius-pill); border: 1px solid var(--border); background: var(--surface); color: var(--ink-soft); }
+  .photo-kind.kind-1 { border-color: var(--navy); color: var(--navy); }
+  .photo-kind.kind-3 { background: #fff1d6; border-color: #e2a53b; color: #7a4a00; }
+  .dock-photo-row[data-photo-kind="3"] .dock-photo { outline: 3px solid #e2a53b; outline-offset: -3px; }
   .dock-photo-row .photo-credit a { color: inherit; text-decoration: underline; }
   .hero-actions-row { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
   .hero-actions-row form { margin: 0; }

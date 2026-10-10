@@ -23,7 +23,7 @@ These come from the owner and apply to every change.
    shell for a single command. Use only the token that was named for the job.
 6. **No em-dashes in text visitors read** (page copy, labels, descriptions). Code comments may use them. See `CLAUDE.md`.
 7. **All design lives in `src/styles`, all browser JavaScript in `src/client`.** No inline CSS, no inline scripts.
-8. **No public sign-ups yet.** Registration stays closed to the public until the checklist in `ROADMAP.md` is done.
+8. **No public sign-ups yet.** Registration is closed in code (`SIGNUP_ALLOWLIST` in `wrangler.toml`, empty = nobody) until the checklist in `ROADMAP.md` is done.
 
 ## Where things live
 
@@ -129,6 +129,8 @@ explicit upload step.
 3. **Build**: `npm run catalogue:build` writes `src/catalogue.json`. An OpenStreetMap dock is published only with a photo
    or at least `MIN_OSM_FACTS` real details; thinner entries stay in `docks.json` for later.
 3b. **About**: `node scripts/fetch-place-blurbs.mjs` (first two sentences of each settlement's Wikipedia article, only on an exact title match within 15 km), then `node scripts/build-about.mjs`. Run the second one after every `catalogue:build`, which rewrites `src/catalogue.json` without the `ab`, `pb` and `pt` fields. The dock page shows them under an About heading with one small Sources line (Wikipedia CC BY-SA 4.0, OpenStreetMap ODbL). Lightly rewording the text does not remove the licence duty, so the credit stays.
+3c. **Photos for docks without one**: `node scripts/find-photos.mjs` and `find-photos-deep.mjs` (Wikimedia Commons, strict name and place match), `find-photos-area.mjs` (the water within 2 km). They only write candidate files; look at the pictures, then `node scripts/apply-photos.mjs slug=File.jpg ...` (add `--area` for nearby views). Never apply a photo nobody has looked at.
+3d. **Photo kinds** (`PhotoKind` in `src/data.ts`, `pk` in the catalogue): 1 a visitor's upload, 2 the owner's (every catalogue and hand-written photo, kept as the owner's even if later replaced), 3 the owner's view of the water near the dock, not the dock itself (loudest tag and an amber frame). Visitor photos from `dock_photos` are kind 1 by definition and a community cover photo shown as the main photo is kind 1.
 4. **Around the dock** (restaurants, hotels, shops, sights nearby): `node scripts/enrich-nearby.mjs [slugs...]`, slow.
 5. **Photo sizes**: `npm run catalogue:variants` (skips rows that use Cloudflare Images and files that exist).
 6. **Local preview of photos**: stop the dev server, then `npm run catalogue:images` (local R2). The preview points at

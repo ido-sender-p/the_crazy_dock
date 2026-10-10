@@ -1,5 +1,5 @@
 import { Layout } from "../components/layout";
-import { type Dock } from "../data";
+import { type Dock, type PhotoKind } from "../data";
 import { slugify } from "../lib/slug";
 import { raw } from "hono/html";
 import { safeJsonForScript } from "../lib/html";
@@ -12,6 +12,12 @@ import { AroundIconSvg, type AroundIcon } from "../components/icons";
 import { photoVariant } from "../lib/imageVariants";
 
 const GALLERY_PREVIEW_LIMIT = 6;
+
+// A small tag saying who supplied the photo; kind 3 (not the dock itself) is the loudest.
+const PHOTO_KIND_LABEL: Record<PhotoKind, string> = { 1: "Visitor photo", 2: "Wildock photo", 3: "Not the dock itself" };
+function PhotoKindTag({ kind }: { kind: PhotoKind }) {
+  return <span class={`photo-kind kind-${kind}`}>{PHOTO_KIND_LABEL[kind]}</span>;
+}
 
 // Credits are stored as "text" or "text|url"; with a url the text links out
 // (Commons file page, Wikipedia article) as the CC licences require. Only
@@ -137,7 +143,7 @@ export function DockPage(
     "@type": "TouristAttraction",
     name: d.name,
     description: d.description,
-    ...(d.imageUrl ? { image: photoVariant(d.imageUrl, "full") } : {}),
+    ...(d.imageUrl && d.photoKind !== 3 ? { image: photoVariant(d.imageUrl, "full") } : {}),
     geo: { "@type": "GeoCoordinates", latitude: d.lat, longitude: d.lon },
     address,
   };
@@ -223,11 +229,15 @@ export function DockPage(
         {actions}
       </div>
       {bleed && (
-        <div class="wrap dock-photo-row">
+        <div class="wrap dock-photo-row" data-photo-kind={d.photoKind ?? 2}>
           <button class="dock-photo" type="button" id="hero-open" aria-label={`View larger photo of ${d.name}`}>
-            <img src={photoVariant(d.imageUrl, "full")} alt={d.name} decoding="async" fetchpriority="high" />
+            <img src={photoVariant(d.imageUrl, "full")} alt={d.photoKind === 3 ? `View near ${d.name}` : d.name} decoding="async" fetchpriority="high" />
           </button>
-          <p class="photo-credit"><PhotoCreditLine value={d.imageAttribution} /></p>
+          <p class="photo-credit">
+            <PhotoKindTag kind={d.photoKind ?? 2} />{" "}
+            {d.photoKind === 3 && <><strong>No photo of this dock yet.</strong> This is the view nearby. </>}
+            <PhotoCreditLine value={d.imageAttribution} />
+          </p>
         </div>
       )}
       <div class="wrap dock-page dock-body">
@@ -274,7 +284,7 @@ export function DockPage(
                 const isLastTile = i === GALLERY_PREVIEW_LIMIT - 1;
                 const remaining = photos.length - GALLERY_PREVIEW_LIMIT;
                 return (
-                  <button class="gallery-tile" data-index={i} type="button">
+                  <button class="gallery-tile" data-index={i} data-photo-kind="1" type="button">
                     <img src={p.image_url} alt={p.title} width={300} height={225} loading="lazy" decoding="async" />
                     {isLastTile && remaining > 0 ? (
                       <span class="more-overlay">+{remaining} more</span>
