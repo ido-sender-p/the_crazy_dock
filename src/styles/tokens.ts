@@ -58,7 +58,7 @@ export const tokensCss = `
 
     /* layout */
     --page-max: 1320px;
-    --gutter: 24px;
+    --gutter: clamp(16px, 4vw, 24px); /* 24px from 600px wide up, 16px on small phones */
     --header-h: 64px;
 
     /* stacking order, lowest to highest */

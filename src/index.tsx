@@ -17,6 +17,7 @@ import { search } from "./routes/search";
 import { users } from "./routes/users";
 import { messages } from "./routes/messages";
 import { assets } from "./routes/assets";
+import { NotFoundPage } from "./pages/notFound";
 
 const app = new Hono<Env>();
 
@@ -43,5 +44,8 @@ app.route("/", account);
 app.route("/", search);
 app.route("/", users);
 app.route("/", messages);
+
+// Unknown URLs get a real page (viewport, header, search) instead of a plain-text 404.
+app.notFound((c) => c.html(<NotFoundPage path={c.req.path} />, 404));
 
 export default app;

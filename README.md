@@ -81,7 +81,7 @@ Design decisions the owner asked for, kept on purpose:
   Natural Earth by `scripts/make-continent-shapes.mjs`).
 - "Pick of the week" is one component (`components/featured.tsx`) used on the home page and under the map on `/map`.
 - Mobile gutters on every page: pages use `padding-block` and a `max-width` that adds the gutter, so text never touches
-  the screen edge on phones while desktop stays unchanged.
+  the screen edge on phones while desktop stays unchanged. `--gutter` is `clamp(16px, 4vw, 24px)`: 24px from 600px wide up, 16px on small phones. Unknown URLs render `pages/notFound.tsx` (viewport, header, search) with status 404.
 - Maps use the OpenStreetMap look. Switching to self-hosted tiles is on the roadmap and would change the look.
 
 ## How assets work

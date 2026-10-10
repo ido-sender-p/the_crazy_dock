@@ -22,6 +22,7 @@ import { messagesCss } from "./pages/messages";
 import { adminCss } from "./pages/admin";
 import { accessibilityCss } from "./pages/accessibility";
 import { creditsCss } from "./pages/credits";
+import { notFoundCss } from "./pages/notFound";
 
 export const PAGE_STYLES = {
   home: homeCss,
@@ -41,6 +42,7 @@ export const PAGE_STYLES = {
   admin: adminCss,
   accessibility: accessibilityCss,
   credits: creditsCss,
+  notFound: notFoundCss,
 } as const;
 
 export type PageName = keyof typeof PAGE_STYLES;
