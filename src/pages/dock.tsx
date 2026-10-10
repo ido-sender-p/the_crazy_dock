@@ -10,6 +10,7 @@ import { SETTLEMENT_PATH } from "../lib/places";
 import { placeLabel } from "../lib/places";
 import { AroundIconSvg, type AroundIcon } from "../components/icons";
 import { photoVariant } from "../lib/imageVariants";
+import { SITE_ORIGIN } from "../lib/site";
 
 const GALLERY_PREVIEW_LIMIT = 6;
 
@@ -138,14 +139,35 @@ export function DockPage(
   if (d.settlement) address.addressLocality = d.settlement;
   if (d.stateProvince) address.addressRegion = d.stateProvince;
   if (d.country) address.addressCountry = d.country;
+  // Breadcrumb trail for search results: the same chain the visible breadcrumb shows.
+  const trail: [string, string][] = [["Wildock", "/"]];
+  if (d.continent) trail.push([d.continent, `/continents/${d.continentSlug}`]);
+  if (d.country) trail.push([d.country, `/countries/${d.countryCode || slugify(d.country)}`]);
+  if (hasState) trail.push([d.stateProvince, `/regions/${d.stateProvinceSlug}`]);
+  if (hasSettlement) trail.push([d.settlement, `/${SETTLEMENT_PATH[d.settlementType]}/${d.settlementSlug}`]);
+  // The source link of the description (Wikipedia article or OpenStreetMap element), as a sameAs reference.
+  const sourceUrl = d.descriptionSource?.split("|")[1];
+  const sameAs = [sourceUrl, d.website].filter((u): u is string => !!u && /^https?:\/\//.test(u));
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "TouristAttraction",
-    name: d.name,
-    description: d.description,
-    ...(d.imageUrl && d.photoKind !== 3 ? { image: photoVariant(d.imageUrl, "full") } : {}),
-    geo: { "@type": "GeoCoordinates", latitude: d.lat, longitude: d.lon },
-    address,
+    "@graph": [
+      {
+        "@type": "TouristAttraction",
+        "@id": `${SITE_ORIGIN}/docks/${d.slug}#place`,
+        url: `${SITE_ORIGIN}/docks/${d.slug}`,
+        name: d.name,
+        description: d.description,
+        ...(d.imageUrl && d.photoKind !== 3 ? { image: photoVariant(d.imageUrl, "full") } : {}),
+        geo: { "@type": "GeoCoordinates", latitude: d.lat, longitude: d.lon },
+        hasMap: `https://www.openstreetmap.org/?mlat=${d.lat}&mlon=${d.lon}#map=15/${d.lat}/${d.lon}`,
+        address,
+        ...(sameAs.length ? { sameAs } : {}),
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [...trail.map(([name, href], i) => ({ "@type": "ListItem", position: i + 1, name, item: SITE_ORIGIN + href })), { "@type": "ListItem", position: trail.length + 1, name: d.name }],
+      },
+    ],
   };
 
   // The only ranking signal shown to visitors: whichever photo currently has
@@ -263,8 +285,12 @@ export function DockPage(
         <div class="info-band">
           <dl class="facts">
             <div><dt>Type</dt><dd>{typeLabel}</dd></div>
+            {d.settlement && <div><dt>Place</dt><dd><a href={`/${SETTLEMENT_PATH[d.settlementType]}/${d.settlementSlug}`}>{d.settlement}</a></dd></div>}
+            {hasState && <div><dt>Region</dt><dd><a href={`/regions/${d.stateProvinceSlug}`}>{d.stateProvince}</a></dd></div>}
+            <div><dt>Country</dt><dd><a href={`/countries/${d.countryCode || slugify(d.country)}`}>{d.country}</a></dd></div>
             {d.lengthM > 0 && <div><dt>Length</dt><dd>{d.lengthM} m</dd></div>}
             {d.yearBuilt != null && <div><dt>Built</dt><dd>{d.yearBuilt}</dd></div>}
+            <div><dt>Coordinates</dt><dd>{d.lat.toFixed(4)}, {d.lon.toFixed(4)}</dd></div>
             {d.website && <div><dt>Website</dt><dd><a href={d.website} target="_blank" rel="nofollow noopener noreferrer">{new URL(d.website).hostname.replace(/^www\./, "")}</a></dd></div>}
           </dl>
           <div class="mini-map">
