@@ -18,7 +18,13 @@
     "catalogue:build": "node scripts/build-catalogue.mjs",
     "catalogue:images": "node scripts/load-images.mjs",
     "catalogue:variants": "node scripts/make-variants.mjs",
-    "catalogue:nearby": "node scripts/enrich-nearby.mjs"
+    "catalogue:nearby": "node scripts/enrich-nearby.mjs",
+    "catalogue:all": "node scripts/build-catalogue.mjs && node scripts/build-about.mjs && node scripts/make-variants.mjs",
+    "ship-photos": "node scripts/ship-photos.mjs",
+    "r2:plan": "node scripts/r2-sync.mjs",
+    "r2:upload": "node scripts/r2-sync.mjs --go",
+    "verify:live": "node scripts/verify-live.mjs",
+    "check": "node scripts/check.mjs"
   },
   "license": "ISC",
   "dependencies": {

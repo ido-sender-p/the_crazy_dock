@@ -8,3 +8,4 @@ scripts/data/
 .env.*
 .dev.vars.*
 *.log
+nul
