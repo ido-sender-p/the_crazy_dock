@@ -8,7 +8,7 @@ export function NotFoundPage(opts: { path: string }) {
         <h1>We could not find that page</h1>
         <p>The link may be old, or the dock may have moved. Search for it, or go back to the start.</p>
         <form class="search-form" method="get" action="/search">
-          <input type="search" name="q" placeholder="Search docks, places and people" aria-label="Search" />
+          <input type="search" name="q" placeholder="Search docks and places" aria-label="Search" />
           <button type="submit">Search</button>
         </form>
         <p>
